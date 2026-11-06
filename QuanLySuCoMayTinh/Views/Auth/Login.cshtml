@@ -10,10 +10,11 @@
     <meta name="description" content="Đăng nhập vào không gian làm việc IT Helpdesk">
     <title>@ViewData["Title"]</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <partial name="_SystemIcons" />
     <link href="~/css/auth-login.css" rel="stylesheet" asp-append-version="true">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie_light.min.js" defer></script>
     <script src="~/js/auth-login.js" defer asp-append-version="true"></script>
 </head>
 <body>
@@ -25,6 +26,7 @@
         <section class="auth-form" aria-labelledby="loginTitle">
             <div class="auth-intro">
                 <div class="auth-mascot" role="img" aria-label="CRT chào mừng bạn"></div>
+                <div class="auth-anim" id="authPinAnim" data-src="@Url.Content("~/animations/pin-code-secure-login.json")" role="img" aria-label="Ổ khóa bảo mật và mã PIN"></div>
                 <p class="auth-eyebrow">KHÔNG GIAN LÀM VIỆC</p>
                 <h1 id="loginTitle">Chào mừng trở lại.</h1>
                 <p>Đăng nhập để tiếp tục công việc của bạn.</p>

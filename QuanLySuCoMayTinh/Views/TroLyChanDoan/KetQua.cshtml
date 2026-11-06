@@ -100,6 +100,32 @@
         border-radius: 0 8px 8px 0;
         padding: 14px; margin-top: 12px;
     }
+    /* Căn cứ AI (lấy ý tưởng từ mẫu "AI answer with traceable sources" và "Bullet chart target") */
+    .why { margin: 0 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface2); }
+    .why > summary { cursor: pointer; padding: 9px 14px; font-size: 12.5px; font-weight: 600; color: var(--text); list-style: none; display: flex; align-items: center; gap: 8px; }
+    .why > summary::-webkit-details-marker { display: none; }
+    .why > summary::after { content: '▾'; margin-left: auto; color: var(--text-muted); transition: transform .2s; }
+    .why[open] > summary::after { transform: rotate(180deg); }
+    .why-body { padding: 4px 14px 12px; }
+    .why-row { display: grid; grid-template-columns: 150px 1fr 56px; align-items: center; gap: 10px; margin: 7px 0; font-size: 12px; }
+    .why-row b { text-align: right; font-weight: 600; color: var(--text); }
+    .why-k { color: var(--text-muted); }
+    .why-k-block { margin: 10px 0 6px; font-size: 12px; }
+    .why-bar { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-muted) 18%, transparent); overflow: hidden; }
+    .why-bar > i { display: block; height: 100%; border-radius: 999px; background: var(--primary, var(--lav-deep)); transform-origin: left; animation: why-grow .8s cubic-bezier(.2,.8,.2,1) both; }
+    .why-bullet { margin: 0 0 6px; }
+    .wb-track { position: relative; display: flex; height: 16px; border-radius: 8px; overflow: hidden; }
+    .wb-track > span:nth-child(1) { flex: 50; background: color-mix(in srgb, var(--c-err) 22%, transparent); }
+    .wb-track > span:nth-child(2) { flex: 25; background: color-mix(in srgb, var(--c-warn) 24%, transparent); }
+    .wb-track > span:nth-child(3) { flex: 25; background: color-mix(in srgb, var(--c-ok) 24%, transparent); }
+    .wb-val { position: absolute; left: 0; top: 5px; height: 6px; border-radius: 3px; background: var(--text); animation: why-grow .9s cubic-bezier(.2,.8,.2,1) both; transform-origin: left; }
+    .wb-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--c-ok); text-decoration: none; }
+    .wb-legend { display: flex; margin-top: 4px; font-size: 10.5px; color: var(--text-muted); }
+    .wb-legend > span { padding-left: 2px; white-space: nowrap; }
+    .why-note { margin: 8px 0 0; font-size: 11.5px; color: var(--text-muted); }
+    @@keyframes why-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @@media (max-width: 575px) { .why-row { grid-template-columns: 1fr 56px; } .why-row .why-bar { grid-column: 1 / -1; order: 3; } }
+    @@media (prefers-reduced-motion: reduce) { .why-bar > i, .wb-val { animation: none; } }
 </style>
 
 <div class="ai-res-page mt-2">
@@ -177,7 +203,7 @@
             {
                 <div class="ai-card mb-4" style="border-top: 2px solid #a855f7;">
                     <div class="ai-card-header">
-                        <i class="bi bi-robot" style="color:#a855f7"></i> Dự đoán từ Hybrid AI (Top 3)
+                        <i class="bi bi-robot" style="color:var(--primary)"></i> Dự đoán từ Hybrid AI (Top 3)
                     </div>
                     <div class="ai-card-body">
                         @foreach(var pred in ViewBag.TopAIPredictions)
@@ -268,9 +294,42 @@
                                     }
                                     @if (loi.XacSuatMaLoiAI.HasValue && loi.XacSuatMaLoiAI.Value > 0)
                                     {
-                                        <span title="Mô hình học máy dự đoán trực tiếp mã lỗi (nhãn huấn luyện yếu, chỉ gợi ý)" style="background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); color:#a855f7; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600; margin-left:6px;"><i class="bi bi-bullseye me-1"></i>AI mã lỗi: @((loi.XacSuatMaLoiAI.Value * 100).ToString("0"))%</span>
+                                        <span title="Mô hình học máy dự đoán trực tiếp mã lỗi (nhãn huấn luyện yếu, chỉ gợi ý)" style="background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); color:var(--primary); font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600; margin-left:6px;"><i class="bi bi-bullseye me-1"></i>AI mã lỗi: @((loi.XacSuatMaLoiAI.Value * 100).ToString("0"))%</span>
                                     }
                                 </div>
+
+                                @{
+                                    var inv = System.Globalization.CultureInfo.InvariantCulture;
+                                    int soTcChon = Model.TrieuChungs?.Count ?? 0;
+                                    int khop = loi.SoTrieuChungKhop ?? 0;
+                                    double khopPct = soTcChon > 0 ? Math.Min(100.0, khop * 100.0 / soTcChon) : 0;
+                                    double? nhomPct = loi.DoTuongDongNhomAI.HasValue ? loi.DoTuongDongNhomAI.Value * 100 : (double?)null;
+                                    double? trucPct = loi.XacSuatMaLoiAI.HasValue && loi.XacSuatMaLoiAI.Value > 0 ? loi.XacSuatMaLoiAI.Value * 100 : (double?)null;
+                                    double? tinPct = loi.XacSuatDungAI.HasValue ? loi.XacSuatDungAI.Value * 100 : (double?)null;
+                                }
+                                <details class="why" @(i == 0 ? "open" : null)>
+                                    <summary><i class="bi bi-lightbulb" aria-hidden="true"></i> Vì sao AI gợi ý mã lỗi này?</summary>
+                                    <div class="why-body">
+                                        <div class="why-row"><span class="why-k">Triệu chứng khớp</span><div class="why-bar"><i style="width:@Math.Round(khopPct).ToString(inv)%"></i></div><b>@khop / @soTcChon</b></div>
+                                        @if (nhomPct.HasValue)
+                                        {
+                                            <div class="why-row"><span class="why-k">Nhóm lỗi tương đồng</span><div class="why-bar"><i style="width:@Math.Round(nhomPct.Value).ToString(inv)%"></i></div><b>@Math.Round(nhomPct.Value)%</b></div>
+                                        }
+                                        @if (trucPct.HasValue)
+                                        {
+                                            <div class="why-row"><span class="why-k">Mô hình mã lỗi</span><div class="why-bar"><i style="width:@Math.Round(trucPct.Value).ToString(inv)%"></i></div><b>@Math.Round(trucPct.Value)%</b></div>
+                                        }
+                                        @if (tinPct.HasValue)
+                                        {
+                                            <div class="why-k why-k-block">Độ tin cậy so với ngưỡng tự chốt</div>
+                                            <div class="why-bullet" role="img" aria-label="Độ tin cậy @Math.Round(tinPct.Value)% so với ngưỡng tự chốt 75%">
+                                                <div class="wb-track"><span></span><span></span><span></span><i class="wb-val" style="width:@Math.Round(tinPct.Value).ToString(inv)%"></i><u class="wb-mark" style="left:75%"></u></div>
+                                                <div class="wb-legend"><span style="flex:50">Thấp</span><span style="flex:25">Trung bình</span><span style="flex:25">Cao (≥ 75% được tự chốt)</span></div>
+                                            </div>
+                                        }
+                                        <p class="why-note">Điểm xếp hạng = số triệu chứng khớp + 2 × độ tương đồng nhóm lỗi + xác suất của mô hình mã lỗi. Đây chỉ là căn cứ gợi ý; KTV là người quyết định.</p>
+                                    </div>
+                                </details>
 
                                 @if (loi.GiaiPhaps == null || !loi.GiaiPhaps.Any())
                                 {

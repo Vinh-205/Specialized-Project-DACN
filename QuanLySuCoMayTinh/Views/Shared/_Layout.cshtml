@@ -28,7 +28,6 @@
 <!DOCTYPE html>
 <html lang="vi" data-theme="light">
 <head>
-    <script src="~/js/auth-arrival.js" defer asp-append-version="true"></script>
     <partial name="_SystemIcons" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -64,8 +63,9 @@
 
 
     @await RenderSectionAsync("Styles", required: false)
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
     <link href="~/css/dashboard-shell.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/hd-modern.css" rel="stylesheet" asp-append-version="true">
 </head>
 <body class="helpdesk-workspace">
 
@@ -88,7 +88,7 @@
                 <button id="sidebarToggle" class="btn p-0 border-0 d-flex align-items-center justify-content-center"
                         style="width:34px;height:34px;background:rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:18px;cursor:pointer;border:1px solid rgba(255,255,255,0.25)!important;"
                         title="Ẩn/hiện menu">
-                    <i class="bi bi-list"></i>
+                    <i class="bi bi-layout-sidebar-inset" id="sidebarIcon"></i>
                 </button>
 
                 <!-- Brand -->
@@ -116,9 +116,16 @@
             <div class="topbar-right">
                 <!-- Dark mode toggle (Classic Shadcn Style) -->
                 <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Chuyển đổi giao diện">
-                    <i class="bi bi-sun-fill classic-toggle-sun"></i>
-                    <i class="bi bi-moon-stars-fill classic-toggle-moon"></i>
+                    <i class="bi bi-sun-fill" id="themeIcon"></i>
                 </button>
+                <script>
+                    (function () {
+                        var icon = document.getElementById('themeIcon');
+                        function sync() { icon.className = 'bi ' + (document.documentElement.getAttribute('data-theme') === 'dark' ? 'bi-moon-stars-fill' : 'bi-sun-fill'); }
+                        sync();
+                        new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+                    })();
+                </script>
 
                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                 {
@@ -303,17 +310,17 @@
             </button>
             <div class="sb-sub" id="sub-kb">
                 <a href="@Url.Action("Index", "TrieuChung")" class="sb-sub-item @(sbCtrl == "TrieuChung" ? "active" : "")" style="text-decoration:none">
-                    <span class="sb-sub-dot"></span>
+                    <i class="bi bi-clipboard2-pulse sb-sub-icon"></i>
                     Triệu chứng
                     <span class="sb-item-pill" style="margin-left:auto;">@countTrieuChung</span>
                 </a>
                 <a href="@Url.Action("Index", "MaLoi")" class="sb-sub-item @(sbCtrl == "MaLoi" ? "active" : "")" style="text-decoration:none">
-                    <span class="sb-sub-dot"></span>
+                    <i class="bi bi-bug sb-sub-icon"></i>
                     Mã lỗi
                     <span class="sb-item-pill danger" style="margin-left:auto;">@countMaLoi</span>
                 </a>
                 <a href="@Url.Action("Index", "GiaiPhap")" class="sb-sub-item @(sbCtrl == "GiaiPhap" ? "active" : "")" style="text-decoration:none">
-                    <span class="sb-sub-dot"></span>
+                    <i class="bi bi-lightbulb sb-sub-icon"></i>
                     Giải pháp
                     <span class="sb-item-pill success" style="margin-left:auto;">@countGiaiPhap</span>
                 </a>
@@ -332,15 +339,15 @@
                 </button>
                 <div class="sb-sub" id="sub-admin">
                     <a href="@Url.Action("Users", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "Users" ? "active" : "")" style="text-decoration:none">
-                        <span class="sb-sub-dot"></span>
+                        <i class="bi bi-people-fill sb-sub-icon"></i>
                         Quản lý nhân sự
                     </a>
                     <a href="@Url.Action("Reports", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "Reports" ? "active" : "")" style="text-decoration:none">
-                        <span class="sb-sub-dot"></span>
+                        <i class="bi bi-bar-chart-line sb-sub-icon"></i>
                         Báo cáo & thống kê
                     </a>
                     <a href="@Url.Action("DanhGia", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "DanhGia" ? "active" : "")" style="text-decoration:none">
-                        <span class="sb-sub-dot"></span>
+                        <i class="bi bi-star sb-sub-icon"></i>
                         Đánh giá khách hàng
                         @if (countDanhGia > 0)
                         {
@@ -348,11 +355,11 @@
                         }
                     </a>
                     <a href="@Url.Action("MLModels", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "MLModels" ? "active" : "")" style="text-decoration:none">
-                        <span class="sb-sub-dot"></span>
+                        <i class="bi bi-cpu sb-sub-icon"></i>
                         Mô hình AI
                     </a>
                     <a href="@Url.Action("Settings", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "Settings" ? "active" : "")" style="text-decoration:none">
-                        <span class="sb-sub-dot"></span>
+                        <i class="bi bi-gear sb-sub-icon"></i>
                         Cài đặt hệ thống
                     </a>
                 </div>
@@ -452,6 +459,9 @@
             sub.classList.toggle('open');
             chv.classList.toggle('open');
             hdr.classList.toggle('open');
+            const dangMo = chv.classList.contains('open');
+            chv.classList.toggle('bi-chevron-up', dangMo);
+            chv.classList.toggle('bi-chevron-down', !dangMo);
         }
 
         /**
@@ -539,6 +549,15 @@
         /* ──────────────────────────────────────────
            DARK MODE TOGGLE
            ────────────────────────────────────────── */
+        // Đổi sáng/tối: tắt mọi hiệu ứng chuyển màu trong khoảnh khắc đổi để thanh bên, thanh trên và thẻ đổi cùng lúc (không lệch nhịp)
+        new MutationObserver(function () {
+            const h = document.documentElement;
+            h.classList.add('theme-swap');
+            void h.offsetWidth;
+            clearTimeout(window.__themeSwapT);
+            window.__themeSwapT = setTimeout(function () { h.classList.remove('theme-swap'); }, 120);
+        }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
         function toggleTheme() {
             const html = document.documentElement;
             const current = html.getAttribute('data-theme') || 'light';
@@ -558,37 +577,19 @@
            ĐĂNG XUẤT với hiệu ứng
            ────────────────────────────────────────── */
         function handleLogout() {
-            const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position:fixed;inset:0;z-index:99999;
-                display:flex;flex-direction:column;align-items:center;justify-content:center;
-                background:var(--bg);opacity:0;transition:opacity .4s ease;
-                font-family:'Sora',sans-serif;
-            `;
-            overlay.innerHTML = `
-                <div style="text-align:center;">
-                    <div style="width:52px;height:52px;margin:0 auto 20px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spinOut 1s linear infinite;"></div>
-                    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Đang đăng xuất...</div>
-                    <div style="font-size:13px;color:var(--text-muted);">Hẹn gặp lại bạn!</div>
-                </div>
-            `;
-
-            const style = document.createElement('style');
-            style.textContent = '@@keyframes spinOut { to { transform: rotate(360deg); } }';
-            document.head.appendChild(style);
-            document.body.appendChild(overlay);
-            setTimeout(() => { overlay.style.opacity = '1'; }, 15);
-
-            fetch('@Url.Action("Logout", "Auth")')
-                .then(response => {
-                    setTimeout(() => {
-                        overlay.style.opacity = '0';
-                        setTimeout(() => { window.location.href = response.url || '/Home/Landing'; }, 400);
-                    }, 1200);
-                })
-                .catch(() => {
-                    window.location.href = '@Url.Action("Logout", "Auth")';
+            if (window.__loBusy) return;
+            window.__loBusy = true;
+            const scene = window.HDScene ? HDScene.open('logout') : null;
+            const dich = (url) => {
+                (scene ? scene.wait(2800) : Promise.resolve()).then(() => {
+                    if (window.HDScene) HDScene.markArrival();
+                    window.location.href = url;
                 });
+            };
+            // Cảnh chuyển dùng chung với đăng nhập (scene.js): xóa phiên ngay khi bấm, chờ hết hoạt ảnh rồi mới chuyển trang
+            fetch('@Url.Action("Logout", "Auth")')
+                .then(response => dich(response.url || '/Home/Landing'))
+                .catch(() => dich('@Url.Action("Logout", "Auth")'));
         }
 
         /* ──────────────────────────────────────────
@@ -608,7 +609,16 @@
                     if (main) main.classList.toggle('expanded');
                     if (bc) bc.classList.toggle('expanded');
                 }
+                syncSidebarIcon();
             });
+            // Icon biến hình theo trạng thái thanh bên: đang mở → "đóng", đang đóng → "mở"
+            function syncSidebarIcon() {
+                const sb = document.getElementById('sidebar'), ic = document.getElementById('sidebarIcon');
+                if (!sb || !ic) return;
+                const visible = window.innerWidth <= 768 ? sb.classList.contains('open-mobile') : !sb.classList.contains('collapsed');
+                ic.className = 'bi ' + (visible ? 'bi-layout-sidebar-inset' : 'bi-layout-sidebar');
+            }
+            syncSidebarIcon();
         }
 
         /* ──────────────────────────────────────────

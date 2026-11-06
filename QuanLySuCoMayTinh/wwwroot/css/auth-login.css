@@ -53,3 +53,23 @@ a:focus-visible,button:focus-visible { outline:3px solid #098bdc; outline-offset
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
 @media(max-width:480px) { .auth-header { padding:18px 20px; min-height:72px; gap:12px; } .auth-header .auth-brand { font-size:14px; } .auth-header a { font-size:10px; gap:6px; } .auth-intro h1 { font-size:26px; } .auth-main { padding:24px 24px 36px; } .auth-footer { padding:18px 24px; flex-wrap:wrap; justify-content:center; } }
 @media(max-height:760px) { .auth-mascot { width:76px; height:76px; margin-bottom:8px; } .auth-main { padding-top:20px; } .auth-intro { margin-bottom:22px; } }
+
+/* ── Hiệu ứng Lottie trên trang đăng nhập: ổ khóa PIN (phía trên) và nét viết "loading" (phía dưới) — cùng bảng màu xanh của trang ── */
+.auth-anim { display:none; width:172px; height:172px; margin:0 auto 6px; }
+.auth-form.has-lottie .auth-anim { display:block; }
+.auth-form.has-lottie .auth-mascot { display:none; }
+.auth-anim svg { display:block; width:100%; height:100%; }
+/* đổi màu minh họa gốc sang xanh hệ thống bằng CSS (thuộc tính fill/stroke do lottie-web ghi) */
+.auth-anim svg [fill="rgb(16,17,17)"] { fill:#173b50; }
+.auth-anim svg [fill="rgb(255,197,0)"], .auth-anim svg [fill="rgb(255,198,0)"] { fill:#0671bc; }
+.auth-anim svg [fill="rgb(7,170,255)"], .auth-anim svg [fill="rgb(8,170,255)"] { fill:#2a9bd8; }
+.auth-anim svg [fill="rgb(0,213,65)"], .auth-anim svg [fill="rgb(0,214,65)"] { fill:#2fb67a; }
+.auth-anim svg [fill="rgb(41,239,207)"], .auth-anim svg [fill="rgb(41,240,207)"] { fill:#dff0f9; }
+.auth-anim svg [fill="rgb(134,19,204)"] { fill:#0671bc; }
+.auth-anim svg [fill="rgb(246,0,250)"], .auth-anim svg [fill="rgb(246,0,251)"] { fill:#6fb7dd; }
+.auth-anim svg [fill="rgb(245,43,55)"] { fill:#9fd0ea; }
+.auth-anim svg [stroke="rgb(246,0,251)"], .auth-anim svg [stroke="rgb(246,0,250)"] { stroke:#6fb7dd; }
+/* chữ viết tay "login": viết dần từ trái sang phải, cùng gradient xanh với nét loading */
+.auth-form.has-lottie .login-loader { display:none !important; }
+@media(prefers-reduced-motion:no-preference) { .auth-form.has-lottie .auth-anim { animation:auth-float 4.2s ease-in-out infinite; } @keyframes auth-float { 50% { transform:translateY(-4px); } } }
+@media(max-height:760px) { .auth-anim { width:120px; height:120px; margin-bottom:2px; } }

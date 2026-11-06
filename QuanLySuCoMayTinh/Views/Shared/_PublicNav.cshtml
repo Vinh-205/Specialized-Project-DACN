@@ -1,0 +1,14 @@
+@* Thanh điều hướng "liquid glass" dùng chung cho các trang công khai (Welcome, Landing).
+   Truyền danh sách mục qua ViewData["PublicNavItems"]: List<string[]> { text, href, stage, active("1"/"0") }.
+   Mục có "stage" khác rỗng sẽ cuộn tới bước tương ứng của trang Welcome (xử lý bằng JS). *@
+@{
+    var items = ViewData["PublicNavItems"] as List<string[]> ?? new List<string[]>();
+}
+<header class="pnav" id="publicNav">
+    <nav class="pn-links" aria-label="Điều hướng chính">
+        @foreach (var it in items)
+        {
+            <a href="@it[1]" data-stage="@it[2]" class="@(it[3] == "1" ? "is-active" : "")" @(it[3] == "1" ? "aria-current=page" : "")>@it[0]</a>
+        }
+    </nav>
+</header>

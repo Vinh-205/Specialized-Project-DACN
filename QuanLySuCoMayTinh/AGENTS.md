@@ -99,3 +99,6 @@ Quy ước: tên thực thể/ thuộc tính tiếng Việt PascalCase không d�
 \## 8. Bộ mô hình AI hiện hành (cập nhật 06/11/2026)
 \- Kho mô hình ngoài mã nguồn: `D:\Code\Đồ án chuyên nghành\AI-Models` (cấu hình `AI:ModelRoot`; triển khai phải sao chép thư mục này và đặt lại khóa cấu hình). Gồm SongNgu (ONNX bộ mã hóa), MaLoiTrucTiep (47 lớp, ghép theo TÊN mã lỗi), KetQuaSua (MLP), ML.NET `ActiveModel.zip` (chỉ hiển thị, học từ dữ liệu tổng hợp).
 \- Nhãn mã lỗi là nhãn YẾU; độ chính xác chung Top-1 khoảng 37–62%, chỉ mức Cao được tự chốt (đo đúng 83–100%, phủ 18–30%). Không có ca thật, không có KTV/thầy duyệt nhãn.
+
+\## 9. Bàn giao Claude → Codex (07/11/2026)
+\- Đọc `CODEX_BAN_GIAO_TU_CLAUDE.md` (trạng thái giao diện công khai, cách làm việc owner muốn, việc còn mở) rồi `CODEX_PROMPT_TIEP_TUC.md` (ERD V2 và AI). Giao diện tạm ổn; việc kế tiếp là đối chiếu ERD V2 với code.

@@ -9,6 +9,33 @@
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     let activeField = 'username';
     let reaction;
+    // ── Hiệu ứng Lottie (cdnjs lottie-web): ổ khóa PIN phía trên phản ứng theo số ký tự mật khẩu, nét "loading" phía dưới chạy khi xác thực.
+    // Không tải được thư viện thì giữ nguyên mascot CRT và vòng quay trong nút (không ảnh hưởng đăng nhập).
+    const section = document.querySelector('.auth-form');
+    const pinBox = document.getElementById('authPinAnim');
+    const PIN_FRAMES = [0, 28, 36, 46, 53];   // 0–4 ký tự: số dấu * hiện ra trên thanh PIN
+    const PIN_UNLOCK = 130;                   // khóa mở + dấu tích trên khiên
+    let pin = null, pinFrame = 0, scene = null;
+    function movePin(to, speed) {
+        if (!pin || to === pinFrame) return;
+        if (reduced.matches) { pin.goToAndStop(to, true); pinFrame = to; return; }
+        const from = pinFrame;
+        pin.setSpeed(speed || 1.5);
+        pin.setDirection(to > from ? 1 : -1);
+        pin.playSegments([from, to], true);
+        pinFrame = to;
+    }
+    // Cảnh chuyển mở: dừng khóa PIN (hoạt ảnh SVG nặng) để lớp mờ nền không bị tính lại mỗi khung hình
+    window.addEventListener('hdscene:open', () => { if (pin) pin.pause(); });
+    function resetPin() { movePin(PIN_FRAMES[Math.min(password.value.length, 4)] || 0, 2); }
+    function startLottie() {
+        if (!window.lottie || !pinBox) return;
+        pin = lottie.loadAnimation({ container: pinBox, renderer: 'svg', loop: false, autoplay: false, path: pinBox.dataset.src,
+            rendererSettings: { preserveAspectRatio: 'xMidYMid meet' } });
+        pin.addEventListener('DOMLoaded', () => { section.classList.add('has-lottie'); pin.goToAndStop(0, true); });
+    }
+    if (document.readyState === 'complete') startLottie(); else addEventListener('load', startLottie);
+    password.addEventListener('input', () => movePin(PIN_FRAMES[Math.min(password.value.length, 4)]));
     function syncMascot() {
         const closed = activeField === 'password' && password.type === 'password';
         if (mascot.classList.contains('is-eyes-closed') === closed) return;
@@ -44,6 +71,7 @@
         if (submit.disabled) return;
         submit.disabled = true;
         submit.classList.add('is-loading');
+        scene = window.HDScene ? HDScene.open('login') : null;
         form.setAttribute('aria-busy', 'true');
         const status = document.getElementById('loginStatus');
         status.classList.remove('is-error');
@@ -71,18 +99,21 @@
             document.getElementById('submitIcon').className = 'bi bi-check-circle-fill';
             document.getElementById('submitText').textContent = 'Đăng nhập thành công';
             status.textContent = 'Đang vào không gian làm việc...';
-            await new Promise(resolve => setTimeout(resolve, reduced.matches ? 0 : 450));
-            try { sessionStorage.setItem('authArrival', JSON.stringify({ at:Date.now(), url:destination.pathname + destination.search })); } catch {}
-            if (!reduced.matches) {
-                await document.querySelector('.auth-main').animate([
-                    { opacity:1, transform:'translateX(0)' },
-                    { opacity:0, transform:'translateX(-28px)' }
-                ], { duration:220, easing:'ease-in', fill:'forwards' }).finished;
+            if (!scene) movePin(PIN_UNLOCK, 1.8);
+            if (scene) {
+                await scene.wait(2200);          // cảnh chuyển hiện tối thiểu ~2,2 giây để chữ Login kịp viết xong
+                scene.morph();                   // khóa → dấu tích, dòng trạng thái đổi sang "Đang vào không gian làm việc…"
+                await scene.wait(3000);
+            } else {
+                await new Promise(resolve => setTimeout(resolve, reduced.matches ? 0 : 450));
             }
+            window.HDScene?.markArrival();       // trang đích mở ra bằng lớp mờ tan dần
             location.assign(destination.href);
         } catch (error) {
             submit.disabled = false;
             submit.classList.remove('is-loading', 'is-success');
+            scene?.close(); scene = null;
+            resetPin();
             document.getElementById('submitIcon').className = 'bi bi-arrow-right';
             document.getElementById('submitText').textContent = 'Đăng nhập';
             status.classList.add('is-error');
@@ -97,6 +128,8 @@
         submit.classList.remove('is-loading', 'is-success');
         document.getElementById('submitIcon').className = 'bi bi-arrow-right';
         document.querySelector('.auth-main').getAnimations().forEach(animation => animation.cancel());
+        scene?.close(); scene = null;
+        resetPin();
         submit.disabled = false;
         form.removeAttribute('aria-busy');
         document.getElementById('submitText').textContent = 'Đăng nhập';

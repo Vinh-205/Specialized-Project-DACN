@@ -409,7 +409,7 @@ html[data-theme="dark"] .classic-toggle-moon {
     top: calc(100% + 12px);
     right: -16px;
     width: 310px;
-    background: rgba(19, 19, 64, 0.88);
+    background: var(--surface-solid);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
@@ -532,7 +532,7 @@ html[data-theme="dark"] .classic-toggle-moon {
     top: calc(100% + 12px);
     right: 0;
     width: 260px;
-    background: rgba(19, 19, 64, 0.90);
+    background: var(--surface-solid);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
@@ -661,7 +661,7 @@ html[data-theme="dark"] .classic-toggle-moon {
     top: calc(100% + 8px);
     left: 0;
     width: 340px;
-    background: rgba(19, 19, 64, 0.88);
+    background: var(--surface-solid);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
@@ -1245,7 +1245,7 @@ html[data-theme="dark"] .classic-toggle-moon {
     border-bottom: 1px solid var(--border);
     text-transform: uppercase;
     letter-spacing: .5px;
-    background: rgba(35, 35, 90, 0.65);
+    background: var(--surface2);
 }
 
 .hd-table td {

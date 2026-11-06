@@ -3,6 +3,15 @@
     ViewData["Title"] = "Quản lý Mô Hình AI (Hybrid AI)";
     var jobs = ViewData["TrainingJobs"] as IEnumerable<QuanLySuCoMayTinh.Models.AITrainingJob>;
     var totalRecords = (int)(ViewData["TotalDiagnosticRecords"] ?? 0);
+    var nguon = ViewBag.NguonDuLieu as Dictionary<string, int> ?? new Dictionary<string, int>();
+    int Dem(string k) => nguon.TryGetValue(k, out var v) ? v : 0;
+    var boThat = ViewBag.BoMoHinhThat as List<QuanLySuCoMayTinh.Services.MoHinhAI> ?? new List<QuanLySuCoMayTinh.Services.MoHinhAI>();
+    bool tuDongChot = ViewBag.TuDongChot is bool tdc && tdc;
+    var coDangDung = Model.Any(x => x.DangSuDung);
+    var dauTien = Model.FirstOrDefault();
+    int soCu = Model.Count(x => !(x.DangSuDung || (!coDangDung && x == dauTien)));
+    var jobsOk = (jobs ?? Enumerable.Empty<QuanLySuCoMayTinh.Models.AITrainingJob>()).Where(j => j.TrangThai != "Failed").Take(3).ToList();
+    var jobsLoi = (jobs ?? Enumerable.Empty<QuanLySuCoMayTinh.Models.AITrainingJob>()).Where(j => j.TrangThai == "Failed").ToList();
 }
 
 <style>
@@ -64,8 +73,8 @@
         padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
         font-size: 13.5px; font-weight: 500; border: 1.5px solid;
     }
-    .ai-alert-success { background: rgba(46,168,76,.1); border-color: rgba(46,168,76,.35); color: #56c96e; }
-    .ai-alert-danger  { background: rgba(232,64,64,.1);  border-color: rgba(232,64,64,.35); color: #f07070; }
+    .ai-alert-success { background: rgba(46,168,76,.1); border-color: rgba(46,168,76,.35); color: var(--c-ok); }
+    .ai-alert-danger  { background: rgba(232,64,64,.1);  border-color: rgba(232,64,64,.35); color: var(--c-err); }
     .ai-alert .btn-close-ai { margin-left: auto; background: none; border: none; font-size: 16px; cursor: pointer; color: inherit; opacity: .7; }
     .ai-alert .btn-close-ai:hover { opacity: 1; }
 
@@ -118,18 +127,18 @@
         font-family: 'JetBrains Mono', monospace;
         font-size: 11px; font-weight: 500;
         padding: 4px 9px; border-radius: 6px;
-        background: rgba(255,255,255,.05); border: 1px solid var(--border-hi);
-        color: #a0b8cc; white-space: nowrap;
+        background: var(--surface2); border: 1px solid var(--border-hi);
+        color: var(--text-muted); white-space: nowrap;
     }
 
     /* accuracy */
     .accuracy-wrap { display: flex; align-items: center; gap: 8px; }
     .accuracy-val { font-weight: 700; font-size: 14px; min-width: 46px; }
-    .acc-bar { flex: 1; height: 4px; border-radius: 99px; background: rgba(255,255,255,.07); min-width: 50px; max-width: 80px; }
+    .acc-bar { flex: 1; height: 4px; border-radius: 99px; background: var(--border-light); min-width: 50px; max-width: 80px; }
     .acc-bar-fill { height: 100%; border-radius: 99px; }
-    .acc-high { color: #3dc97a; } .acc-high .acc-bar-fill { background: #2ea84c; }
-    .acc-med  { color: #d4933a; } .acc-med  .acc-bar-fill { background: #d4933a; }
-    .acc-low  { color: #e84040; } .acc-low  .acc-bar-fill { background: #e84040; }
+    .acc-high { color: var(--c-ok); } .acc-high .acc-bar-fill { background: var(--c-ok); }
+    .acc-med  { color: var(--c-warn); } .acc-med  .acc-bar-fill { background: var(--c-warn); }
+    .acc-low  { color: var(--c-err); } .acc-low  .acc-bar-fill { background: var(--c-err); }
 
     /* logloss */
     .logloss-val { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--text-muted); }
@@ -146,17 +155,17 @@
         padding: 4px 11px; border-radius: 20px; font-size: 12px; font-weight: 600;
     }
     .status-active {
-        background: rgba(46,168,76,.15); color: #3dc97a;
+        background: rgba(46,168,76,.15); color: var(--c-ok);
         border: 1px solid rgba(46,168,76,.35);
     }
     .status-active::before {
         content: ''; width: 7px; height: 7px; border-radius: 50%;
-        background: #3dc97a;
-        box-shadow: 0 0 8px #3dc97a;
+        background: var(--c-ok);
+        box-shadow: 0 0 8px var(--c-ok);
         animation: pulse 2s ease-in-out infinite;
     }
     .status-paused {
-        background: rgba(255,255,255,.04); color: var(--text-muted);
+        background: var(--surface2); color: var(--text-muted);
         border: 1px solid var(--border);
     }
     @@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
@@ -166,8 +175,8 @@
         padding: 5px 13px; border-radius: 7px; font-size: 12px; font-weight: 600;
         border: 1.5px solid; cursor: pointer; background: transparent; transition: all .18s;
     }
-    .btn-act-activate { border-color: rgba(46,168,76,.5); color: #3dc97a; }
-    .btn-act-activate:hover { background: rgba(46,168,76,.12); border-color: #3dc97a; }
+    .btn-act-activate { border-color: rgba(46,168,76,.5); color: var(--c-ok); }
+    .btn-act-activate:hover { background: rgba(46,168,76,.12); border-color: var(--c-ok); }
     .btn-act-detail   { border-color: var(--border-hi); color: var(--text-muted); }
     .btn-act-detail:hover   { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 
@@ -200,25 +209,25 @@
     .job-error  {
         margin-top: 6px; padding: 6px 10px; border-radius: 6px;
         background: rgba(232,64,64,.1); border: 1px solid rgba(232,64,64,.25);
-        font-size: 11.5px; color: #f07070; font-family: 'JetBrains Mono', monospace;
+        font-size: 11.5px; color: var(--c-err); font-family: 'JetBrains Mono', monospace;
     }
 
     .badge-status {
         font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
         text-transform: uppercase; letter-spacing: .03em;
     }
-    .bs-done    { background: rgba(46,168,76,.15);  color: #3dc97a; }
-    .bs-error   { background: rgba(232,64,64,.15);  color: #f07070; }
-    .bs-running { background: rgba(61,142,240,.15); color: #7cb9f5; }
-    .bs-pending { background: rgba(212,147,58,.15); color: #e0b060; }
+    .bs-done    { background: rgba(46,168,76,.15);  color: var(--c-ok); }
+    .bs-error   { background: rgba(232,64,64,.15);  color: var(--c-err); }
+    .bs-running { background: rgba(61,142,240,.15); color: var(--c-info); }
+    .bs-pending { background: rgba(212,147,58,.15); color: var(--c-warn); }
 
     /* ── Modal ──────────────────────────────────────────────── */
     .ai-modal .modal-content {
-        background: #0c1520; border: 1.5px solid var(--border-hi);
+        background: var(--surface-solid); border: 1.5px solid var(--border-hi);
         border-radius: 14px; color: var(--text-primary);
     }
     .ai-modal .modal-header { border-bottom: 1.5px solid var(--border); padding: 18px 22px; }
-    .ai-modal .modal-title  { font-size: 15px; font-weight: 700; color: #e2eaf4; }
+    .ai-modal .modal-title  { font-size: 15px; font-weight: 700; color: var(--text); }
     .ai-modal .modal-body   { padding: 20px 22px; }
     .ai-modal .modal-footer { border-top: 1.5px solid var(--border); padding: 14px 22px; }
 
@@ -231,13 +240,13 @@
 
     .ai-modal .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .ai-modal .stat-item {
-        background: rgba(255,255,255,.03); border: 1px solid var(--border);
+        background: var(--surface2); border: 1px solid var(--border);
         border-radius: 8px; padding: 10px 12px;
     }
     .ai-modal .stat-label { font-size: 11px; color: var(--text-dim); margin-bottom: 3px; }
     .ai-modal .stat-value { font-size: 15px; font-weight: 700; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; }
-    .ai-modal .stat-item.accent-green .stat-value { color: #3dc97a; }
-    .ai-modal .stat-item.accent-blue  .stat-value { color: #7cb9f5; }
+    .ai-modal .stat-item.accent-green .stat-value { color: var(--c-ok); }
+    .ai-modal .stat-item.accent-blue  .stat-value { color: var(--c-info); }
 
     .ai-modal .table-mini { width: 100%; font-size: 12.5px; border-collapse: collapse; }
     .ai-modal .table-mini td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
@@ -252,10 +261,32 @@
     .btn-close-modal:hover { color: var(--text-primary); }
     .btn-secondary-modal {
         padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 600;
-        background: rgba(255,255,255,.06); border: 1.5px solid var(--border-hi);
+        background: var(--surface2); border: 1.5px solid var(--border-hi);
         color: var(--text-muted); cursor: pointer; transition: all .18s;
     }
     .btn-secondary-modal:hover { border-color: var(--accent); color: var(--accent); }
+    .real-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; padding: 16px; }
+    .real-card { border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; background: color-mix(in srgb, var(--accent) 5%, transparent); display: flex; flex-direction: column; gap: 8px; }
+    .real-card h3 { margin: 0; font-size: 14px; font-weight: 700; }
+    .real-card .rc-role { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+    .real-card .rc-type { font-size: 11.5px; font-weight: 600; color: var(--accent); }
+    .real-card dl { margin: 0; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 12.5px; }
+    .real-card dl div { display: flex; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border); padding-top: 4px; }
+    .real-card dt { color: var(--text-dim); font-weight: 500; }
+    .real-card dd { margin: 0; font-weight: 600; text-align: right; }
+    .real-card .rc-note { font-size: 11.5px; color: var(--text-dim); border-left: 3px solid var(--c-warn); padding-left: 8px; line-height: 1.45; }
+    .real-card .rc-file { font-size: 11px; color: var(--text-dim); word-break: break-all; }
+    .mix-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; padding: 16px; }
+    .mix-tile { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+    .mix-tile b { display: block; font-size: 22px; line-height: 1.2; }
+    .mix-tile span { font-size: 12px; color: var(--text-dim); }
+    .mix-tile.real { border-color: var(--c-ok); }
+    .mix-tile.fake { border-style: dashed; }
+    .ai-note { margin: 0 16px 16px; font-size: 12.5px; color: var(--text-dim); line-height: 1.5; }
+    .status-unverified { background: rgba(245,158,11,.15); color: var(--c-warn); }
+    .jobs-fold { border-top: 1px solid var(--border); padding: 10px 16px; font-size: 12.5px; }
+    .jobs-fold summary { cursor: pointer; color: var(--text-dim); }
+    tr[hidden] { display: none !important; }
 </style>
 
 <div class="ai-page">
@@ -268,7 +299,7 @@
             </h1>
             <p class="page-subtitle">
                 Giám sát huấn luyện · Chọn mô hình dự đoán &nbsp;·&nbsp;
-                <span style="color:var(--accent)">@totalRecords bản ghi chẩn đoán</span>
+                <span style="color:var(--accent)">@totalRecords bản ghi có nhãn, trong đó @Dem("UserHistory") từ ca của hệ thống</span>
             </p>
         </div>
         <div class="header-actions">
@@ -305,20 +336,74 @@
         </div>
     }
 
+    <div class="ai-card" style="margin-bottom:24px">
+        <div class="ai-card-header">
+            <i class="bi bi-diagram-3 header-icon"></i>
+            Bộ mô hình AI đang dùng thật trong hệ thống
+        </div>
+        <div class="real-grid">
+            @foreach (var bm in boThat)
+            {
+                <article class="real-card">
+                    <h3>@bm.Ten</h3>
+                    <span class="rc-type">@bm.Loai</span>
+                    <span class="rc-role">@bm.VaiTro</span>
+                    <dl>
+                        <div><dt>Tình trạng</dt><dd>@(bm.TonTai ? "Đang nạp được" : "Thiếu tệp")</dd></div>
+                        @if (bm.TonTai)
+                        {
+                            <div><dt>Dung lượng</dt><dd>@((bm.DungLuong / 1048576.0).ToString("0.0")) MB</dd></div>
+                            <div><dt>Cập nhật</dt><dd>@(bm.NgaySua?.ToString("dd/MM/yyyy") ?? "—")</dd></div>
+                        }
+                        <div><dt>Dữ liệu</dt><dd style="font-weight:500;font-size:12px">@bm.DuLieu</dd></div>
+                        @foreach (var cs in bm.ChiSo)
+                        {
+                            <div><dt>@cs.Nhan</dt><dd>@cs.GiaTri</dd></div>
+                        }
+                    </dl>
+                    <span class="rc-note">@bm.GhiChu</span>
+                    <span class="rc-file">@bm.Tep</span>
+                </article>
+            }
+            <article class="real-card">
+                <h3>Tự chốt mã lỗi</h3>
+                <span class="rc-type">Quy tắc vận hành</span>
+                <span class="rc-role">Khi độ tin cậy mức Cao (≥ 75%) cùng điều kiện an toàn, hệ thống tự chốt mã lỗi và ghi nhật ký AI_TU_CHOT. Tự tạm dừng nếu ≥ 10 ca tự chốt mà &gt; 30% bị sửa lại.</span>
+                <dl><div><dt>Cấu hình AI:TuDongChot</dt><dd>@(tuDongChot ? "Đang bật" : "Đang tắt")</dd></div></dl>
+            </article>
+        </div>
+        <p class="ai-note">Các mô hình trên là tệp ONNX/JSON nên không nằm trong bảng ML_MODEL_INFO; bảng bên dưới chỉ liệt kê mô hình ML.NET, và chỉ ML.NET mới có nút Huấn luyện/Kích hoạt.</p>
+    </div>
+
+    <div class="ai-card" style="margin-bottom:24px">
+        <div class="ai-card-header">
+            <i class="bi bi-pie-chart header-icon"></i>
+            Dữ liệu chẩn đoán có nhãn trong cơ sở dữ liệu (@totalRecords)
+        </div>
+        <div class="mix-grid">
+            <div class="mix-tile real"><b>@Dem("UserHistory")</b><span>Ca của hệ thống (KTV chốt)</span></div>
+            <div class="mix-tile real"><b>@Dem("RealRepair")</b><span>Sửa chữa thật (nguồn công khai)</span></div>
+            <div class="mix-tile real"><b>@Dem("PublicDataset")</b><span>Bộ dữ liệu công khai</span></div>
+            <div class="mix-tile fake"><b>@Dem("SyntheticRule")</b><span>Tổng hợp theo luật (không phải ca thật)</span></div>
+            <div class="mix-tile fake"><b>@Dem("LegacyRandom")</b><span>Sinh ngẫu nhiên cũ (không phải ca thật)</span></div>
+        </div>
+        <p class="ai-note">Mô hình ML.NET trong bảng bên dưới học chủ yếu từ dữ liệu tổng hợp/ngẫu nhiên nên chưa phản ánh chất lượng trên ca thật. Nhãn mã lỗi chưa được người xác minh; hệ thống không thu thập thêm ca thật theo quyết định của chủ đề tài.</p>
+    </div>
+
     <div class="row g-4">
         <!-- Model List -->
         <div class="col-lg-8">
             <div class="ai-card">
                 <div class="ai-card-header">
                     <i class="bi bi-box-seam header-icon"></i>
-                    Danh sách mô hình đã huấn luyện
+                    Mô hình ML.NET đang dùng
                 </div>
                 <div class="table-responsive">
                     <table class="model-table">
                         <thead>
                             <tr>
                                 <th>Phiên bản</th>
-                                <th>Độ chính xác</th>
+                                <th title="Micro Accuracy trên tập kiểm tra của chính mô hình">Độ chính xác (Micro)</th>
                                 <th>LogLoss</th>
                                 <th>Mẫu Training</th>
                                 <th>Ngày tạo</th>
@@ -340,11 +425,12 @@
                             {
                                 var accPct = Math.Round(m.DoChinhXacMicro * 100, 1);
                                 var accClass = m.DoChinhXacMicro >= 0.8 ? "acc-high" : (m.DoChinhXacMicro >= 0.6 ? "acc-med" : "acc-low");
-                                <tr class="@(m.DangSuDung ? "is-active" : "")">
+                                bool hien = m.DangSuDung || (!coDangDung && m == dauTien);
+                                <tr class="@(m.DangSuDung ? "is-active" : "") @(hien ? "" : "old-row")" @(hien ? "" : "hidden")>
                                     <td><span class="version-badge">@m.PhienBan</span>
                                         @if (m.PhienBanBoDuLieu != null && m.PhienBanBoDuLieu.StartsWith("KHOI_TAO_TONG_HOP"))
                                         {
-                                            <span class="version-badge" style="background:rgba(245,158,11,.15); color:#f59e0b" title="Huấn luyện từ dữ liệu tổng hợp, chưa kiểm chứng bằng ca thật">Khởi tạo (tổng hợp)</span>
+                                            <span class="version-badge" style="background:rgba(245,158,11,.15); color:var(--c-warn)" title="Huấn luyện từ dữ liệu tổng hợp, chưa kiểm chứng bằng ca thật">Khởi tạo (tổng hợp)</span>
                                         }
                                     </td>
                                     <td>
@@ -359,7 +445,11 @@
                                     <td><span class="record-count">@m.SoBanGhiHuanLuyen.ToString("N0")</span></td>
                                     <td><span class="date-val">@m.NgayTao.ToString("dd/MM/yyyy HH:mm")</span></td>
                                     <td>
-                                        @if (m.DangSuDung)
+                                        @if (m.DangSuDung && QuanLySuCoMayTinh.Services.ModelGate.ChuaKiemChung(m))
+                                        {
+                                            <span class="status-badge status-unverified" title="Đang được chọn nhưng chưa đủ bằng chứng nên không ảnh hưởng thứ hạng gợi ý">Đang chọn · chưa kiểm chứng</span>
+                                        }
+                                        else if (m.DangSuDung)
                                         {
                                             <span class="status-badge status-active">Đang kích hoạt</span>
                                         }
@@ -389,6 +479,12 @@
                         </tbody>
                     </table>
                 </div>
+                @if (soCu > 0)
+                {
+                    <div class="jobs-fold" style="text-align:center">
+                        <button type="button" class="btn-act btn-act-detail" id="toggleOld" data-n="@soCu">Hiện @soCu phiên bản cũ</button>
+                    </div>
+                }
             </div>
         </div>
 
@@ -397,10 +493,10 @@
             <div class="ai-card">
                 <div class="ai-card-header">
                     <i class="bi bi-activity header-icon"></i>
-                    Tiến trình huấn luyện gần đây
+                    Huấn luyện gần đây
                 </div>
                 <div class="jobs-list">
-                    @if (jobs == null || !jobs.Any())
+                    @if (!jobsOk.Any() && !jobsLoi.Any())
                     {
                         <div style="padding:32px;text-align:center;color:var(--text-dim);font-size:13px;">
                             <i class="bi bi-inbox" style="font-size:24px;display:block;margin-bottom:8px;"></i>
@@ -409,7 +505,7 @@
                     }
                     else
                     {
-                        @foreach (var job in jobs)
+                        @foreach (var job in jobsOk)
                         {
                             var dotClass = job.TrangThai == "Completed" ? "dot-success"
                                          : job.TrangThai == "Failed"    ? "dot-error"
@@ -432,13 +528,28 @@
                                 </div>
                                 <div class="job-time">
                                     <i class="bi bi-clock" style="font-size:10px;"></i>
-                                    @(job.NgayBatDau?.ToString("dd/MM HH:mm") ?? "—")
+                                    @(job.NgayBatDau is DateTime nb && nb.Year > 2000 ? nb.ToString("dd/MM HH:mm") : "—")
                                 </div>
                                 @if (job.TrangThai == "Failed" && !string.IsNullOrEmpty(job.ThongBaoLoi))
                                 {
                                     <div class="job-error">@job.ThongBaoLoi</div>
                                 }
                             </div>
+                        }
+                        @if (jobsLoi.Any())
+                        {
+                            <details class="jobs-fold">
+                                <summary>@jobsLoi.Count tiến trình lỗi trong 10 lần gần nhất</summary>
+                                @foreach (var job in jobsLoi)
+                                {
+                                    <div class="job-item">
+                                        <span class="job-dot dot-error"></span>
+                                        <div class="job-header"><span class="job-title">Job #@job.MaTacVu</span><span class="badge-status bs-error">Lỗi</span></div>
+                                        <div class="job-time"><i class="bi bi-clock" style="font-size:10px;"></i> @(job.NgayBatDau is DateTime nb2 && nb2.Year > 2000 ? nb2.ToString("dd/MM HH:mm") : "—")</div>
+                                        @if (!string.IsNullOrEmpty(job.ThongBaoLoi)) { <div class="job-error">@job.ThongBaoLoi</div> }
+                                    </div>
+                                }
+                            </details>
                         }
                     }
                 </div>
@@ -466,9 +577,9 @@
               <div class="section-label"><i class="bi bi-pie-chart"></i> Dataset — @m.PhienBanBoDuLieu</div>
               <table class="table-mini">
                   <tr><td>Tổng Records</td><td>@m.SoBanGhiHuanLuyen.ToString("N0")</td></tr>
-                  <tr><td><span style="color:#3dc97a">● RealRepair</span></td><td>@m.SoBanGhiThucTe.ToString("N0")</td></tr>
-                  <tr><td><span style="color:#d4933a">● UserHistory</span></td><td>@m.SoBanGhiLichSuNguoiDung.ToString("N0")</td></tr>
-                  <tr><td><span style="color:#7cb9f5">● SyntheticRule</span></td><td>@m.SoBanGhiTongHop.ToString("N0")</td></tr>
+                  <tr><td><span style="color:var(--c-ok)">● RealRepair</span></td><td>@m.SoBanGhiThucTe.ToString("N0")</td></tr>
+                  <tr><td><span style="color:var(--c-warn)">● UserHistory</span></td><td>@m.SoBanGhiLichSuNguoiDung.ToString("N0")</td></tr>
+                  <tr><td><span style="color:var(--c-info)">● SyntheticRule</span></td><td>@m.SoBanGhiTongHop.ToString("N0")</td></tr>
               </table>
 
               <div class="section-label"><i class="bi bi-speedometer2"></i> Hiệu suất</div>
@@ -483,7 +594,7 @@
                   </div>
                   <div class="stat-item accent-blue">
                       <div class="stat-label">Rule Engine</div>
-                      <div class="stat-value">@m.DoChinhXacRule.ToString("0.00")%</div>
+                      <div class="stat-value">@(m.DoChinhXacRule > 0 ? m.DoChinhXacRule.ToString("0.00") + "%" : "Chưa đo")</div>
                   </div>
                   <div class="stat-item accent-green">
                       <div class="stat-label">AI Top-1</div>
@@ -498,6 +609,27 @@
                       <div class="stat-value">@(m.DoChinhXacTop5?.ToString("0.00") ?? "—")%</div>
                   </div>
               </div>
+
+              @{
+                  bool khoiTao = QuanLySuCoMayTinh.Services.ModelGate.LaKhoiTao(m);
+                  var cong = QuanLySuCoMayTinh.Services.ModelGate.TinhCong(m);
+                  bool quaCong = QuanLySuCoMayTinh.Services.ModelGate.QuaCong(cong);
+              }
+              <div class="section-label"><i class="bi bi-shield-check"></i> Cổng duyệt khi kích hoạt</div>
+              <ol class="gate @(quaCong ? "gate-pass" : "gate-fail")">
+                  @for (int gi = 0; gi < cong.Count; gi++)
+                  {
+                      var g = cong[gi];
+                      <li class="gate-step @g.TrangThai" style="--i:@gi">
+                          <span class="gate-node"><i class="bi @(g.TrangThai == "skip" ? "bi-dash-lg" : (g.Dat ? "bi-check-lg" : "bi-x-lg"))" aria-hidden="true"></i></span>
+                          <div class="gate-text"><b>@g.Ten</b><small>@g.ChiTiet</small></div>
+                      </li>
+                  }
+                  <li class="gate-step gate-end @(quaCong ? "ok" : "bad")" style="--i:@cong.Count">
+                      <span class="gate-node"><i class="bi @(quaCong ? "bi-shield-check" : "bi-lock-fill")" aria-hidden="true"></i></span>
+                      <div class="gate-text"><b>@(quaCong ? "Được phép kích hoạt" : "Bị chặn, chưa kích hoạt được")</b><small>@(QuanLySuCoMayTinh.Services.ModelGate.ChuaKiemChung(m) ? "Kích hoạt được nhưng mô hình chưa kiểm chứng: không cộng điểm hay chèn gợi ý vào kết quả chẩn đoán" : "Máy chủ vẫn kiểm tra lại các chốt này khi bấm Kích hoạt")</small></div>
+                  </li>
+              </ol>
 
               <div class="section-label"><i class="bi bi-grid-3x3"></i> Confusion Matrix</div>
               @if (!string.IsNullOrEmpty(m.MaTranNhamLanJSON))
@@ -534,7 +666,7 @@
                                       var td = tr.insertCell();
                                       td.textContent = val;
                                       td.style.cssText = 'padding:7px 10px;font-size:12px;';
-                                      if(i===1) td.style.color = isCorrect ? '#3dc97a' : '#f07070';
+                                      if(i===1) td.style.color = isCorrect ? 'var(--c-ok)' : 'var(--c-err)';
                                       if(i===2) { td.style.fontFamily = "'JetBrains Mono',monospace"; td.style.textAlign='right'; }
                                   });
                               });
@@ -564,6 +696,16 @@
 
 @section Scripts {
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var tg = document.getElementById('toggleOld');
+            if (!tg) return;
+            tg.addEventListener('click', function () {
+                var rows = document.querySelectorAll('tr.old-row');
+                var show = rows.length && rows[0].hasAttribute('hidden');
+                rows.forEach(function (r) { if (show) r.removeAttribute('hidden'); else r.setAttribute('hidden', ''); });
+                tg.textContent = show ? 'Ẩn phiên bản cũ' : 'Hiện ' + tg.dataset.n + ' phiên bản cũ';
+            });
+        });
         document.addEventListener("DOMContentLoaded", function () {
             var activateButtons = document.querySelectorAll('.btn-activate');
             activateButtons.forEach(function (btn) {

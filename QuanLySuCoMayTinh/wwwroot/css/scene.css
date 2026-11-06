@@ -1,0 +1,54 @@
+/* ================================================================
+   CẢNH CHUYỂN ĐĂNG NHẬP / ĐĂNG XUẤT (dùng chung cho mọi trang, nạp qua _SystemIcons)
+   Trang bị làm mờ đậm, ở giữa là: vòng tròn + icon biến hình → nét "loading" → chữ viết tay Login/Logout → dòng trạng thái.
+   Trang đích mở ra bằng lớp mờ tan dần (html.sc-reveal). Màu theo biến --sc-*, có chế độ tối.
+   ================================================================ */
+html { --sc-scrim-lite: rgba(241, 249, 253, .99); --sc-scrim: rgba(241, 249, 253, .96); --sc-ink: #173b50; --sc-muted: #456b80; --sc-blue: #0671bc; --sc-g1: #5bbbe3; --sc-g2: #0671bc; --sc-g3: #054f8a; }
+html[data-theme="dark"] { --sc-scrim-lite: rgba(19, 28, 29, .99); --sc-scrim: rgba(19, 28, 29, .96); --sc-ink: #e7f2f2; --sc-muted: #a7bec1; --sc-blue: #5bbbe3; --sc-g1: #9fdcf5; --sc-g2: #5bbbe3; --sc-g3: #2f9fd0; }
+
+/* Hiệu năng: lớp mờ nền (backdrop-filter) chỉ được tính lại khi phía sau thay đổi, nên (1) khóa mọi hiệu ứng nằm dưới khi cảnh mở (html.sc-freeze),
+   (2) không hoạt hình độ mờ của cả màn hình: màu phủ mờ dần bằng background-color, nội dung giữa trang mờ dần bằng opacity (chỉ vùng nhỏ),
+   (3) bán kính mờ vừa phải, không saturate, không filter trên phần tử đang chạy. */
+.sc-overlay { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center;
+    background-color: transparent; -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px);
+    color: var(--sc-ink); font-family: 'Be Vietnam Pro', sans-serif; transition: background-color .4s ease; }
+.sc-overlay.on { background-color: var(--sc-scrim); }
+/* Chế độ nhẹ: tự bật khi máy/trình duyệt đo được dưới 45 khung/giây — bỏ làm mờ nền, thay bằng lớp phủ đậm hơn */
+.sc-overlay.sc-lite { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.sc-overlay.sc-lite.on { background-color: var(--sc-scrim-lite); }
+.sc-overlay > * { opacity: 0; transition: opacity .35s ease .1s; }
+.sc-overlay.on > * { opacity: 1; }
+html.sc-freeze body > *:not(.sc-overlay), html.sc-freeze body > *:not(.sc-overlay) * { animation-play-state: paused !important; }
+
+.sc-stage { position: relative; width: 132px; height: 132px; display: flex; align-items: center; justify-content: center; contain: layout paint; }
+.sc-circle { position: absolute; inset: 0; border-radius: 50%; background: color-mix(in srgb, var(--sc-blue) 20%, transparent);
+    transform: translate(-72px, 72px) scale(0); transition: transform .75s cubic-bezier(.22, 1, .36, 1); will-change: transform; }
+.sc-overlay.circle .sc-circle { transform: none; }
+.sc-icon { position: relative; display: inline-flex; font-size: 76px; line-height: 1; color: var(--sc-ink); }
+.sc-icon svg { stroke-width: 2.4; }
+
+.sc-load { width: min(440px, 86vw); height: 112px; margin-top: 4px; contain: layout paint; }
+.sc-load svg { display: block; width: 100%; height: 100%; }
+html[data-theme="dark"] .sc-load stop:nth-of-type(1) { stop-color: #9fdcf5; }
+html[data-theme="dark"] .sc-load stop:nth-of-type(2) { stop-color: #5bbbe3; }
+html[data-theme="dark"] .sc-load stop:nth-of-type(3) { stop-color: #2f9fd0; }
+
+/* chữ viết tay: viết dần từ trái sang phải, cùng gradient xanh với nét loading */
+.sc-word { margin: -12px 0 -24px; font-family: 'Dancing Script', 'Segoe Script', cursive; font-size: 54px; line-height: 62px; font-weight: 600;
+    color: var(--sc-blue); background: linear-gradient(90deg, var(--sc-g1), var(--sc-g2) 55%, var(--sc-g3)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    padding: 8px .4em 26px .34em; clip-path: inset(-20px 100% -20px -30px); }
+.sc-overlay.circle .sc-word { animation: sc-write 1.2s cubic-bezier(.4, 0, .2, 1) .2s both; }
+@keyframes sc-write { from { clip-path: inset(-20px 100% -20px -30px); } to { clip-path: inset(-20px -30px -20px -30px); } }
+.sc-sub { margin-top: 6px; min-height: 20px; font-size: 13px; color: var(--sc-muted); }
+
+/* trang đích: lớp mờ tan dần để "mở" vào giao diện (đặt bởi script nhỏ trong _SystemIcons) */
+html.sc-reveal::before { content: ''; position: fixed; inset: 0; z-index: 99998; pointer-events: none; background: var(--sc-scrim); animation: sc-reveal .9s ease .12s both; }
+@keyframes sc-reveal { from { opacity: 1; } to { opacity: 0; } }
+
+@media (max-height: 640px) { .sc-stage { width: 96px; height: 96px; } .sc-icon { font-size: 54px; } .sc-circle { transform: translate(-52px, 52px) scale(0); } .sc-load { height: 84px; } .sc-word { font-size: 42px; line-height: 48px; } }
+@media (prefers-reduced-motion: reduce) {
+    .sc-overlay, .sc-overlay > *, .sc-circle { transition: none; }
+    .sc-word { clip-path: none; }
+    .sc-overlay.circle .sc-word { animation: none; }
+    html.sc-reveal::before { animation: none; opacity: 0; }
+}

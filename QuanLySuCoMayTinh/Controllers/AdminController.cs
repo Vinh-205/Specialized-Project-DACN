@@ -5,6 +5,7 @@ using QuanLySuCoMayTinh.Data;
 using QuanLySuCoMayTinh.Models;
 using System.Security.Claims;
 using QuanLySuCoMayTinh.Models.ML;
+using QuanLySuCoMayTinh.Services;
 
 namespace QuanLySuCoMayTinh.Controllers
 {
@@ -438,6 +439,19 @@ namespace QuanLySuCoMayTinh.Controllers
 
             // Thống kê dữ liệu huấn luyện
             ViewData["TotalDiagnosticRecords"] = await _context.LichSuChanDoans.CountAsync(x => x.MaLoiThucTe != null);
+
+            // Thành phần dữ liệu có nhãn theo nguồn (để không gọi dữ liệu tổng hợp là "bản ghi chẩn đoán")
+            var theoNguon = await _context.LichSuChanDoans
+                .Where(x => x.MaLoiThucTe != null)
+                .GroupBy(x => x.NguonDuLieu)
+                .Select(g => new { g.Key, N = g.Count() })
+                .ToListAsync();
+            ViewBag.NguonDuLieu = theoNguon.ToDictionary(x => x.Key.ToString(), x => x.N);
+
+            // Bộ mô hình AI thật (ONNX / JSON) nằm ngoài bảng ML_MODEL_INFO
+            var cfg = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            ViewBag.BoMoHinhThat = AiModelCatalog.Doc(Services.ModelPaths.Root(cfg, Directory.GetCurrentDirectory()));
+            ViewBag.TuDongChot = cfg.GetValue<bool>("AI:TuDongChot", true);
 
             var maLois = await _context.MaLois.ToListAsync();
             ViewBag.MaLoiNames = maLois.ToDictionary(m => m.MaLoiID.ToString(), m => m.TenLoi);

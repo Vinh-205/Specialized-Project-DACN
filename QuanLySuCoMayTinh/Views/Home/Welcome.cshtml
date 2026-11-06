@@ -1,83 +1,157 @@
 @{
     Layout = null;
+    ViewData["PublicNavItems"] = new List<string[]>
+    {
+        new[] { "Tiếp nhận", "#", "1", "0" },
+        new[] { "Chẩn đoán", "#", "2", "0" },
+        new[] { "Sửa chữa", "#", "3", "0" },
+        new[] { "Khám phá", Url.Action("Landing", "Home")!, "", "0" },
+    };
 }
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <partial name="_SystemIcons" />
-    <link href="~/css/public-motion.css" rel="stylesheet" asp-append-version="true">
-    <script src="~/js/public-motion.js" defer asp-append-version="true"></script>
-    <link href="~/css/scroll-showcase.css" rel="stylesheet" asp-append-version="true">
-    <script src="~/js/scroll-showcase.js" defer asp-append-version="true"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="IT Helpdesk - kết nối tiếp nhận sự cố, chẩn đoán cùng DeskAI và quản lý sửa chữa máy tính.">
     <title>IT Helpdesk | Chào mừng</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="~/css/welcome-sylva.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/public-nav.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/welcome-cartoon.css" rel="stylesheet" asp-append-version="true">
     <script src="~/js/welcome-mascot.bundle.js" defer asp-append-version="true"></script>
-    <script src="~/js/welcome-sylva.js" defer asp-append-version="true"></script>
+    <script src="~/js/welcome-cartoon.js" defer asp-append-version="true"></script>
 </head>
 <body>
+    <partial name="_PublicNav" />
     <main>
-        <div class="welcome-scroll-track">
-        <section class="welcome-hero" id="welcomeHero" aria-labelledby="welcomeTitle">
-            <div class="welcome-mascot" id="welcomeMascot" data-directions="@Url.Content("~/mascots/crt-directions.webp")" data-reactions="@Url.Content("~/mascots/crt-reactions.webp")">
-                <div class="mascot-fallback" role="img" aria-label="Nhân vật CRT chào mừng bạn"></div>
+        <section class="track" id="track" aria-label="Hành trình tiếp nhận, chẩn đoán, sửa chữa">
+            <div class="stick" id="stick">
+                <div class="glow" id="glow"></div>
+                <div class="wc-marquee" aria-hidden="true"><div class="wc-mq-track"><span>Chào mừng</span><i>✦</i><span class="o">Welcome</span><i>✦</i><span>Bienvenue</span><i>✦</i><span class="o">Willkommen</span><i>✦</i><span>Bem-vindo</span><i>✦</i><span class="o">Bienvenido</span><i>✦</i><span>Chào mừng</span><i>✦</i><span class="o">Welcome</span><i>✦</i><span>Bienvenue</span><i>✦</i><span class="o">Willkommen</span><i>✦</i><span>Bem-vindo</span><i>✦</i><span class="o">Bienvenido</span><i>✦</i></div></div>
+                <div class="rig" id="rig">
+            <div class="lapt" role="img" aria-label="Laptop minh họa">
+                <img class="base" src="~/images/welcome-cartoon/cartoon-laptop-cut.webp" alt="" draggable="false">
+                <div class="lid" id="lid"><img class="lf" src="~/images/welcome-cartoon/cartoon-laptop-cut.webp" alt="" draggable="false"><div class="lc" id="lc"><i></i><i></i></div></div>
             </div>
-            <div class="welcome-guides" aria-hidden="true"><i></i><i></i><i></i></div>
-            <div class="welcome-ghost" aria-hidden="true">HELPDESK</div>
-            <header class="dock-wrap">
-                <nav class="welcome-dock" aria-label="Điều hướng chính">
-                    <a class="dock-mark" href="@Url.Action("Welcome", "Home")" aria-label="IT Helpdesk - Trang chủ" title="Trang chủ"><i class="bi bi-pc-display" aria-hidden="true"></i></a>
-                    <a class="dock-item is-active" href="#welcomeHero" aria-current="page">Chào mừng</a>
-                    <a class="dock-item" href="@Url.Action("Landing", "Home")">Khám phá</a>
-                    <a class="dock-item dock-login" href="@Url.Action("Login", "Auth")">Đăng nhập <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-                </nav>
-            </header>
-            <div class="welcome-copy">
-                <p class="welcome-eyebrow"><span></span> CÔNG NGHỆ KẾT NỐI. HỖ TRỢ LIỀN MẠCH.</p>
-                <h1 id="welcomeTitle">IT HELPDESK</h1>
-                <p class="welcome-tagline">Mọi sự cố.<br><em>Một hướng giải quyết.</em></p>
-                <a class="welcome-primary" href="@Url.Action("Landing", "Home")"><span>Khám phá hệ thống</span><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+
+            <!-- 01 Tiếp nhận: phiếu tiếp nhận + thẻ ghi lỗi -->
+            <div class="prop" data-a=".17" data-b=".34" style="left:-6%;top:15%;width:24%;--z:90px">
+                <svg class="fl1" viewBox="0 0 200 260" aria-hidden="true">
+                    <rect x="20" y="22" width="160" height="220" rx="14" fill="#f7b03d" stroke="#1a2157" stroke-width="5"/>
+                    <rect x="36" y="46" width="128" height="180" rx="6" fill="#fff" stroke="#1a2157" stroke-width="4"/>
+                    <rect x="68" y="8" width="64" height="32" rx="11" fill="#cfd6ee" stroke="#1a2157" stroke-width="5"/>
+                    <text x="100" y="72" text-anchor="middle" font-family="Be Vietnam Pro, sans-serif" font-weight="700" font-size="15" fill="#1a2157">PTN-0031</text>
+                    <g stroke="#1a2157" stroke-width="3.5" fill="#fff"><rect x="50" y="94" width="18" height="18" rx="4"/><rect x="50" y="134" width="18" height="18" rx="4"/><rect x="50" y="174" width="18" height="18" rx="4"/></g>
+                    <path d="M53 104l5 5 9-12M53 144l5 5 9-12" stroke="#2d9fd4" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    <g fill="#bfe6f7" stroke="#1a2157" stroke-width="2.5"><rect x="78" y="98" width="70" height="9" rx="4.5"/><rect x="78" y="138" width="60" height="9" rx="4.5"/><rect x="78" y="178" width="76" height="9" rx="4.5"/></g>
+                </svg>
             </div>
-            <p class="welcome-lede">Từ tiếp nhận đến sửa chữa.<br>DeskAI đồng hành cùng kỹ thuật viên, kết nối thông tin và tìm hướng xử lý.</p>
-            <div class="scene-actions">
-                <button id="openWelcomeVideo" type="button" aria-label="Xem video giới thiệu" title="Xem video giới thiệu"><i class="bi bi-play-fill" aria-hidden="true"></i></button>
+            <div class="prop" data-a=".17" data-b=".34" style="left:0%;top:65%;width:25%;--z:60px">
+                <svg class="fl2" viewBox="0 0 190 150" aria-hidden="true">
+                    <path d="M176 76 L138 28 H34 a12 12 0 0 0 -12 12 V112 a12 12 0 0 0 12 12 H138 Z" fill="#fcd34d" stroke="#1a2157" stroke-width="5" stroke-linejoin="round"/>
+                    <text x="80" y="68" text-anchor="middle" font-family="Be Vietnam Pro, sans-serif" font-weight="700" font-size="17" fill="#1a2157">Không lên</text>
+                    <text x="80" y="92" text-anchor="middle" font-family="Be Vietnam Pro, sans-serif" font-weight="700" font-size="17" fill="#f2705a">nguồn</text>
+                    <circle cx="140" cy="76" r="8" fill="#fff" stroke="#1a2157" stroke-width="4"/>
+                    <path d="M140 68 C146 50 132 34 140 18" fill="none" stroke="#1a2157" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="140" cy="15" r="6" fill="#fff" stroke="#1a2157" stroke-width="4"/>
+                </svg>
             </div>
-            <a class="welcome-card card-knowledge" href="@Url.Action("Landing", "Home")#plates">
-                <img src="~/images/proposals/helpdesk-knowledge.png" alt="Các lớp kết nối tri thức của hệ thống">
-                <span class="card-label">KHO TRI THỨC</span>
-                <h2>Kinh nghiệm được kết nối.</h2>
-                <span class="card-arrow"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-            </a>
-            <a class="welcome-card card-deskai" href="@Url.Action("Landing", "Home")#plates">
-                <span class="card-label">DESKAI / CHẨN ĐOÁN</span>
-                <h2>Hiểu triệu chứng.<br>Tìm đúng giải pháp.</h2>
-                <img src="~/images/proposals/helpdesk-knowledge.png" alt="Minh họa quy trình phân tích sự cố">
-                <span class="card-arrow"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-            </a>
-            <div class="welcome-capabilities">
-                <span><i class="bi bi-ticket-detailed" aria-hidden="true"></i> Phiếu tiếp nhận</span>
-                <span><i class="bi bi-stars" aria-hidden="true"></i> Chẩn đoán AI</span>
-                <span><i class="bi bi-tools" aria-hidden="true"></i> Quản lý sửa chữa</span>
+
+            <!-- 02 Chẩn đoán: kính lúp + bảng gợi ý mã lỗi + triệu chứng -->
+            <div class="prop" data-a=".5" data-b=".65" style="left:22%;top:14%;width:34%;--z:110px">
+                <svg class="fl1" viewBox="0 0 240 260" aria-hidden="true">
+                    <circle cx="100" cy="100" r="74" fill="#ffffff55" stroke="#1a2157" stroke-width="9"/>
+                    <path d="M52 70 A56 56 0 0 1 96 44" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+                    <path d="M152 152 L212 222" stroke="#1a2157" stroke-width="30" stroke-linecap="round"/>
+                    <path d="M152 152 L212 222" stroke="#f7b03d" stroke-width="15" stroke-linecap="round"/>
+                    <path d="M100 66 L134 126 H66 Z" fill="#f2705a" stroke="#1a2157" stroke-width="5" stroke-linejoin="round"/>
+                    <path d="M100 86 V106" stroke="#fff" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="116" r="4.5" fill="#fff"/>
+                </svg>
             </div>
-            <a class="welcome-discover" href="#welcomeNext">Kết nối toàn bộ hành trình <i class="bi bi-arrow-down" aria-hidden="true"></i></a>
-        </section>
+            <div class="prop" data-a=".5" data-b=".65" style="left:62%;top:58%;width:32%;--z:70px">
+                <svg class="fl2" viewBox="0 0 270 210" aria-hidden="true">
+                    <rect x="6" y="6" width="258" height="198" rx="18" fill="#fff" stroke="#1a2157" stroke-width="5"/>
+                    <text x="24" y="40" font-family="Be Vietnam Pro, sans-serif" font-weight="700" font-size="16" fill="#1a2157">DeskAI · Gợi ý mã lỗi</text>
+                    <g font-family="Be Vietnam Pro, sans-serif" font-size="13" font-weight="600" fill="#1a2157">
+                        <text x="24" y="74">Lỗi nguồn</text><text x="24" y="116">Lỗi RAM</text><text x="24" y="158">Lỗi pin</text>
+                        <text x="246" y="74" text-anchor="end">82%</text><text x="246" y="116" text-anchor="end">11%</text><text x="246" y="158" text-anchor="end">5%</text>
+                    </g>
+                    <g stroke="#1a2157" stroke-width="3" fill="#e4e8f7"><rect x="24" y="82" width="222" height="14" rx="7"/><rect x="24" y="124" width="222" height="14" rx="7"/><rect x="24" y="166" width="222" height="14" rx="7"/></g>
+                    <g stroke="#1a2157" stroke-width="3"><rect x="24" y="82" width="182" height="14" rx="7" fill="#4fc3e8"/><rect x="24" y="124" width="26" height="14" rx="7" fill="#f7b03d"/><rect x="24" y="166" width="14" height="14" rx="7" fill="#f2705a"/></g>
+                </svg>
+            </div>
+            <div class="prop" data-a=".5" data-b=".65" style="left:6%;top:68%;width:30%;--z:80px">
+                <svg class="fl3" viewBox="0 0 250 100" aria-hidden="true">
+                    <g font-family="Be Vietnam Pro, sans-serif" font-weight="600" font-size="13" fill="#1a2157" stroke="#1a2157" stroke-width="3.5">
+                        <rect x="4" y="8" width="150" height="38" rx="19" fill="#fcd34d"/><rect x="40" y="54" width="170" height="38" rx="19" fill="#bfe6f7"/>
+                    </g>
+                    <path d="M18 27l6 6 10-13M54 73l6 6 10-13" stroke="#1a2157" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    <g font-family="Be Vietnam Pro, sans-serif" font-weight="600" font-size="13" fill="#1a2157"><text x="42" y="32">Không lên nguồn</text><text x="78" y="78">Quạt kêu to</text></g>
+                </svg>
+            </div>
+
+            <!-- 03 Sửa chữa: cánh tay cầm tua vít + linh kiện -->
+            <div class="prop" data-a=".8" data-b=".91" style="left:36%;top:50%;width:35%;--z:100px">
+                <div class="arm"><img src="~/images/welcome-cartoon/hand-screwdriver.webp" alt="" draggable="false" style="display:block;width:100%;height:auto;filter:drop-shadow(0 12px 12px #1a215733)"></div>
+                <svg class="spark" viewBox="0 0 60 50" style="position:absolute;left:-9%;top:-6%;width:16%" aria-hidden="true"><g stroke="#f7b03d" stroke-width="5" stroke-linecap="round"><path d="M8 40l-6 -10M24 44v-14M42 36l8 -10"/></g></svg>
+            </div>
+            <div class="prop" data-a=".8" data-b=".91" style="left:-1%;top:16%;width:14%;--z:60px">
+                <svg class="fl2" viewBox="0 0 120 120" aria-hidden="true">
+                    <g class="spin" fill="#f7b03d" stroke="#1a2157" stroke-width="5" stroke-linejoin="round">
+                        <rect x="49" y="4" width="22" height="26" rx="4"/><rect x="49" y="90" width="22" height="26" rx="4"/><rect x="4" y="49" width="26" height="22" rx="4"/><rect x="90" y="49" width="26" height="22" rx="4"/>
+                        <rect x="49" y="4" width="22" height="26" rx="4" transform="rotate(45 60 60)"/><rect x="49" y="90" width="22" height="26" rx="4" transform="rotate(45 60 60)"/><rect x="4" y="49" width="26" height="22" rx="4" transform="rotate(45 60 60)"/><rect x="90" y="49" width="26" height="22" rx="4" transform="rotate(45 60 60)"/>
+                        <circle cx="60" cy="60" r="38"/><circle cx="60" cy="60" r="14" fill="#fff"/>
+                    </g>
+                </svg>
+            </div>
+            <div class="prop" data-a=".8" data-b=".91" style="left:0%;top:72%;width:28%;--z:80px">
+                <img class="fl3" src="~/images/welcome-cartoon/ram.webp" alt="" draggable="false" style="display:block;width:100%;height:auto;filter:drop-shadow(0 10px 10px #1a215726)">
+            </div>
         </div>
-        <section class="welcome-next" id="welcomeNext">
-            <p>IT HELPDESK PLATFORM</p>
-            <h2>Công việc tiếp tục.<br><span>Hỗ trợ luôn liền mạch.</span></h2>
-            <a href="@Url.Action("Landing", "Home")">Mở sổ tay hệ thống <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+
+                <div class="welcome-mascot" id="welcomeMascot" data-directions="@Url.Content("~/mascots/crt-directions.webp")" data-reactions="@Url.Content("~/mascots/crt-reactions.webp")">
+                    <div class="mascot-fallback" role="img" aria-label="Nhân vật CRT chào mừng bạn"></div>
+                </div>
+                <div class="mascot-say" id="mascotSay" aria-live="polite">Xin chào! Mình là CRT.</div>
+
+                <div class="copy c0" data-a="0" data-b=".2">
+                    <p class="kicker">IT HELPDESK · CÔNG NGHỆ KẾT NỐI. HỖ TRỢ LIỀN MẠCH.</p>
+                    <h1 id="welcomeTitle">Mọi sự cố.<br><em>Một hướng giải quyết.</em></h1>
+                    <p class="lead">Từ tiếp nhận đến sửa chữa, DeskAI đồng hành cùng kỹ thuật viên: kết nối thông tin và tìm hướng xử lý.</p>
+                    <div class="wc-actions">
+                        <a class="wc-primary" href="@Url.Action("Landing", "Home")"><span>Khám phá hệ thống</span><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    </div>
+                </div>
+                <div class="copy c1 right" data-a=".17" data-b=".34"><span class="no">01</span><h2>Tiếp nhận</h2><p>Thiết bị, khách hàng và mô tả sự cố nằm trong một phiếu duy nhất, theo dõi từ đầu đến cuối.</p></div>
+                <div class="copy c2" data-a=".5" data-b=".65"><span class="no">02</span><h2>Chẩn đoán</h2><p>Kỹ thuật viên chọn triệu chứng; DeskAI xếp hạng mã lỗi kèm mức tin cậy. Quyết định cuối cùng vẫn là của con người.</p></div>
+                <div class="copy c3 right" data-a=".8" data-b=".91"><span class="no">03</span><h2>Sửa chữa</h2><p>Hạng mục, linh kiện xuất kho và chi phí gắn vào từng phiếu; mọi thay đổi trạng thái đều có lịch sử.</p></div>
+                <div class="copy c4 center" data-a=".93" data-b="1.01"><h2>Sẵn sàng bắt đầu?</h2><a class="cta" href="@Url.Action("Login", "Auth")">Vào không gian làm việc <span>→</span></a></div>
+
+                <div class="wc-caps" id="wcCaps">
+                    <span><i class="bi bi-ticket-detailed" aria-hidden="true"></i> Phiếu tiếp nhận</span>
+                    <span><i class="bi bi-stars" aria-hidden="true"></i> Chẩn đoán AI</span>
+                    <span><i class="bi bi-tools" aria-hidden="true"></i> Quản lý sửa chữa</span>
+                </div>
+                <div class="wc-stepper" role="group" aria-label="Chuyển bước">
+                    <button type="button" id="stepUp" aria-label="Bước trước" title="Bước trước"><i class="bi bi-chevron-up" aria-hidden="true"></i></button>
+                    <button type="button" id="stepDown" aria-label="Bước tiếp theo" title="Bước tiếp theo"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+                </div>
+                <div class="rail" id="rail" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+            </div>
+        </section>
+        <section class="welcome-next" id="welcomeNext" aria-labelledby="nextTitle">
+            <p class="wn-kicker">IT HELPDESK PLATFORM</p>
+            <h2 id="nextTitle">Muốn biết hệ thống<br><span>vận hành thế nào?</span></h2>
+            <div class="wn-grid">
+                <a class="wn-card" href="@Url.Action("Landing", "Home")#sketchbook"><i class="bi bi-journal-richtext" aria-hidden="true"></i><h3>Sổ tay hệ thống</h3><p>Vai trò, DeskAI, kho tri thức, linh kiện và chi phí.</p><span>Mở sổ tay <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
+                <a class="wn-card" href="@Url.Action("Landing", "Home")#inside"><i class="bi bi-laptop" aria-hidden="true"></i><h3>Bên trong chiếc máy</h3><p>Mổ xẻ laptop từng lớp: màn hình, quạt, RAM, bo mạch, pin.</p><span>Xem từng lớp <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
+                <a class="wn-card" href="@Url.Action("Landing", "Home")#journey"><i class="bi bi-signpost-split" aria-hidden="true"></i><h3>Hành trình một phiếu</h3><p>Bốn trạng thái từ chờ khám đến hoàn thành.</p><span>Theo dõi phiếu <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
+            </div>
+            <a class="wn-login" href="@Url.Action("Login", "Auth")">Vào không gian làm việc <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <p class="wn-foot">IT HELPDESK · Quản lý sự cố máy tính · DeskAI</p>
         </section>
     </main>
-    <dialog class="welcome-video-dialog" id="welcomeVideoDialog" aria-label="Video giới thiệu IT Helpdesk">
-        <button type="button" class="video-close" id="closeWelcomeVideo" aria-label="Đóng video" title="Đóng video"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
-        <video id="welcomeVideo" controls playsinline preload="none" poster="@Url.Content("~/images/proposals/helpdesk-workspace.png")" aria-label="Video minh họa hệ thống IT Helpdesk">
-            <source src="~/images/vid_homelanding.mp4" type="video/mp4">
-        </video>
-    </dialog>
 </body>
 </html>

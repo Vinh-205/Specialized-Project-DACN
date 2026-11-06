@@ -1,2 +1,18 @@
+<link href="~/css/scene.css" rel="stylesheet" asp-append-version="true">
+<script>
+    window.HDSceneConfig = { loading: '@Url.Content("~/animations/loading-line.json")' };
+    (function () {
+        try {
+            var a = JSON.parse(sessionStorage.getItem('hdScene') || 'null');
+            sessionStorage.removeItem('hdScene');
+            if (a && Date.now() - a.at < 15000) {
+                var d = document.documentElement;
+                d.classList.add('sc-reveal');
+                setTimeout(function () { d.classList.remove('sc-reveal'); }, 1400);
+            }
+        } catch (e) { }
+    })();
+</script>
+<script src="~/js/scene.js" defer asp-append-version="true"></script>
 <link href="~/css/system-icons.css" rel="stylesheet" asp-append-version="true">
 <script src="~/js/system-icons.bundle.js" defer asp-append-version="true"></script>

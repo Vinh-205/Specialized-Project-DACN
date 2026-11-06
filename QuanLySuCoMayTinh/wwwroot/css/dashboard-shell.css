@@ -120,6 +120,24 @@ html[data-theme="dark"] .helpdesk-workspace .sb-item-pill.danger { color: #ffc2b
 html[data-theme="dark"] .helpdesk-workspace :is(.helpdesk-topbar,.helpdesk-sidebar,.topbar-breadcrumb-strip) { background: #1e2a2b; color: #e7f2f2; }
 html[data-theme="dark"] .helpdesk-workspace .hd-btn-primary { background: #087da3; color: #fff; box-shadow: none; }
 .helpdesk-workspace { font-family: 'Be Vietnam Pro', sans-serif; }
+/* Biến bí danh: nhiều trang Quản lý/Mô hình AI dùng tên biến cũ nên không đổi màu theo sáng/tối.
+   Gán về token của theme (đặt cùng phần tử với token nên tự đổi khi chuyển chế độ). */
+.helpdesk-workspace {
+    --text-primary: var(--text);
+    --text2: var(--text-muted);
+    --text3: var(--text-light);
+    --text-dim: var(--text-light);
+    --bg-card-alt: var(--surface2);
+    --bg-row-hover: var(--surface2);
+    --border-hi: var(--border);
+    --accent: var(--lav-deep);
+    --accent-glow: var(--border);
+    --accent-green: var(--c-ok);
+    --accent-amber: var(--c-warn);
+    --accent-red: var(--c-err);
+    --purple: var(--c-purple);
+    --mono: 'JetBrains Mono', monospace;
+}
 .helpdesk-workspace .app-blobs-wrapper { display: none; }
 .helpdesk-workspace .helpdesk-topbar { box-shadow: none; border-bottom: 1px solid var(--border); }
 .workspace-label { font-size: 9px; color: var(--text-muted); padding-left: 14px; margin-left: 8px; border-left: 1px solid var(--border); }

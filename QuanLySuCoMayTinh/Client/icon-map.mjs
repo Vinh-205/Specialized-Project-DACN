@@ -37,5 +37,7 @@ export const iconGroups = {
     Star: 'star star-fill', Sun: 'sun-fill', Tag: 'tag-fill', Trash2: 'trash trash3-fill',
     Trophy: 'trophy-fill', X: 'x x-lg', CircleX: 'x-circle x-circle-fill',
     Activity: 'activity', ChartArea: 'chart-area', ListFilter: 'sort-down',
+    Download: 'download', Calendar: 'calendar3', MessageSquareText: 'chat-left-text', Target: 'bullseye',
+    PanelLeftClose: 'layout-sidebar-inset', PanelLeftOpen: 'layout-sidebar',
     ZoomIn: 'zoom-in', ZoomOut: 'zoom-out', Maximize: 'fullscreen', Pause: 'pause'
 };

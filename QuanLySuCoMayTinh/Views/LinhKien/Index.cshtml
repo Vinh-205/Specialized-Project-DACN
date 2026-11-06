@@ -27,7 +27,7 @@
 .lk-hero-left { display: flex; align-items: center; gap: 16px; }
 .lk-hero-icon {
     width: 48px; height: 48px;
-    background: linear-gradient(135deg, #a855f7, #6366f1);
+    background: var(--primary);
     border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
     font-size: 22px; flex-shrink: 0;
@@ -79,7 +79,7 @@
     border-radius: 8px; color:var(--text); font-size: 13px;
     outline: none; cursor: pointer;
 }
-.lk-filter-select option { background: #1e1e2e; }
+.lk-filter-select option { background: var(--surface-solid); color: var(--text); }
 
 /* Table */
 .lk-table-wrap {
@@ -141,7 +141,7 @@
 
 /* Buttons */
 .lk-btn-add {
-    background: linear-gradient(135deg, #a855f7, #6366f1);
+    background: var(--primary);
     color: #fff; border: none;
     padding: 9px 18px; border-radius: 8px;
     font-size: 13.5px; font-weight: 600;
@@ -180,7 +180,7 @@
         </div>
         <div class="lk-stats">
             <div class="lk-stat">
-                <div class="lk-stat-val" style="color:#a855f7">@Model.Count()</div>
+                <div class="lk-stat-val" style="color:var(--primary)">@Model.Count()</div>
                 <div class="lk-stat-label">Tổng mặt hàng</div>
             </div>
             <div class="lk-stat">
@@ -299,7 +299,7 @@
 
 <!-- DELETE CONFIRM MODAL -->
 <div id="deleteModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
-    <div style="background:#1a1a2e; border:1px solid rgba(239,68,68,0.3); border-radius:16px; padding:28px; max-width:400px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="background:var(--surface-solid); border:1px solid rgba(239,68,68,0.3); border-radius:16px; padding:28px; max-width:400px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
         <div style="text-align:center; margin-bottom:20px;">
             <div style="width:52px; height:52px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:22px; color:var(--c-err);">
                 <i class="bi bi-exclamation-triangle"></i>

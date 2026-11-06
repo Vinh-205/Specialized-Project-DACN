@@ -131,6 +131,24 @@
         .star-btn.active { color: #facc15; transform: scale(1.1); }
         .star-btn:hover { transform: scale(1.2); }
 
+        /* Thanh trượt mặt cười (lấy ý tưởng từ mẫu "Face-changing satisfaction slider") */
+        .mood { --mc: #34d399; text-align: center; margin-bottom: 20px; }
+        .mood[data-val="1"] { --mc: #f87171; } .mood[data-val="2"] { --mc: #fb923c; } .mood[data-val="3"] { --mc: #fbbf24; } .mood[data-val="4"] { --mc: #a3e635; }
+        .mood-face { width: 112px; height: 112px; display: block; margin: 0 auto 6px; }
+        .mood-bg { fill: var(--mc); transition: fill .3s ease; }
+        .mood-eye { fill: #1c1917; }
+        .mood-mouth { fill: none; stroke: #1c1917; stroke-width: 6; stroke-linecap: round; }
+        .mood-label { font-size: 15px; font-weight: 700; color: var(--mc); margin-bottom: 14px; min-height: 22px; transition: color .3s ease; }
+        .mood-range { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 999px; outline: none; cursor: pointer;
+            background: linear-gradient(90deg, #f87171, #fb923c, #fbbf24, #a3e635, #34d399); }
+        .mood-range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 4px solid var(--mc); box-shadow: 0 2px 8px rgba(0,0,0,.35); transition: border-color .3s ease, transform .15s ease; }
+        .mood-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 4px solid var(--mc); }
+        .mood-range:active::-webkit-slider-thumb { transform: scale(1.12); }
+        .mood-range:focus-visible { outline: 3px solid rgba(255,255,255,.5); outline-offset: 6px; }
+        .mood-ticks { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: rgba(255,255,255,0.45); }
+        .mood-ticks span { cursor: pointer; flex: 1; }
+        .mood-ticks span:first-child { text-align: left; } .mood-ticks span:last-child { text-align: right; }
+
         .comment-box {
             width: 100%;
             padding: 12px 16px;
@@ -290,18 +308,18 @@
                     Bạn hài lòng với dịch vụ sửa chữa không?
                 </div>
 
-                <div class="stars-row" id="starsRow">
-                    <button type="button" class="star-btn" data-val="1"><i class="bi bi-star-fill"></i></button>
-                    <button type="button" class="star-btn" data-val="2"><i class="bi bi-star-fill"></i></button>
-                    <button type="button" class="star-btn" data-val="3"><i class="bi bi-star-fill"></i></button>
-                    <button type="button" class="star-btn" data-val="4"><i class="bi bi-star-fill"></i></button>
-                    <button type="button" class="star-btn active" data-val="5"><i class="bi bi-star-fill"></i></button>
+                <div class="mood" id="mood" data-val="5">
+                    <svg class="mood-face" viewBox="0 0 120 120" aria-hidden="true">
+                        <circle class="mood-bg" cx="60" cy="60" r="54"></circle>
+                        <ellipse class="mood-eye" cx="43" cy="50" rx="5" ry="7"></ellipse>
+                        <ellipse class="mood-eye" cx="77" cy="50" rx="5" ry="7"></ellipse>
+                        <path class="mood-mouth" id="moodMouth" d="M38 72 Q60 102 82 72"></path>
+                    </svg>
+                    <div class="mood-label" id="starLabel" aria-live="polite">Tuyệt vời!</div>
+                    <input type="range" class="mood-range" id="moodRange" min="1" max="5" step="1" value="5" aria-label="Mức hài lòng từ 1 đến 5">
+                    <div class="mood-ticks" aria-hidden="true"><span data-val="1">Tệ</span><span data-val="2">Chưa tốt</span><span data-val="3">Bình thường</span><span data-val="4">Tốt</span><span data-val="5">Tuyệt vời</span></div>
                 </div>
                 <input type="hidden" name="soSao" id="soSaoInput" value="5" />
-
-                <div id="starLabel" style="text-align:center; font-size:12.5px; color:#fbbf24; font-weight:600; margin-bottom:16px;">
-                    Tuyệt vời! ⭐
-                </div>
 
                 <textarea name="binhLuan" class="comment-box" placeholder="Chia sẻ trải nghiệm của bạn (tùy chọn)..."></textarea>
 
@@ -311,25 +329,40 @@
             </form>
 
             <script>
-                const labels = { 1:'Tệ 😞', 2:'Chưa tốt 😐', 3:'Bình thường 🙂', 4:'Tốt 😊', 5:'Tuyệt vời! ⭐' };
-                const stars = document.querySelectorAll('#starsRow .star-btn');
+                const labels = { 1: 'Tệ', 2: 'Chưa tốt', 3: 'Bình thường', 4: 'Tốt', 5: 'Tuyệt vời!' };
+                const mouth = { 1: [88, 60], 2: [84, 70], 3: [80, 80], 4: [76, 92], 5: [72, 102] };   // [y hai đầu miệng, y điểm điều khiển]
+                const range = document.getElementById('moodRange');
                 const input = document.getElementById('soSaoInput');
                 const label = document.getElementById('starLabel');
+                const mood = document.getElementById('mood');
+                const path = document.getElementById('moodMouth');
+                const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                let cur = mouth[5].slice(), raf = 0;
 
-                function setStars(val) {
-                    stars.forEach(s => {
-                        const v = parseInt(s.getAttribute('data-val'));
-                        s.classList.toggle('active', v <= val);
-                    });
-                    input.value = val;
-                    label.textContent = labels[val] || '';
+                function draw(a) { path.setAttribute('d', 'M38 ' + a[0].toFixed(1) + ' Q60 ' + a[1].toFixed(1) + ' 82 ' + a[0].toFixed(1)); }
+                function morph(to) {
+                    cancelAnimationFrame(raf);
+                    if (reduce) { cur = to.slice(); draw(cur); return; }
+                    const from = cur.slice(), t0 = performance.now();
+                    (function step(t) {
+                        const k = Math.min((t - t0) / 260, 1), e = 1 - Math.pow(1 - k, 3);
+                        cur = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e];
+                        draw(cur);
+                        if (k < 1) raf = requestAnimationFrame(step);
+                    })(t0);
                 }
-
-                stars.forEach(s => {
-                    s.addEventListener('click', () => setStars(parseInt(s.getAttribute('data-val'))));
-                });
-
-                setStars(5);
+                function setVal(v) {
+                    v = parseInt(v, 10);
+                    input.value = v;              // giá trị gửi lên server vẫn là soSao 1–5 như trước
+                    range.value = v;
+                    label.textContent = labels[v];
+                    mood.dataset.val = v;
+                    range.setAttribute('aria-valuetext', labels[v]);
+                    morph(mouth[v]);
+                }
+                range.addEventListener('input', () => setVal(range.value));
+                document.querySelectorAll('.mood-ticks span').forEach(t => t.addEventListener('click', () => setVal(t.getAttribute('data-val'))));
+                setVal(5);
             </script>
         }
     </div>

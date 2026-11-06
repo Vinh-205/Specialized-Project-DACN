@@ -53,7 +53,8 @@ namespace QuanLySuCoMayTinh.Controllers
 
             ViewBag.SelectedMaPhieu = maPhieu;
             
-            return View(danhSachTrieuChung);
+            // Chỉ định rõ tên view: khi XuLyChanDoan gọi lại Index (chưa chọn triệu chứng) thì không bị tìm view "XuLyChanDoan".
+            return View("Index", danhSachTrieuChung);
         }
 
         // POST: Xử lý chẩn đoán dựa trên triệu chứng được chọn
@@ -185,7 +186,7 @@ namespace QuanLySuCoMayTinh.Controllers
                 // Assign to ViewBag for UI
                 ViewBag.TopAIPredictions = topPredictions;
                 var activeInfo = await _context.MLModelInfos.AsNoTracking().FirstOrDefaultAsync(m => m.DangSuDung);
-                bool aiKhoiTao = activeInfo?.PhienBanBoDuLieu != null && activeInfo.PhienBanBoDuLieu.StartsWith("KHOI_TAO_TONG_HOP");
+                bool aiKhoiTao = activeInfo != null && Services.ModelGate.ChuaKiemChung(activeInfo);
                 ViewBag.AIKhoiTao = aiKhoiTao;
 
                 // Mô hình KHỞI TẠO (huấn luyện từ dữ liệu tổng hợp, chưa kiểm chứng bằng ca thật) chỉ HIỂN THỊ để tham khảo:

@@ -271,6 +271,30 @@
     }
     .btn-train:hover { background: var(--green); border-color: var(--green); color: #fff; }
 
+    /* Hiệu ứng chờ khi gửi chẩn đoán */
+    .cd-loading { position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 16px;
+        background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .cd-loading[hidden] { display: none; }
+    .cd-loading-card { width: min(380px, 100%); text-align: center; padding: 28px 24px 22px; border-radius: 24px; background: var(--surface); box-shadow: 0 20px 60px rgba(0,0,0,.18); animation: cdPop .28s ease both; }
+    .cd-loading-card h3 { font-size: 17px; font-weight: 600; color: var(--text); margin: 14px 0 6px; }
+    .cd-step { min-height: 40px; font-size: 13px; color: var(--text-muted); margin: 0 0 12px; }
+    .cd-note { font-size: 11.5px; color: var(--text-light); margin: 14px 0 0; }
+    .cd-orbit { position: relative; width: 84px; height: 84px; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: var(--primary, var(--lav-deep)); font-size: 30px; }
+    .cd-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--primary, var(--lav-deep)) 18%, transparent); border-top-color: var(--primary, var(--lav-deep)); animation: cdSpin 1.1s linear infinite; }
+    .cd-ring-2 { inset: 10px; border-width: 2px; animation-duration: 1.7s; animation-direction: reverse; }
+    .cd-orbit > i { animation: cdPulse 1.4s ease-in-out infinite; }
+    .cd-dots { display: flex; justify-content: center; gap: 6px; }
+    .cd-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--primary, var(--lav-deep)); animation: cdBounce 1.2s ease-in-out infinite; }
+    .cd-dots i:nth-child(2) { animation-delay: .15s; } .cd-dots i:nth-child(3) { animation-delay: .3s; }
+    .cd-bar { height: 4px; border-radius: 999px; background: var(--surface2); margin-top: 16px; overflow: hidden; }
+    .cd-bar span { display: block; width: 40%; height: 100%; border-radius: 999px; background: var(--primary, var(--lav-deep)); animation: cdSlide 1.4s ease-in-out infinite; }
+    @@keyframes cdSpin { to { transform: rotate(360deg); } }
+    @@keyframes cdPulse { 0%,100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.12); opacity: 1; } }
+    @@keyframes cdBounce { 0%,80%,100% { transform: translateY(0); opacity: .45; } 40% { transform: translateY(-6px); opacity: 1; } }
+    @@keyframes cdSlide { 0% { transform: translateX(-110%); } 100% { transform: translateX(260%); } }
+    @@keyframes cdPop { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+    @@media (prefers-reduced-motion: reduce) { .cd-ring, .cd-orbit > i, .cd-dots i, .cd-bar span, .cd-loading-card { animation: none; } .cd-bar span { width: 100%; opacity: .5; } }
+
     .btn-submit {
         background: linear-gradient(135deg, #FF7A45, #FFA53E);
         color: #fff; border: none; font-weight: 700; font-size: 15px;
@@ -333,7 +357,7 @@
         </div>
     }
 
-    <form asp-action="XuLyChanDoan" method="post">
+    <form asp-action="XuLyChanDoan" method="post" id="frmChanDoan">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -458,6 +482,21 @@
             </button>
         </div>
     </form>
+
+    <!-- Hiệu ứng chờ khi AI đang chẩn đoán -->
+    <div class="cd-loading" id="cdLoading" role="alertdialog" aria-modal="true" aria-labelledby="cdLoadingTitle" aria-describedby="cdLoadingStep" hidden>
+        <div class="cd-loading-card">
+            <div class="cd-orbit" aria-hidden="true">
+                <span class="cd-ring"></span><span class="cd-ring cd-ring-2"></span>
+                <i class="bi bi-cpu"></i>
+            </div>
+            <h3 id="cdLoadingTitle">DeskAI đang chẩn đoán</h3>
+            <p class="cd-step" id="cdLoadingStep" aria-live="polite">Đang đọc triệu chứng và mô tả sự cố…</p>
+            <div class="cd-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="cd-bar" aria-hidden="true"><span></span></div>
+            <p class="cd-note">Vui lòng không đóng trang, kết quả sẽ hiện ngay sau khi xong.</p>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -570,6 +609,44 @@
 
         document.getElementById('tcNoResult').style.display = anyVisible ? 'none' : 'block';
     });
+
+    (function () {
+        const form = document.getElementById('frmChanDoan');
+        const overlay = document.getElementById('cdLoading');
+        const stepEl = document.getElementById('cdLoadingStep');
+        if (!form || !overlay) return;
+        document.body.appendChild(overlay); // đưa ra ngoài vùng nội dung để phủ kín cả thanh trên/thanh bên
+        const steps = [
+            'Đang đọc triệu chứng và mô tả sự cố…',
+            'Đối chiếu với kho tri thức và luật chẩn đoán…',
+            'Mô hình AI đang dự đoán nhóm lỗi và mã lỗi…',
+            'Xếp hạng kết quả và tính độ tin cậy…'
+        ];
+        let timer = null, busy = false;
+        function show() {
+            overlay.hidden = false;
+            document.body.style.overflow = 'hidden';
+            let i = 0; stepEl.textContent = steps[0];
+            timer = setInterval(function () { i = Math.min(i + 1, steps.length - 1); stepEl.textContent = steps[i]; }, 600);
+        }
+        function hide() {
+            overlay.hidden = true; busy = false;
+            document.body.style.overflow = '';
+            if (timer) { clearInterval(timer); timer = null; }
+            const btn = form.querySelector('.btn-submit'); if (btn) btn.disabled = false;
+        }
+        // Hiệu ứng chờ hiển thị tối thiểu ~2,2 giây rồi mới gửi thật; cộng thời gian xử lý của server thì tổng khoảng 2–3 giây.
+        const MIN_LOADING_MS = 2200;
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (busy) return;
+            busy = true;
+            const btn = form.querySelector('.btn-submit'); if (btn) btn.disabled = true;
+            show();
+            setTimeout(function () { form.submit(); }, MIN_LOADING_MS);
+        });
+        window.addEventListener('pageshow', function (e) { if (e.persisted) hide(); });
+    })();
 
     document.getElementById('frmHuanLuyen').addEventListener('submit', function(e) {
         e.preventDefault();

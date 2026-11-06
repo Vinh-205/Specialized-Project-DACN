@@ -1,0 +1,331 @@
+/* ================================================================
+   IT HELPDESK — Giao diện "thẻ bo lớn + nút viên thuốc" (giữ màu xanh hệ thống)
+   Nạp SAU CÙNG (sau dashboard-shell.css). Mọi giá trị đi qua token nên tự đổi theo sáng/tối.
+   Quy ước: khung và thẻ trang tổng quan bo 20px; bảng/biểu mẫu bo 12px; nút chính và nút phụ dạng viên thuốc (999px);
+   nút biểu tượng tròn 32px; MỘT nút chính cho mỗi màn hình; không gradient, không đổ bóng; trạng thái dùng nền nhạt.
+   ================================================================ */
+
+/* ── 1. Token ─────────────────────────────────────────────────── */
+html[data-theme="light"] body.helpdesk-workspace {
+    --bg: #e9f0f3;
+    --surface2: #f1f6f8;
+    --surface3: #e6eef2;
+    --border: #dfe9ee;
+    --border-light: #ebf2f5;
+    --field-bd: #cfdfe7;
+    --on-primary: #ffffff;
+    --primary: #007eaf;
+    --primary-hover: #00648c;
+    --tint: #e1f1f8;
+    --tint-x: #00648c;
+    --ok-bg: #def4e9;  --ok-x: #187a60;
+    --warn-bg: #fff1d8; --warn-x: #8a5200;
+    --err-bg: #fbe9ea; --err-x: #a63842;
+    --info-bg: #e1f1f8; --info-x: #00648c;
+}
+html[data-theme="dark"] body.helpdesk-workspace {
+    --bg: #131c1d;
+    --surface: #1e2a2b;
+    --surface2: #263638;
+    --border: #2c3e41;
+    --border-light: #25363a;
+    --field-bd: #3c5154;
+    --on-primary: #06222d;
+    --primary: #5bbbe3;
+    --primary-hover: #7ccbea;
+    --tint: #1f4350;
+    --tint-x: #9fdcf5;
+    --ok-bg: #1d3b32;  --ok-x: #6ee7a8;
+    --warn-bg: #3d3220; --warn-x: #fbd38a;
+    --err-bg: #3b2427; --err-x: #ffa8a8;
+    --info-bg: #1f4350; --info-x: #9fdcf5;
+    --lav-deep: #5bbbe3;
+}
+html body.helpdesk-workspace {
+    --topbar-h: 80px;
+    --sidebar-w: 240px;
+    --r-card: 20px;
+    --r-ctl: 12px;
+    --r-pill: 999px;
+    background: var(--bg);
+}
+
+/* ── 2. Khung: thanh trên nổi, thanh bên là thẻ nổi ─────────── */
+html body.helpdesk-workspace .helpdesk-topbar {
+    top: 12px; left: 12px; right: 12px;
+    height: 56px;
+    padding: 0 12px 0 10px;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    box-shadow: none;
+    backdrop-filter: none;
+}
+html body.helpdesk-workspace .helpdesk-topbar :is(.user-chip, .notif-btn, .theme-toggle-btn, .btn-logout) {
+    background: var(--surface2);
+    border: 0;
+    border-radius: var(--r-pill);
+    color: var(--text);
+}
+html body.helpdesk-workspace .helpdesk-topbar :is(.notif-btn, .theme-toggle-btn) { width: 36px; height: 36px; }
+html body.helpdesk-workspace .helpdesk-topbar :is(.brand-icon, .user-avatar) {
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: none;
+}
+html body.helpdesk-workspace #sidebarToggle {
+    width: 36px !important; height: 36px !important;
+    border-radius: 50% !important;
+    background: var(--surface2) !important;
+    color: var(--text) !important;
+    border: 0 !important;
+}
+html body.helpdesk-workspace .topbar-search {
+    background: var(--surface2);
+    border: 1px solid transparent;
+    border-radius: var(--r-pill);
+    box-shadow: none;
+}
+html body.helpdesk-workspace .topbar-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
+html body.helpdesk-workspace .search-dropdown,
+html body.helpdesk-workspace .notif-dropdown,
+html body.helpdesk-workspace .profile-dropdown { border-radius: 16px; border: 1px solid var(--border); background: var(--surface-solid); box-shadow: 0 12px 32px rgba(0, 0, 0, .12); }
+
+html body.helpdesk-workspace .helpdesk-sidebar {
+    top: var(--topbar-h);
+    left: 12px;
+    bottom: 12px;
+    width: calc(var(--sidebar-w) - 12px);
+    background: var(--surface);
+    border: 0;
+    border-radius: 24px;
+    box-shadow: none;
+    backdrop-filter: none;
+    padding: 4px 8px;
+}
+html body.helpdesk-workspace .helpdesk-sidebar.collapsed { transform: translateX(calc(-100% - 24px)); }
+html body.helpdesk-workspace .helpdesk-sidebar :is(.sb-item, .sb-group-header, .sb-sub-item) { border-radius: 14px; }
+html body.helpdesk-workspace .helpdesk-sidebar .sb-item.active,
+html body.helpdesk-workspace .helpdesk-sidebar .sb-sub-item.active {
+    background: var(--tint);
+    color: var(--tint-x);
+    border-radius: 14px;
+    box-shadow: none;
+}
+html body.helpdesk-workspace .helpdesk-sidebar .sb-item.active::before { display: none; }
+html body.helpdesk-workspace .helpdesk-sidebar .sb-item.active .sb-icon { color: var(--tint-x); }
+html body.helpdesk-workspace .helpdesk-sidebar :is(.sb-user-header, .sb-footer) { border-color: var(--border); }
+
+/* Lớp nền đặc phía sau thanh trên + dải đường dẫn để nội dung cuộn không hiện xuyên qua khe hở */
+html body.helpdesk-workspace::before {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0;
+    height: calc(var(--topbar-h) + 26px);
+    background: var(--bg);
+    z-index: 90;
+    pointer-events: none;
+}
+html body.helpdesk-workspace .topbar-breadcrumb-strip {
+    top: calc(var(--topbar-h) - 4px);
+    left: var(--sidebar-w);
+    right: 12px;
+    height: 30px;
+    z-index: 95; /* thấp hơn <header> (100) để hộp thông báo/hồ sơ nổi lên trên dải đường dẫn */
+    background: var(--bg);
+    border: 0;
+    padding: 0 8px;
+    backdrop-filter: none;
+}
+html body.helpdesk-workspace .topbar-breadcrumb-strip.expanded { left: 12px; }
+html body.helpdesk-workspace .helpdesk-main { margin-left: var(--sidebar-w); margin-right: 12px; margin-top: calc(var(--topbar-h) + 28px); }
+html body.helpdesk-workspace .helpdesk-main.expanded { margin-left: 12px; }
+@media (max-width: 991px) {
+    html body.helpdesk-workspace .helpdesk-topbar { left: 8px; right: 8px; top: 8px; }
+    html body.helpdesk-workspace .helpdesk-main, html body.helpdesk-workspace .helpdesk-main.expanded { margin-left: 8px; margin-right: 8px; }
+    html body.helpdesk-workspace .topbar-breadcrumb-strip, html body.helpdesk-workspace .topbar-breadcrumb-strip.expanded { left: 8px; }
+}
+
+/* ── 3. Thẻ ──────────────────────────────────────────────────── */
+html body.helpdesk-workspace .hd-card {
+    background: var(--surface);
+    border: 0;
+    border-radius: var(--r-card);
+    box-shadow: none;
+    transition: none;
+}
+html body.helpdesk-workspace .hd-card:hover { transform: none; box-shadow: none; }
+html body.helpdesk-workspace .hd-card-header { background: transparent; border-bottom: 1px solid var(--border); padding: 16px 20px; }
+
+/* ── 4. Nút: viên thuốc, cao 36px, không gradient/bóng ───────── */
+html body.helpdesk-workspace :is(.hd-btn, .main-content-area .btn) {
+    min-height: 36px;
+    padding: 0 16px;
+    border-radius: var(--r-pill);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+    box-shadow: none;
+    transform: none;
+}
+html body.helpdesk-workspace .hd-btn-sm { min-height: 30px; padding: 0 12px; font-size: 12px; }
+html body.helpdesk-workspace .hd-btn:hover { transform: none; box-shadow: none; }
+
+html body.helpdesk-workspace :is(.hd-btn-primary, .main-content-area .btn-primary) {
+    background: var(--primary); background-image: none;
+    border-color: var(--primary);
+    color: var(--on-primary);
+}
+html body.helpdesk-workspace :is(.hd-btn-primary, .main-content-area .btn-primary):hover {
+    background: var(--primary-hover); background-image: none; border-color: var(--primary-hover); color: var(--on-primary);
+}
+html body.helpdesk-workspace :is(.hd-btn-outline, .main-content-area .btn-outline-secondary, .main-content-area .btn-light) {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--field-bd);
+}
+html body.helpdesk-workspace :is(.hd-btn-outline, .main-content-area .btn-outline-secondary, .main-content-area .btn-light):hover { background: var(--surface2); color: var(--text); }
+html body.helpdesk-workspace :is(.main-content-area .btn-outline-primary, .hd-btn-tonal) {
+    background: var(--tint); color: var(--tint-x); border: 1px solid transparent;
+}
+html body.helpdesk-workspace :is(.main-content-area .btn-outline-primary, .hd-btn-tonal):hover { background: var(--primary); color: var(--on-primary); }
+html body.helpdesk-workspace :is(.hd-btn-success, .main-content-area .btn-success) { background: var(--ok-bg); color: var(--ok-x); border: 1px solid transparent; }
+html body.helpdesk-workspace :is(.hd-btn-success, .main-content-area .btn-success):hover { background: var(--ok-x); color: var(--surface); }
+html body.helpdesk-workspace :is(.hd-btn-danger, .main-content-area .btn-danger, .main-content-area .btn-outline-danger) { background: var(--err-bg); color: var(--err-x); border: 1px solid transparent; }
+html body.helpdesk-workspace :is(.hd-btn-danger, .main-content-area .btn-danger, .main-content-area .btn-outline-danger):hover { background: var(--err-x); color: var(--surface); }
+
+/* Nút chính riêng của từng trang → cùng một kiểu */
+html body.helpdesk-workspace :is(.lk-btn-add, .btn-primary-ai, .btn-admin-primary, .btn-settings-save, .btn-submit, .btn-modal-save, .btn-save, .hd-btn-primary) {
+    background: var(--primary) !important; background-image: none !important;
+    border: 1px solid var(--primary) !important;
+    color: var(--on-primary) !important;
+    border-radius: var(--r-pill) !important;
+    box-shadow: none !important;
+    min-height: 36px;
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0;
+    transform: none !important;
+}
+html body.helpdesk-workspace :is(.lk-btn-add, .btn-primary-ai, .btn-admin-primary, .btn-settings-save, .btn-submit, .btn-modal-save, .btn-save, .hd-btn-primary):hover {
+    background: var(--primary-hover) !important; border-color: var(--primary-hover) !important; color: var(--on-primary) !important;
+}
+html body.helpdesk-workspace :is(.btn-train, .btn-ghost, .btn-act, .btn-modal-cancel, .btn-clear, .quick-link-btn) { border-radius: var(--r-pill); box-shadow: none; }
+
+/* Nút biểu tượng tròn */
+html body.helpdesk-workspace :is(.icon-btn, .u-action-btn, .lk-btn-icon) {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--surface2);
+    color: var(--text-muted);
+}
+html body.helpdesk-workspace .icon-btn.view:hover, html body.helpdesk-workspace .u-action-btn:hover, html body.helpdesk-workspace .lk-btn-edit:hover { background: var(--tint); color: var(--tint-x); border: 0; }
+html body.helpdesk-workspace .icon-btn.edit:hover { background: var(--tint); color: var(--tint-x); border: 0; }
+html body.helpdesk-workspace .icon-btn.done:hover { background: var(--ok-bg); color: var(--ok-x); border: 0; }
+html body.helpdesk-workspace :is(.icon-btn.del, .lk-btn-delete):hover { background: var(--err-bg); color: var(--err-x); border: 0; }
+html body.helpdesk-workspace .lk-btn-delete { color: var(--err-x); background: var(--err-bg); }
+
+/* ── 5. Ô nhập, bộ lọc ───────────────────────────────────────── */
+html body.helpdesk-workspace :is(.hd-search-input, .hd-filter-select, .lk-filter-select) { border: 1px solid var(--field-bd); border-radius: var(--r-pill); font-family: inherit; }
+html body.helpdesk-workspace .hd-search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
+html body.helpdesk-workspace .hd-search-bar { background: transparent; border-bottom: 1px solid var(--border); }
+html body.helpdesk-workspace :is(.form-control, .form-select) { border-radius: var(--r-ctl); border-color: var(--field-bd); }
+html body.helpdesk-workspace :is(.form-control, .form-select):focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
+
+/* ── 6. Bảng: tiêu đề nhạt, chữ thường, hàng ngăn mảnh ──────── */
+html body.helpdesk-workspace :is(.hd-table th, .lk-table thead th, .user-table th, .model-table thead th, .cp-table th) {
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    border-bottom: 1px solid var(--border);
+}
+html body.helpdesk-workspace :is(.hd-table td, .lk-table tbody td, .user-table td) { border-bottom-color: var(--border-light); }
+html body.helpdesk-workspace :is(.hd-table tr:hover td, .lk-table tbody tr:hover, .user-table tbody tr:hover td, .model-table tbody tr:hover) { background: var(--surface2); }
+
+/* ── 7. Nhãn trạng thái dùng cùng bộ nền nhạt ───────────────── */
+html body.helpdesk-workspace .hd-badge { border-radius: var(--r-pill); font-weight: 500; }
+html body.helpdesk-workspace .hd-badge-warning { background: var(--warn-bg); color: var(--warn-x); }
+html body.helpdesk-workspace .hd-badge-success { background: var(--ok-bg); color: var(--ok-x); }
+html body.helpdesk-workspace .hd-badge-danger { background: var(--err-bg); color: var(--err-x); }
+html body.helpdesk-workspace .hd-badge-info { background: var(--info-bg); color: var(--info-x); }
+html body.helpdesk-workspace .hd-badge-gray { background: var(--surface2); color: var(--text-muted); }
+
+/* ── 8. Chân trang, phần đầu trang, ô thống kê, thẻ riêng ───── */
+html body.helpdesk-workspace .helpdesk-footer { background: transparent; border: 0; box-shadow: none; backdrop-filter: none; color: var(--text-muted); }
+
+html body.helpdesk-workspace :is(.lk-hero, .admin-hero, .ai-hero) {
+    background: var(--surface); background-image: none;
+    border: 0; border-radius: var(--r-card);
+    box-shadow: none; backdrop-filter: none;
+}
+html body.helpdesk-workspace :is(.lk-hero, .admin-hero, .ai-hero)::before { display: none; }
+html body.helpdesk-workspace :is(.lk-hero-icon, .admin-hero-icon, .ai-hero-icon) {
+    background: var(--tint) !important; background-image: none !important;
+    color: var(--tint-x) !important;
+    box-shadow: none !important;
+    border-radius: 14px;
+}
+html body.helpdesk-workspace :is(.lk-hero-icon, .admin-hero-icon, .ai-hero-icon) i { color: inherit !important; }
+
+html body.helpdesk-workspace .lk-stat { background: var(--surface2); border: 0; border-radius: 16px; box-shadow: none; }
+html body.helpdesk-workspace .admin-stat { background: var(--surface); border: 0; border-radius: var(--r-card); box-shadow: none; }
+html body.helpdesk-workspace .admin-stat-accent { display: none; }
+html body.helpdesk-workspace :is(.lk-stat-label, .admin-stat-label) { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500; }
+
+html body.helpdesk-workspace :is(.lk-table-wrap, .admin-table-card, .ai-card, .lk-search-wrap, .admin-search-wrap) {
+    border: 0; border-radius: var(--r-card); box-shadow: none;
+}
+html body.helpdesk-workspace :is(.lk-table-wrap, .admin-table-card, .ai-card) { background: var(--surface); }
+html body.helpdesk-workspace .ai-card-header { background: transparent; border-bottom: 1px solid var(--border); }
+
+html body.helpdesk-workspace .u-avatar { background: var(--tint) !important; background-image: none !important; color: var(--tint-x) !important; box-shadow: none; border-radius: 50%; }
+html body.helpdesk-workspace .lk-loai-tag { background: var(--tint); border: 0; color: var(--tint-x); border-radius: var(--r-pill); font-weight: 500; }
+html body.helpdesk-workspace .role-admin { background: var(--tint); background-image: none; color: var(--tint-x); border: 0; }
+html body.helpdesk-workspace .role-ktv { background: var(--surface2); color: var(--text-muted); border: 0; }
+html body.helpdesk-workspace :is(.lk-badge-active, .lk-badge-inactive) { border: 0; }
+html body.helpdesk-workspace .lk-badge-active { background: var(--ok-bg); color: var(--ok-x); }
+html body.helpdesk-workspace .lk-badge-inactive { background: var(--err-bg); color: var(--err-x); }
+
+/* ── 9. Icon biến hình (morphicons): chevron nhóm menu không xoay CSS nữa, icon tự đổi lên/xuống ── */
+html body.helpdesk-workspace .sb-chevron.open { transform: none; }
+
+/* ── 10. Icon cho mục con của thanh bên (Từ điển tri thức, Quản trị) ── */
+html body.helpdesk-workspace .sb-sub-item { padding-left: 34px; gap: 10px; }
+html body.helpdesk-workspace .sb-sub-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; font-size: 15px; flex-shrink: 0; color: var(--text-light); transition: color .15s; }
+html body.helpdesk-workspace .sb-sub-item:hover .sb-sub-icon { color: var(--text); }
+html body.helpdesk-workspace .sb-sub-item.active .sb-sub-icon { color: var(--tint-x); }
+html body.helpdesk-workspace .sb-sub-item.active { background: var(--tint); color: var(--tint-x); border-radius: 14px; }
+
+/* ── 12. Số liệu nhảy chữ số (rolling-digits.js) ── */
+.rd { display: inline-flex; vertical-align: bottom; font-variant-numeric: tabular-nums; }
+.rd-col { display: inline-block; height: 1.15em; overflow: hidden; line-height: 1.15; }
+.rd-strip { display: block; transform: translateY(0); transition: transform .95s cubic-bezier(.2, .8, .2, 1); }
+.rd-strip > span { display: block; height: 1.15em; }
+.rd-strip.on { transform: translateY(calc(var(--d) * -1.15em)); }
+.rd-sep { display: inline-block; line-height: 1.15; }
+@media (prefers-reduced-motion: reduce) { .rd-strip { transition: none; } }
+
+/* ── 13. Cổng duyệt khi kích hoạt mô hình AI (lấy ý tưởng từ mẫu "Release promotion gate") ── */
+.gate { list-style: none; margin: 0 0 16px; padding: 4px 0 0 6px; position: relative; }
+.gate::before { content: ''; position: absolute; left: 21px; top: 20px; bottom: 26px; width: 2px; background: var(--border, #d6e5eb); }
+.gate-step { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 7px 0; animation: gate-in .45s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * .16s); }
+.gate-node { position: relative; z-index: 1; flex: none; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px;
+    background: var(--surface2); color: var(--text-muted); border: 2px solid var(--surface-solid, var(--surface)); }
+.gate-step.ok .gate-node { background: var(--ok-bg, #def4e9); color: var(--ok-x, #187a60); }
+.gate-step.bad .gate-node { background: var(--err-bg, #fbe9ea); color: var(--err-x, #a63842); }
+.gate-text { display: flex; flex-direction: column; min-width: 0; padding-top: 1px; }
+.gate-text b { font-size: 13px; font-weight: 600; color: var(--text); }
+.gate-text small { font-size: 11.5px; color: var(--text-muted); }
+.gate-end .gate-node { width: 32px; height: 32px; }
+.gate-pass .gate-end .gate-text b { color: var(--ok-x, #187a60); }
+.gate-fail .gate-end .gate-text b { color: var(--err-x, #a63842); }
+@keyframes gate-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .gate-step { animation: none; } }
+
+/* Đổi sáng/tối: mọi phần tử đổi màu cùng một khung hình (class do script trong _Layout bật 120 ms) */
+html.theme-swap, html.theme-swap *, html.theme-swap *::before, html.theme-swap *::after { transition: none !important; }

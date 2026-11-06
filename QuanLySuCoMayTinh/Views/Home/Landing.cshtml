@@ -1,10 +1,18 @@
 @{
     Layout = null;
+    ViewData["PublicNavItems"] = new List<string[]>
+    {
+        new[] { "Chào mừng", Url.Action("Welcome", "Home")!, "", "0" },
+        new[] { "Sổ tay", "#sketchbook", "", "1" },
+        new[] { "Bên trong", "#inside", "", "0" },
+        new[] { "Hành trình", "#journey", "", "0" },
+        new[] { "Mục lục", "#plates", "", "0" },
+    };
     var chapters = new[] {
-        new { Title = "Tiếp nhận sự cố", Tag = "Mọi thông tin, một điểm bắt đầu.", Text = "Ghi nhận thiết bị, khách hàng và mô tả sự cố. Mỗi yêu cầu có một phiếu để theo dõi xuyên suốt quá trình xử lý.", Icon = "ticket-detailed", Note = "Thiết bị / Khách hàng / Triệu chứng", Image = "proposals/helpdesk-workspace.png" },
-        new { Title = "Chẩn đoán cùng DeskAI", Tag = "Từ triệu chứng đến hướng giải quyết.", Text = "Kết nối triệu chứng với mã lỗi và giải pháp tham khảo. DeskAI hỗ trợ phân tích để kỹ thuật viên đưa ra quyết định xử lý.", Icon = "stars", Note = "Triệu chứng / Mã lỗi / Giải pháp", Image = "proposals/helpdesk-knowledge.png" },
-        new { Title = "Theo dõi sửa chữa", Tag = "Rõ từng bước. Liền mạch từng việc.", Text = "Gắn hạng mục sửa chữa, linh kiện sử dụng và chi phí vào phiếu. Cập nhật tiến độ để thông tin luôn theo sát công việc.", Icon = "tools", Note = "Hạng mục / Linh kiện / Tiến độ", Image = "proposals/helpdesk-workspace.png" },
-        new { Title = "Kết nối tri thức", Tag = "Kinh nghiệm hôm nay, giải pháp ngày mai.", Text = "Tra cứu mã lỗi và giải pháp trong kho tri thức. Kết hợp thông tin hỗ trợ, báo cáo và đánh giá để nhìn lại quá trình phục vụ.", Icon = "book", Note = "Mã lỗi / Tra cứu / Đánh giá", Image = "proposals/helpdesk-knowledge.png" }
+        new { Title = "Vai trò trong hệ thống", Tag = "Mỗi người một việc rõ ràng.", Text = "Admin KTV quản lý người dùng, linh kiện và mô hình AI. KTV nhận ca, chẩn đoán và sửa chữa. Khách hàng đánh giá dịch vụ qua liên kết công khai của phiếu đã hoàn thành.", Icon = "people", Note = "Admin KTV / KTV / Khách hàng", Image = "proposals/helpdesk-overview.png" },
+        new { Title = "DeskAI và quyết định cuối", Tag = "Gợi ý có căn cứ, có nhật ký.", Text = "DeskAI xếp hạng mã lỗi kèm mức tin cậy. Chỉ khi độ tin cậy Cao và đủ điều kiện an toàn mới tự chốt; mọi lần tự chốt đều được ghi nhật ký và có thể tắt.", Icon = "stars", Note = "Top-3 / Tin cậy / Nhật ký", Image = "proposals/helpdesk-deskai.png" },
+        new { Title = "Kho tri thức", Tag = "Kinh nghiệm hôm nay, giải pháp ngày mai.", Text = "Tra cứu triệu chứng, mã lỗi và giải pháp tham khảo. Kết hợp thông tin hỗ trợ, báo cáo và đánh giá để nhìn lại quá trình phục vụ.", Icon = "book", Note = "Triệu chứng / Mã lỗi / Giải pháp", Image = "proposals/helpdesk-knowledge.png" },
+        new { Title = "Linh kiện và chi phí", Tag = "Xuất kho đến đâu, ghi đến đó.", Text = "Kiểm tra tồn kho, trừ tồn khi xuất và lưu đơn giá xuất để tính chi phí sửa chữa chính xác theo từng phiếu.", Icon = "cpu", Note = "Tồn kho / Đơn giá / Chi phí", Image = "proposals/helpdesk-repair.png" }
     };
 }
 <!DOCTYPE html>
@@ -13,8 +21,6 @@
     <partial name="_SystemIcons" />
     <link href="~/css/public-motion.css" rel="stylesheet" asp-append-version="true">
     <script src="~/js/public-motion.js" defer asp-append-version="true"></script>
-    <link href="~/css/scroll-showcase.css" rel="stylesheet" asp-append-version="true">
-    <script src="~/js/scroll-showcase.js" defer asp-append-version="true"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Khám phá IT Helpdesk: tiếp nhận sự cố, chẩn đoán cùng DeskAI, quản lý sửa chữa và kết nối tri thức.">
@@ -23,33 +29,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="~/css/helpdesk-sketchbook.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/public-nav.css" rel="stylesheet" asp-append-version="true">
+    <style>body.sketchbook-page > main { padding-top: 78px; } html { scroll-padding-top: 90px; }</style>
+    <link href="~/css/iso-figures.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/landing-figures.css" rel="stylesheet" asp-append-version="true">
+    <script src="~/js/landing-figures.js" defer asp-append-version="true"></script>
     <script src="~/js/helpdesk-sketchbook.js" defer asp-append-version="true"></script>
 </head>
 <body class="sketchbook-page">
-    <header class="sk-top">
-        <a class="sk-brand" href="@Url.Action("Welcome", "Home")"><i class="bi bi-pc-display" aria-hidden="true"></i> IT HELPDESK</a>
-        <nav aria-label="Điều hướng chính">
-            <a href="#showcase">Khám phá</a>
-            <a href="#sketchbook">Sổ tay</a>
-            <a href="#about">Hệ thống</a>
-            <a href="#plates">Mục lục</a>
-            <a class="sk-login" href="@Url.Action("Login", "Auth")">Đăng nhập <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-        </nav>
-    </header>
+    <partial name="_PublicNav" />
     <main>
-        <partial name="~/Views/Home/_ScrollShowcase.cshtml" />
-        <section class="landing-illustration" aria-labelledby="overviewTitle">
-            <h2 id="overviewTitle">Toàn cảnh IT Helpdesk</h2>
-            <a href="@Url.Content("~/images/proposals/helpdesk-workspace.png")" target="_blank" rel="noopener" aria-label="Xem ảnh toàn cảnh hệ thống ở kích thước gốc">
-                <img src="~/images/proposals/helpdesk-workspace.png" alt="Bàn sửa chữa IT Helpdesk với máy tính, màn hình chẩn đoán, trợ lý CRT, linh kiện và tài liệu kỹ thuật." width="1536" height="1024" loading="lazy">
-            </a>
-        </section>
         <section class="sk-hero" id="sketchbook" aria-label="Sổ tay IT Helpdesk">
             <div class="sk-desk">
                 <div class="sk-intro">
                     <p class="sk-kicker">CON NGƯỜI · CÔNG NGHỆ · GIẢI PHÁP</p>
                     <h1>IT Helpdesk</h1>
-                    <p>Một cuốn sổ. Trọn hành trình hỗ trợ.</p>
+                    <p>Một cuốn sổ. Hiểu hệ thống vận hành.</p>
                 </div>
                 <div class="sb-stage" role="region" aria-roledescription="carousel" aria-label="Các chương giới thiệu" tabindex="0">
                     <button class="sb-arrow js-control" type="button" data-step="-1" aria-label="Chương trước" title="Chương trước"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
@@ -81,7 +76,7 @@
                     <button class="sb-arrow js-control" type="button" data-step="1" aria-label="Chương sau" title="Chương sau"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
                 </div>
                 <div class="sb-bottom js-control">
-                    <p class="sb-caption" id="bookCaption" role="status" aria-live="polite">01 / 04 · Tiếp nhận sự cố</p>
+                    <p class="sb-caption" id="bookCaption" role="status" aria-live="polite">01 / 04 · Vai trò trong hệ thống</p>
                     <div class="sb-tools" role="group" aria-label="Công cụ xem sổ tay">
                         <button type="button" id="zoomOut" aria-label="Thu nhỏ" title="Thu nhỏ"><i class="bi bi-dash-lg" aria-hidden="true"></i></button>
                         <output id="zoomRead" aria-label="Mức phóng đại">100%</output>
@@ -94,11 +89,44 @@
                 <a class="sk-down" href="#about" aria-label="Giới thiệu hệ thống" title="Giới thiệu hệ thống"><i class="bi bi-arrow-down" aria-hidden="true"></i></a>
             </div>
         </section>
+        <section class="lf-pin" id="inside" data-lf="laptop" aria-label="Bên trong một chiếc laptop">
+            <div class="lf-stick">
+                <div class="lf-text">
+                    <p class="sk-kicker">BÊN TRONG CHIẾC MÁY</p>
+                    <h2>Mở máy ra,<br><em>xem từng lớp.</em></h2>
+                    <div class="lf-steps" aria-live="polite">
+                        <div class="lf-step"><span class="lf-no">01</span><h3>Laptop mang đến sửa</h3><p>Máy được gập lại khi khách mang đến. Cuộn xuống để mở máy và xem bên trong.</p></div>
+                        <div class="lf-step"><span class="lf-no">02</span><h3>Mặt phím và màn hình</h3><p>Lỗi hiển thị, liệt phím hay không lên nguồn thường bắt đầu từ lớp này.</p></div>
+                        <div class="lf-step"><span class="lf-no">03</span><h3>Quạt, RAM, SSD</h3><p>Máy nóng, treo hoặc báo thiếu ổ đĩa: kiểm tra quạt tản nhiệt, thanh RAM và ổ SSD.</p></div>
+                        <div class="lf-step"><span class="lf-no">04</span><h3>Bo mạch chủ</h3><p>Chip xử lý, tụ, khe cắm: nơi chẩn đoán lỗi phần cứng sâu nhất.</p></div>
+                        <div class="lf-step"><span class="lf-no">05</span><h3>Pin và vỏ đáy</h3><p>Linh kiện xuất kho được ghi lại cùng đơn giá để tính chi phí sửa chữa.</p></div>
+                    </div>
+                    <div class="lf-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+                </div>
+                <div class="lf-card lf-art-a"><p class="sb-art-label"><i class="bi bi-circle-fill" aria-hidden="true"></i> TRANH KỸ THUẬT · LAPTOP MỔ XẺ</p><partial name="_LaptopFigure" /></div>
+            </div>
+        </section>
+        <section class="lf-pin" id="journey" data-lf="journey" aria-label="Hành trình của một phiếu sửa chữa">
+            <div class="lf-stick">
+                <div class="lf-text">
+                    <p class="sk-kicker">HÀNH TRÌNH CỦA MỘT PHIẾU</p>
+                    <h2>Bốn trạm,<br><em>một phiếu duy nhất.</em></h2>
+                    <div class="lf-steps" aria-live="polite">
+                        <div class="lf-step"><span class="lf-no">01</span><h3>Chờ khám</h3><p>Tạo phiếu, gắn thiết bị và khách hàng, ghi mô tả sự cố cùng mức ưu tiên.</p></div>
+                        <div class="lf-step"><span class="lf-no">02</span><h3>Đang kiểm tra</h3><p>KTV nhận ca, chọn triệu chứng; luật và học máy cùng xếp hạng mã lỗi gợi ý.</p></div>
+                        <div class="lf-step"><span class="lf-no">03</span><h3>Đang sửa chữa</h3><p>Chốt mã lỗi, áp dụng giải pháp, xuất linh kiện có kiểm tra tồn kho và ghi đơn giá.</p></div>
+                        <div class="lf-step"><span class="lf-no">04</span><h3>Hoàn thành</h3><p>Chốt phí, bàn giao máy; khách đánh giá dịch vụ qua liên kết công khai.</p></div>
+                    </div>
+                    <div class="lf-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                </div>
+                <div class="lf-card lf-art-b"><p class="sb-art-label"><i class="bi bi-circle-fill" aria-hidden="true"></i> TRANH KỸ THUẬT · BỐN TRẠM</p><partial name="_JourneyFigure" /></div>
+            </div>
+        </section>
         <section id="about" class="sk-about">
-            <p class="sk-kicker">VỀ HỆ THỐNG</p>
-            <h2>Chăm sóc thiết bị.<br><em>Kết nối con người.</em></h2>
+            <p class="sk-kicker">VỀ SỔ TAY NÀY</p>
+            <h2>Đi sâu vào<br><em>cách hệ thống vận hành.</em></h2>
             <div class="sk-about-body">
-                <p>IT Helpdesk tập hợp phiếu tiếp nhận, chẩn đoán, sửa chữa và tri thức trong cùng một không gian làm việc. DeskAI đồng hành cùng kỹ thuật viên ở bước phân tích, để mỗi sự cố có một hướng xử lý rõ ràng.</p>
+                <p>Trang chào mừng giới thiệu hành trình tiếp nhận, chẩn đoán và sửa chữa. Sổ tay này đi sâu hơn: vai trò, cách DeskAI đưa ra gợi ý, kho tri thức, linh kiện và chi phí của từng phiếu.</p>
                 <a class="sk-entry" href="@Url.Action("Login", "Auth")">Vào không gian làm việc <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             </div>
         </section>
