@@ -1,0 +1,63 @@
+@model IEnumerable<QuanLySuCoMayTinh.Models.TrieuChung>
+@{
+    ViewData["Title"] = "Quản lý triệu chứng";
+}
+
+<div class="helpdesk-breadcrumb">
+    <span>Từ điển tri thức</span><span class="sep">›</span><span class="cur">Từ điển Triệu chứng</span>
+</div>
+
+<div class="helpdesk-page-header">
+    <div>
+        <div class="page-title">Từ điển Triệu chứng</div>
+        <div class="page-subtitle">Chuẩn hóa các biểu hiện sự cố từ lời kể của khách hàng</div>
+    </div>
+    <a asp-action="Create" class="hd-btn hd-btn-primary hd-btn-sm" style="text-decoration:none">
+        Thêm triệu chứng
+    </a>
+</div>
+
+<div class="hd-card">
+    <form asp-action="Index" method="get" class="hd-search-bar" style="margin-bottom:0">
+        <i class="bi bi-search" style="color:var(--text3)"></i>
+        <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="hd-search-input" placeholder="Tìm kiếm triệu chứng (Ví dụ: Màn hình xanh... Nhấn Enter để tìm)">
+    </form>
+    <table class="hd-table">
+        <thead>
+            <tr>
+                <th>Mã TC</th>
+                <th>Biểu hiện (Triệu chứng)</th>
+                <th>Mô tả chi tiết</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="ticket-id">TC-@(item.MaTC.ToString("D3"))</td>
+                    <td class="fw-bold text-dark">@item.TenTC</td>
+                    <td>@item.MoTa</td>
+                    <td>
+                        <div class="action-group">
+                            <a asp-action="Edit" asp-route-id="@item.MaTC" class="icon-btn edit" title="Chỉnh sửa"><i class="bi bi-pencil"></i></a>
+                            <form asp-action="Delete" asp-route-id="@item.MaTC" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa triệu chứng này?');">
+                                <button type="submit" class="icon-btn del" title="Xóa"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+            
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                        Hệ tri thức đang trống. Hãy thêm các triệu chứng đầu tiên!
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

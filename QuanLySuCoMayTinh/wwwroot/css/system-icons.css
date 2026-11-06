@@ -1,0 +1,3 @@
+.bi.morph-ready::before { display:none !important; content:none !important; }
+.bi.morph-ready > svg { display:inline-block; width:1em; height:1em; vertical-align:-.125em; pointer-events:none; overflow:visible; }
+@media print { .bi.morph-ready > svg { print-color-adjust:exact; } }

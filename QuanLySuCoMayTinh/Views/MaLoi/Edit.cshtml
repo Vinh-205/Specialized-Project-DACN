@@ -1,0 +1,60 @@
+@model QuanLySuCoMayTinh.Models.MaLoi
+
+@{
+    ViewData["Title"] = "Cập nhật Mã Lỗi";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 border-top border-primary border-4">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 text-dark fw-bold">Cập nhật Mã Lỗi</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <!-- Giấu cái Mã Lỗi ID đi đặng code nó biết đang sửa thằng nào -->
+                        <input type="hidden" asp-for="MaLoiID" />
+
+                        <div class="mb-3">
+                            <label asp-for="TenLoi" class="form-label fw-bold">Tên Lỗi (Bệnh lý) <span class="text-danger">*</span></label>
+                            <input asp-for="TenLoi" class="form-control" />
+                            <span asp-validation-for="TenLoi" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PhanLoai" class="form-label fw-bold">Phân Loại <span class="text-danger">*</span></label>
+                            <select asp-for="PhanLoai" class="form-select">
+                                <option value="Phần cứng">Phần cứng</option>
+                                <option value="Phần mềm">Phần mềm</option>
+                                <option value="Mạng">Mạng / Internet</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                            <span asp-validation-for="PhanLoai" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4 form-check form-switch fs-5">
+                            <input class="form-check-input" type="checkbox" asp-for="Status">
+                            <label class="form-check-label ms-2" asp-for="Status">Đang hoạt động</label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                Quay lại danh sách
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold">
+                                Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,67 @@
+@model IEnumerable<QuanLySuCoMayTinh.Models.GiaiPhap>
+@{
+    ViewData["Title"] = "Quản lý giải pháp";
+}
+
+<div class="helpdesk-breadcrumb">
+    <span>Từ điển tri thức</span><span class="sep">›</span><span class="cur">Ngân hàng Giải pháp</span>
+</div>
+
+<div class="helpdesk-page-header">
+    <div>
+        <div class="page-title">Ngân hàng Giải pháp</div>
+        <div class="page-subtitle">Thư viện lưu trữ các bước khắc phục sự cố (Step-by-Step) cho KTV</div>
+    </div>
+    <a asp-action="Create" class="hd-btn hd-btn-primary hd-btn-sm" style="text-decoration:none">
+        Thêm giải pháp
+    </a>
+</div>
+
+<div class="hd-card">
+    <form asp-action="Index" method="get" class="hd-search-bar" style="margin-bottom:0">
+        <i class="bi bi-search" style="color:var(--text3)"></i>
+        <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="hd-search-input" placeholder="Tra cứu mã lỗi hoặc hướng dẫn khắc phục... (Nhấn Enter để tìm)">
+    </form>
+    <table class="hd-table">
+        <thead>
+            <tr>
+                <th>Mã GP</th>
+                <th>Áp dụng cho bệnh</th>
+                <th>Cẩm nang khắc phục (Các bước)</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="ticket-id">GP-@(item.MaGP.ToString("D3"))</td>
+                        <td class="fw-bold text-danger">ID Lỗi: @item.MaLoi</td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 400px;" title="@item.NoiDungStepByStep">@item.NoiDungStepByStep</div>
+                        </td>
+                        <td>
+                            <div class="action-group">
+                                <a asp-action="Edit" asp-route-id="@item.MaGP" class="icon-btn edit" title="Chỉnh sửa"><i class="bi bi-pencil"></i></a>
+                                <form asp-action="Delete" asp-route-id="@item.MaGP" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa giải pháp này?');">
+                                    <button type="submit" class="icon-btn del" title="Xóa"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            @if (Model == null || !Model.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                        Thư viện giải pháp đang trống.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

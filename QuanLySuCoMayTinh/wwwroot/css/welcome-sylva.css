@@ -1,0 +1,93 @@
+/* Sylva's full-bleed scene, floating dock and layered cards, adapted for IT Helpdesk. */
+:root { --ink:#173b52; --muted:#456b80; --blue:#0671bc; --border:#c8e2ef; --surface:#f2fbff; }
+* { box-sizing:border-box; letter-spacing:0; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--surface); color:var(--ink); font-family:'Be Vietnam Pro',sans-serif; }
+a { color:inherit; text-decoration:none; }
+button { font:inherit; cursor:pointer; }
+a:focus-visible,button:focus-visible { outline:3px solid #098bdc; outline-offset:5px; }
+[hidden] { display:none !important; }
+.welcome-hero { position:relative; min-height:820px; height:calc(100svh - 40px); overflow:hidden; isolation:isolate; background:#e9f7fe; }
+.welcome-mascot { position:absolute; left:50%; top:310px; width:min(360px,32%); aspect-ratio:1; transform:translateX(-50%); z-index:2; }
+.mascot-fallback { width:100%; height:100%; background:url('../mascots/crt-directions.webp') 50% 50% / 300% 300% no-repeat; }
+.welcome-mascot button:focus-visible { outline:3px solid var(--blue); outline-offset:0; border-radius:8px; }
+.welcome-guides { position:absolute; inset:0; display:flex; justify-content:space-evenly; pointer-events:none; z-index:0; }
+.welcome-guides i { width:1px; background:#c4dfec66; }
+.welcome-ghost { position:absolute; bottom:65px; left:4%; font-size:126px; line-height:1; font-weight:600; color:#bedbea55; pointer-events:none; z-index:0; }
+.dock-wrap { position:absolute; top:28px; left:20px; right:20px; z-index:5; display:flex; justify-content:center; }
+.welcome-dock { display:flex; gap:4px; padding:6px; background:#ffffffed; border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 24px #204f6410; align-items:center; }
+.dock-mark { display:grid; place-items:center; width:40px; height:40px; background:var(--blue); color:#fff; border-radius:6px; font-size:21px; }
+.dock-item { display:flex; align-items:center; gap:8px; min-height:40px; padding:0 17px; border-radius:5px; font-size:12px; color:var(--muted); transition:background .2s, transform .2s; }
+.dock-item:hover { background:#e5f4fc; transform:translateY(-2px); }
+.dock-item.is-active { color:var(--blue); background:#e8f5ff; }
+.dock-login { color:var(--blue); }
+.welcome-copy { position:absolute; top:160px; left:6%; z-index:3; }
+.welcome-eyebrow { font-size:10px; color:#537b91; margin:0 0 24px; display:flex; align-items:center; gap:8px; }
+.welcome-eyebrow span { width:6px; height:6px; border-radius:50%; background:#2d9a80; }
+.welcome-copy h1 { font-weight:500; font-size:58px; line-height:1.1; margin:0 0 20px; }
+.welcome-tagline { font-size:30px; font-weight:300; line-height:1.4; margin:0 0 28px; }
+.welcome-tagline em { color:var(--blue); font-style:normal; }
+.welcome-primary { display:inline-flex; gap:30px; align-items:center; padding:15px 20px; background:#0671bc; color:#fff; font-size:13px; border-radius:6px; box-shadow:0 8px 18px #1671a51c; }
+.welcome-primary:hover { background:#085e9b; }
+.welcome-lede { position:absolute; left:56%; top:170px; width:270px; font-size:14px; line-height:1.9; color:var(--muted); z-index:3; margin:0; }
+.welcome-card { position:absolute; z-index:2; width:224px; padding:16px; background:#fff; border:1px solid #d0e5ef; border-radius:8px; box-shadow:0 12px 30px #315a7212; transition:transform .25s; }
+.welcome-card:hover { transform:translateY(-5px); }
+.welcome-card img { width:100%; height:100px; object-fit:contain; background:#dff3ff; display:block; border-radius:4px; }
+.card-label { font-size:9px; color:#547b90; display:block; margin:14px 0 8px; }
+.welcome-card h2 { font-size:17px; line-height:1.45; font-weight:500; margin:0 0 12px; }
+.card-knowledge { left:6%; bottom:136px; }
+.card-deskai { right:6%; bottom:165px; background:#f7f4ff; border-color:#ded8f0; }
+.card-deskai .card-label { margin-top:0; color:#6c609a; }
+.card-arrow { position:absolute; bottom:-17px; right:18px; width:36px; height:36px; background:#e9f5fe; border:1px solid #bcd7e7; border-radius:50%; display:grid; place-items:center; color:var(--blue); }
+.scene-actions { position:absolute; top:43%; right:8%; z-index:4; display:flex; gap:10px; }
+.scene-actions button { display:grid; place-items:center; width:50px; height:50px; border:1px solid #acd3e7; background:#ffffffde; border-radius:50%; color:var(--blue); font-size:22px; }
+.welcome-capabilities { position:absolute; left:35%; right:25%; bottom:150px; display:flex; flex-wrap:wrap; gap:20px 28px; z-index:3; font-size:11px; color:#3c6c85; }
+.welcome-capabilities span { display:flex; gap:9px; align-items:center; }
+.welcome-capabilities i { color:var(--blue); font-size:17px; }
+.welcome-discover { position:absolute; bottom:30px; left:6%; right:6%; border-top:1px solid #bcdce9; padding-top:20px; display:flex; justify-content:space-between; font-size:11px; color:#456e85; z-index:3; }
+.welcome-next { padding:70px 6%; background:#fff; }
+.welcome-next>p { font-size:10px; color:var(--muted); margin:0 0 18px; }
+.welcome-next h2 { font-size:38px; font-weight:400; margin:0 0 26px; line-height:1.4; }
+.welcome-next h2 span { color:var(--blue); }
+.welcome-next>a { font-size:13px; color:var(--blue); display:inline-flex; gap:30px; border-bottom:1px solid #a5c9e0; padding-bottom:10px; }
+.welcome-video-dialog { width:min(1000px,94%); padding:50px 14px 14px; background:#f1f9ff; border:1px solid #b5d5e7; border-radius:8px; }
+.welcome-video-dialog::backdrop { background:#09283cc9; }
+.welcome-video-dialog video { width:100%; max-height:75svh; display:block; }
+.video-close { position:absolute; right:10px; top:5px; width:40px; height:40px; border:0; background:transparent; color:var(--ink); }
+@media(max-width:1100px) {
+    .welcome-mascot { top:420px; width:min(260px,32%); }
+    .welcome-copy h1 { font-size:48px; }
+    .welcome-tagline { font-size:26px; }
+    .welcome-lede { left:62%; width:240px; font-size:13px; }
+    .welcome-card { width:194px; }
+    .welcome-capabilities { left:33%; right:30%; bottom:132px; gap:14px; }
+}
+@media(max-width:760px) {
+    .welcome-hero { height:auto; min-height:1260px; }
+    .dock-wrap { top:18px; left:12px; right:12px; }
+    .welcome-dock { gap:0; padding:4px; width:auto; }
+    .dock-mark { width:34px; height:38px; font-size:18px; }
+    .dock-item { padding:0 10px; min-height:40px; font-size:10px; gap:4px; }
+    .welcome-copy { top:130px; left:24px; right:24px; }
+    .welcome-copy h1 { font-size:42px; }
+    .welcome-tagline { font-size:25px; margin-bottom:22px; }
+    .welcome-eyebrow { font-size:8px; margin-bottom:18px; }
+    .welcome-lede { left:24px; right:24px; top:382px; width:auto; max-width:380px; font-size:13px; }
+    .welcome-mascot { top:465px; width:min(360px,calc(100% - 48px)); }
+    .scene-actions { top:770px; right:24px; }
+    .welcome-card { top:875px; bottom:auto; width:calc(50% - 30px); padding:12px; }
+    .card-knowledge { left:20px; }
+    .card-deskai { right:20px; }
+    .welcome-card img { height:85px; object-fit:contain; background:#e7f4fd; }
+    .welcome-card h2 { font-size:13px; margin-bottom:10px; }
+    .card-label { font-size:8px; }
+    .welcome-capabilities { bottom:104px; left:24px; right:24px; gap:16px; font-size:10px; }
+    .welcome-ghost { font-size:62px; bottom:185px; left:20px; }
+    .welcome-discover { left:24px; right:24px; }
+    .welcome-next { padding:50px 24px; }
+    .welcome-next h2 { font-size:30px; }
+}
+@media(prefers-reduced-motion:reduce) {
+    html { scroll-behavior:auto; }
+    *,*::before,*::after { animation:none !important; transition:none !important; }
+}

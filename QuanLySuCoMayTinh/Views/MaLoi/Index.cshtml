@@ -1,0 +1,82 @@
+@model IEnumerable<QuanLySuCoMayTinh.Models.MaLoi>
+@{
+    ViewData["Title"] = "Quản lý mã lỗi";
+}
+
+<div class="helpdesk-breadcrumb">
+    <span>Từ điển tri thức</span><span class="sep">›</span><span class="cur">Từ điển Chẩn đoán</span>
+</div>
+
+<div class="helpdesk-page-header">
+    <div>
+        <div class="page-title">Từ điển Mã lỗi (Chẩn đoán)</div>
+        <div class="page-subtitle">Định nghĩa các "căn bệnh" hệ thống để AI có thể nhận diện</div>
+    </div>
+    <a asp-action="Create" class="hd-btn hd-btn-primary hd-btn-sm" style="text-decoration:none">
+        Thêm mã lỗi
+    </a>
+</div>
+
+<div class="hd-card">
+    <form asp-action="Index" method="get" class="hd-search-bar" style="margin-bottom:0">
+        <i class="bi bi-search" style="color:var(--text3)"></i>
+        <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="hd-search-input" placeholder="Tìm kiếm căn bệnh (Ví dụ: Hỏng RAM... Nhấn Enter để tìm)">
+        <select name="phanLoai" class="hd-filter-select" onchange="this.form.submit()">
+            <option value="Tất cả phân loại" selected="@(ViewData["CurrentFilter"]?.ToString() == "Tất cả phân loại" ? "selected" : null)">Tất cả phân loại</option>
+            <option value="Phần cứng" selected="@(ViewData["CurrentFilter"]?.ToString() == "Phần cứng" ? "selected" : null)">Phần cứng</option>
+            <option value="Phần mềm" selected="@(ViewData["CurrentFilter"]?.ToString() == "Phần mềm" ? "selected" : null)">Phần mềm</option>
+            <option value="Mạng" selected="@(ViewData["CurrentFilter"]?.ToString() == "Mạng" ? "selected" : null)">Mạng / Internet</option>
+            <option value="Khác" selected="@(ViewData["CurrentFilter"]?.ToString() == "Khác" ? "selected" : null)">Khác</option>
+        </select>
+    </form>
+    <table class="hd-table">
+        <thead>
+            <tr>
+                <th>Mã bệnh</th>
+                <th>Tên chẩn đoán (Bệnh lý)</th>
+                <th>Phân loại</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="ticket-id">ERR-@(item.MaLoiID.ToString("D3"))</td>
+                    <td class="fw-bold text-dark">@item.TenLoi</td>
+                    <td>
+                        @if (item.PhanLoai == "Phần cứng") { <span class="hd-badge hd-badge-danger">@item.PhanLoai</span> }
+                        else if (item.PhanLoai == "Phần mềm") { <span class="hd-badge hd-badge-info">@item.PhanLoai</span> }
+                        else { <span class="hd-badge hd-badge-warning">@item.PhanLoai</span> }
+                    </td>
+                    <td>
+                        @if (item.Status) {
+                            <span class="badge border" style="background: var(--surface2); color: var(--c-ok); border-color: var(--c-ok) !important;">Kích hoạt</span>
+                        } else {
+                            <span class="badge border" style="background: var(--surface2); color: var(--text-muted); border-color: var(--border) !important;">Tạm khóa</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="action-group">
+                            <a asp-action="Edit" asp-route-id="@item.MaLoiID" class="icon-btn edit" title="Chỉnh sửa"><i class="bi bi-pencil"></i></a>
+                            <form asp-action="Delete" asp-route-id="@item.MaLoiID" method="post" style="display:inline;" onsubmit="return confirm('Xác nhận xóa mã lỗi này?');">
+                                <button type="submit" class="icon-btn del" title="Xóa"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+            
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                        Từ điển chẩn đoán đang trống.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

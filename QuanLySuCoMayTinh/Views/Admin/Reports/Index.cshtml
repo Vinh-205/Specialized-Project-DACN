@@ -1,0 +1,558 @@
+@{
+    ViewData["Title"] = "Báo cáo & Thống kê";
+
+    int tongPhieu   = (int)(ViewData["TongPhieu"]   ?? 0);
+    int choKham     = (int)(ViewData["ChoKham"]      ?? 0);
+    int dangXuLy    = (int)(ViewData["DangXuLy"]     ?? 0);
+    int daGiaiQuyet = (int)(ViewData["DaGiaiQuyet"]  ?? 0);
+    int soTrieuChung = (int)(ViewData["SoTrieuChung"] ?? 0);
+    int soMaLoi     = (int)(ViewData["SoMaLoi"]      ?? 0);
+    int soGiaiPhap  = (int)(ViewData["SoGiaiPhap"]   ?? 0);
+
+    var topKtv  = ViewData["TopKtv"]  as dynamic;
+    var topLoi  = ViewData["TopLoi"]  as dynamic;
+    var recent  = ViewData["Recent"]  as IEnumerable<QuanLySuCoMayTinh.Models.PhieuTiepNhan>;
+
+    string chartLabels = ViewData["ChartLabels"]?.ToString() ?? "[]";
+    string chartData   = ViewData["ChartData"]?.ToString()   ?? "[]";
+    double pctDone = tongPhieu > 0 ? Math.Round((double)daGiaiQuyet / tongPhieu * 100) : 0;
+}
+
+<style>
+.reports-page { color:var(--text); }
+
+.reports-hero {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(20px);
+    position: relative; overflow: hidden;
+}
+.reports-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+}
+
+.reports-hero-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #0284c7, #22d3ee);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; box-shadow: 0 6px 20px rgba(2,132,199,0.4);
+}
+
+.rpt-grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.rpt-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+.rpt-grid-2 { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 20px; }
+
+.rpt-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+}
+
+.rpt-stat {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    position: relative; overflow: hidden;
+}
+.rpt-stat-bar { position: absolute; top:0; left:0; width:3px; height:100%; border-radius:2px 0 0 2px; }
+.rpt-stat-label { font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+.rpt-stat-value { font-size:30px; font-weight:700; font-family:'JetBrains Mono',monospace; margin:5px 0 3px; }
+.rpt-stat-sub   { font-size:11.5px; color:var(--text-muted); }
+.rpt-stat-bg-icon { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:36px; opacity:.07; }
+
+.rpt-card-head {
+    padding: 14px 18px;
+    border-bottom:1px solid var(--border);
+    font-size: 13.5px; font-weight: 600; color:var(--text);
+    display: flex; align-items: center; gap: 8px;
+}
+
+.rpt-card-head i { color:var(--c-info); font-size: 16px; }
+.rpt-card-body { padding: 16px 18px; }
+
+/* Donut ring */
+.donut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 16px;
+}
+
+.donut-svg { transform: rotate(-90deg); }
+.donut-center { position:absolute; text-align:center; }
+.donut-pct  { font-size:26px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--text); }
+.donut-lbl  { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+.legend-item { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-muted); }
+.legend-dot  { width:9px; height:9px; border-radius:3px; flex-shrink:0; }
+
+/* KTV table */
+.ktv-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.ktv-row:last-child { border-bottom:none; }
+.ktv-rank { width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+.ktv-bar { height:5px; border-radius:3px; margin-top:4px; transition:width .6s ease; }
+
+/* Recent activity */
+.act-row { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.act-row:last-child { border-bottom:none; }
+.act-dot-wrap { display:flex; flex-direction:column; align-items:center; padding-top:3px; }
+.act-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.act-dot-line { width:1px; flex:1; background:var(--border); margin:4px 0; }
+.act-text { font-size:12.5px; color:var(--text-muted); line-height:1.5; }
+.act-time { font-size:11px; color:var(--text-muted); margin-top:3px; }
+
+/* Chart container */
+.chart-wrap { padding: 14px 18px 18px; }
+canvas { max-height: 180px; }
+
+@@media (max-width:992px) { .rpt-grid-4 { grid-template-columns:repeat(2,1fr); } .rpt-grid-2 { grid-template-columns:1fr; } }
+@@media (max-width:576px) { .rpt-grid-3, .rpt-grid-4 { grid-template-columns:1fr; } }
+</style>
+
+<div class="reports-page">
+
+    <!-- Hero -->
+    <div class="reports-hero">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <div style="font-size:22px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:12px;">
+                    <div class="reports-hero-icon"><i class="bi bi-bar-chart-fill"></i></div>
+                    Báo cáo & Thống kê
+                </div>
+                <div style="color:var(--text-muted);font-size:13px;margin-top:6px;">
+                    Tổng quan hoạt động hệ thống IT Helpdesk — Cập nhật theo thời gian thực
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">
+                <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;box-shadow:0 0 6px #22c55e;"></span>
+                Dữ liệu được cập nhật liên tục
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat Cards — Phiếu -->
+    <div class="rpt-grid-4">
+        <div class="rpt-stat">
+            <div class="rpt-stat-bar" style="background:linear-gradient(180deg,#7c3aed,#0284c7)"></div>
+            <div class="rpt-stat-label">Tổng phiếu</div>
+            <div class="rpt-stat-value" data-count="@tongPhieu">0</div>
+            <div class="rpt-stat-sub">Toàn bộ hệ thống</div>
+            <i class="bi bi-ticket-detailed-fill rpt-stat-bg-icon" style="color:#0284c7; opacity:0.25; filter:drop-shadow(0 0 10px rgba(2,132,199,0.5));"></i>
+        </div>
+        <div class="rpt-stat">
+            <div class="rpt-stat-bar" style="background:#ef4444"></div>
+            <div class="rpt-stat-label">Chờ khám</div>
+            <div class="rpt-stat-value" style="color:var(--c-err)" data-count="@choKham">0</div>
+            <div class="rpt-stat-sub">Đang chờ tiếp nhận</div>
+            <i class="bi bi-hdd-network-fill rpt-stat-bg-icon" style="color:var(--c-err); opacity:0.25; filter:drop-shadow(0 0 10px rgba(239,68,68,0.5));"></i>
+        </div>
+        <div class="rpt-stat">
+            <div class="rpt-stat-bar" style="background:#f59e0b"></div>
+            <div class="rpt-stat-label">Đang kiểm tra & sửa chữa</div>
+            <div class="rpt-stat-value" style="color:var(--c-warn);" data-count="@dangXuLy">0</div>
+            <div class="rpt-stat-sub">KTV đang sửa chữa</div>
+            <i class="bi bi-motherboard-fill rpt-stat-bg-icon" style="color:var(--c-warn); opacity:0.25; filter:drop-shadow(0 0 10px rgba(245,158,11,0.5));"></i>
+        </div>
+        <div class="rpt-stat">
+            <div class="rpt-stat-bar" style="background:#22c55e"></div>
+            <div class="rpt-stat-label">Hoàn thành</div>
+            <div class="rpt-stat-value" style="color:var(--c-ok);" data-count="@daGiaiQuyet">0</div>
+            <div class="rpt-stat-sub">Tỷ lệ: @pctDone%</div>
+            <i class="bi bi-shield-fill-check rpt-stat-bg-icon" style="color:var(--c-ok); opacity:0.25; filter:drop-shadow(0 0 10px rgba(34,197,94,0.5));"></i>
+        </div>
+    </div>
+
+    <!-- Row 2: Biểu đồ + Donut + Tri thức -->
+    <div class="rpt-grid" style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:20px;margin-bottom:24px;">
+
+        <!-- Chart cột phiếu theo ngày -->
+        <div class="rpt-card">
+            <div class="rpt-card-head">
+                <i class="bi bi-graph-up-arrow"></i> Phiếu tiếp nhận 7 ngày gần nhất
+            </div>
+            <div class="chart-wrap">
+                <canvas id="chartPhieu"></canvas>
+            </div>
+        </div>
+
+        <!-- Donut phân bổ trạng thái -->
+        <div class="rpt-card">
+            <div class="rpt-card-head">
+                <i class="bi bi-pie-chart-fill"></i> Phân bổ trạng thái
+            </div>
+            <div class="donut-wrap">
+                <div style="position:relative;width:140px;height:140px;display:flex;align-items:center;justify-content:center;">
+                    <svg class="donut-svg" width="140" height="140" viewBox="0 0 140 140">
+                        @{
+                            double r = 52; double cx = 70; double cy = 70;
+                            double circ = 2 * Math.PI * r;
+                            double offset0 = 0;
+                            double[] vals = { choKham, dangXuLy, daGiaiQuyet };
+                            string[] colors = { "#ef4444", "#f59e0b", "#22c55e" };
+                        }
+                        <circle cx="@cx" cy="@cy" r="@r" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="18"/>
+                        @for (int i = 0; i < vals.Length; i++) {
+                            double pct = tongPhieu > 0 ? vals[i] / (double)tongPhieu : 0;
+                            double dash = pct * circ;
+                            double gap  = circ - dash;
+                            <circle cx="@cx" cy="@cy" r="@r" fill="none"
+                                    stroke="@colors[i]" stroke-width="18"
+                                    stroke-dasharray="@dash.ToString("F2") @gap.ToString("F2")"
+                                    stroke-dashoffset="@(-offset0).ToString("F2")"
+                                    stroke-linecap="butt"/>
+                            offset0 += dash;
+                        }
+                    </svg>
+                    <div class="donut-center">
+                        <div class="donut-pct">@pctDone%</div>
+                        <div class="donut-lbl">Hoàn thành</div>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;align-self:flex-start;width:100%;padding:0 4px;">
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div> Chờ khám <strong style="margin-left:auto;font-family:'JetBrains Mono',monospace;">@choKham</strong></div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div> Đang sửa chữa <strong style="margin-left:auto;font-family:'JetBrains Mono',monospace;">@dangXuLy</strong></div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div> Hoàn thành <strong style="margin-left:auto;font-family:'JetBrains Mono',monospace;">@daGiaiQuyet</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donut Chi phí -->
+        <div class="rpt-card">
+            <div class="rpt-card-head">
+                <i class="bi bi-pie-chart-fill"></i> Chi phí theo hạng mục
+            </div>
+            <div class="chart-wrap" style="height:200px;display:flex;align-items:center;justify-content:center;margin-top:10px;">
+                <canvas id="chartChiPhi"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Biểu đồ xu hướng lỗi 30 ngày -->
+    <div class="rpt-card" style="margin-bottom:24px;">
+        <div class="rpt-card-head">
+            <i class="bi bi-graph-up"></i> Xu hướng Top 5 Lỗi (30 ngày qua)
+        </div>
+        <div class="chart-wrap" style="height:300px; padding:10px;">
+            <canvas id="chartXuHuong"></canvas>
+        </div>
+    </div>
+
+    <!-- Stat Tri thức -->
+    <div class="rpt-grid-3">
+        <div class="rpt-stat">
+            <div class="rpt-stat-bar" style="background:#a78bfa"></div>
+            <div class="rpt-stat-label">Triệu chứng</div>
+            <div class="rpt-stat-value" style="color:var(--c-purple)" data-count="@soTrieuChung">0</div>
+            <div class="rpt-stat-sub">Trong cơ sở tri thức</div>
+            <i class="bi bi-exclamation-triangle-fill rpt-stat-bg-icon" style="color:var(--c-purple); opacity:0.25; filter:drop-shadow(0 0 10px rgba(167,139,250,0.5));"></i>
+        </div>
+        <div class="rpt-stat">
+            <div class="rpt-stat-bar" style="background:#38bdf8"></div>
+            <div class="rpt-stat-label">Mã lỗi</div>
+            <div class="rpt-stat-value" style="color:var(--c-info)" data-count="@soMaLoi">0</div>
+            <div class="rpt-stat-sub">Nguyên nhân đã chuẩn hóa</div>
+            <i class="bi bi-bug-fill rpt-stat-bg-icon" style="color:var(--c-info); opacity:0.25; filter:drop-shadow(0 0 10px rgba(56,189,248,0.5));"></i>
+        </div>
+        <div class="rpt-stat">
+            <div class="rpt-stat-bar" style="background:#22c55e"></div>
+            <div class="rpt-stat-label">Giải pháp</div>
+            <div class="rpt-stat-value" style="color:var(--c-ok)" data-count="@soGiaiPhap">0</div>
+            <div class="rpt-stat-sub">Hướng dẫn step-by-step</div>
+            <i class="bi bi-lightbulb-fill rpt-stat-bg-icon" style="color:var(--c-ok); opacity:0.25; filter:drop-shadow(0 0 10px rgba(34,197,94,0.5));"></i>
+        </div>
+    </div>
+
+    <!-- Row: Top KTV + Hoạt động gần đây -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+        <!-- Top KTV -->
+        <div class="rpt-card">
+            <div class="rpt-card-head">
+                <i class="bi bi-trophy-fill" style="color:var(--c-warn);"></i> Top KTV hiệu suất cao
+            </div>
+            <div class="rpt-card-body">
+                @{
+                    var ktvList = topKtv as IEnumerable<dynamic>;
+                    var maxKtv  = ktvList?.Any() == true ? (int)ktvList.Max(k => (int)k.SoPhieu) : 1;
+                    int ktvRank = 0;
+                    string[] rankColors = { "#f59e0b", "#94a3b8", "#cd7f32", "#38bdf8", "#38bdf8" };
+                }
+                @if (ktvList?.Any() == true)
+                {
+                    @foreach (var k in ktvList)
+                    {
+                        ktvRank++;
+                        double barPct = maxKtv > 0 ? (double)(int)k.SoPhieu / maxKtv * 100 : 0;
+                        <div class="ktv-row">
+                            <div class="ktv-rank" style="background:var(--surface);color:@rankColors[Math.Min(ktvRank-1,4)];">
+                                @ktvRank
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@k.FullName</div>
+                                <div class="ktv-bar" style="width:@barPct.ToString("F0")%;background:@rankColors[Math.Min(ktvRank-1,4)];"></div>
+                            </div>
+                            <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text-muted);white-space:nowrap;">
+                                @k.SoPhieu phiếu
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div style="text-align:center;color:var(--text-light);padding:30px;font-size:13px;">
+                        <i class="bi bi-inbox" style="font-size:28px;display:block;margin-bottom:10px;"></i>
+                        Chưa có phiếu hoàn thành
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Hoạt động gần đây -->
+        <div class="rpt-card">
+            <div class="rpt-card-head">
+                <i class="bi bi-activity"></i> Hoạt động gần đây
+            </div>
+            <div class="rpt-card-body">
+                @if (recent != null && recent.Any())
+                {
+                    @foreach (var p in recent)
+                    {
+                        var dotColor = p.TrangThai == "Hoàn thành" ? "var(--c-ok)" :
+                                       p.TrangThai == "Đang kiểm tra" || p.TrangThai == "Đang sửa chữa" ? "var(--c-warn)" : "var(--c-err)";
+                        <div class="activity-item">
+                            <div class="act-dot-wrap">
+                                <div class="act-dot" style="background:@dotColor;"></div>
+                                <div class="act-dot-line"></div>
+                            </div>
+                            <div>
+                                <div class="act-text">
+                                    Phiếu <strong style="color:var(--text);font-family:'JetBrains Mono',monospace;">HD-@p.MaPhieu.ToString("D4")</strong>
+                                    — @(p.ThietBi?.KhachHang?.HoTen ?? "Khách lẻ")
+                                </div>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+                                    <span style="color:@dotColor;font-weight:500;">@p.TrangThai</span>
+                                    · @(p.User_KTV?.FullName ?? "Chưa phân công")
+                                </div>
+                                <div class="act-time">@p.NgayNhan.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div style="text-align:center;color:var(--text-light);padding:30px;font-size:13px;">
+                        <i class="bi bi-inbox" style="font-size:28px;display:block;margin-bottom:10px;"></i>
+                        Chưa có hoạt động
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    const labels = @Html.Raw(chartLabels);
+    const data   = @Html.Raw(chartData);
+    const chiPhiLabels = @Html.Raw(ViewData["ChiPhiLabels"] ?? "[]");
+    const chiPhiData = @Html.Raw(ViewData["ChiPhiData"] ?? "[]");
+
+    const ctx = document.getElementById('chartPhieu');
+    if (!ctx || !labels.length) return;
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Số phiếu',
+                data,
+                backgroundColor: 'rgba(56,189,248,0.25)',
+                borderColor: '#38bdf8',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+                hoverBackgroundColor: 'rgba(56,189,248,0.45)',
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(6,13,31,0.95)',
+                    borderColor: 'rgba(56,189,248,0.3)',
+                    borderWidth: 1,
+                    titleColor: 'rgba(255,255,255,0.7)',
+                    bodyColor: '#38bdf8',
+                    padding: 10,
+                    callbacks: {
+                        label: ctx => ` ${ctx.parsed.y} phiếu tiếp nhận`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: 'rgba(255,255,255,0.4)', stepSize: 1, font: { size: 11 } },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+})();
+
+// Biểu đồ Doughnut Chi phí linh kiện
+(function() {
+    if (typeof chiPhiLabels === 'undefined' || chiPhiLabels.length === 0) return;
+    const ctx = document.getElementById('chartChiPhi');
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: chiPhiLabels,
+            datasets: [{
+                data: chiPhiData,
+                backgroundColor: [
+                    '#38bdf8', // Phí dịch vụ
+                    '#f59e0b',
+                    '#22c55e',
+                    '#a78bfa',
+                    '#ef4444',
+                    '#f472b6',
+                    '#fbbf24'
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: 'rgba(255,255,255,0.7)', font: { size: 11, family: "'Be Vietnam Pro', sans-serif" }, padding: 10 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(6,13,31,0.95)',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    titleColor: 'rgba(255,255,255,0.7)',
+                    bodyColor: '#fff',
+                    padding: 10,
+                    callbacks: {
+                        label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString('vi-VN')}đ`
+                    }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+})();
+
+// Biểu đồ Xu hướng lỗi (Line Chart)
+(function() {
+    const trendDates = @Html.Raw(ViewData["TrendDates"] ?? "[]");
+    const trendDatasets = @Html.Raw(ViewData["TrendDatasets"] ?? "[]");
+
+    if (!trendDates.length || !trendDatasets.length) return;
+    const ctx = document.getElementById('chartXuHuong');
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trendDates,
+            datasets: trendDatasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: 'rgba(255,255,255,0.7)', font: { size: 11, family: "'Be Vietnam Pro', sans-serif" } }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(6,13,31,0.95)',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    titleColor: 'rgba(255,255,255,0.7)',
+                    bodyColor: '#fff',
+                    padding: 10,
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: 'rgba(255,255,255,0.4)', stepSize: 1, font: { size: 10 } },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+})();
+
+/* ── Counter Animation (đếm số mượt mà) ── */
+(function() {
+    function animateCounter(el, target, duration) {
+        if (el.dataset.animated) return;
+        el.dataset.animated = 'true';
+        const start = performance.now();
+        function update(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            // Easing: easeOutExpo
+            const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+            el.textContent = Math.round(eased * target).toLocaleString('vi-VN');
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                const target = parseInt(el.dataset.count) || 0;
+                animateCounter(el, target, 1200);
+                observer.unobserve(el);
+            }
+        });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+})();
+</script>
+}

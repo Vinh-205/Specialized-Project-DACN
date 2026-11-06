@@ -1,0 +1,83 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <partial name="_SystemIcons" />
+    <link href="~/css/public-motion.css" rel="stylesheet" asp-append-version="true">
+    <script src="~/js/public-motion.js" defer asp-append-version="true"></script>
+    <link href="~/css/scroll-showcase.css" rel="stylesheet" asp-append-version="true">
+    <script src="~/js/scroll-showcase.js" defer asp-append-version="true"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="IT Helpdesk - kết nối tiếp nhận sự cố, chẩn đoán cùng DeskAI và quản lý sửa chữa máy tính.">
+    <title>IT Helpdesk | Chào mừng</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="~/css/welcome-sylva.css" rel="stylesheet" asp-append-version="true">
+    <script src="~/js/welcome-mascot.bundle.js" defer asp-append-version="true"></script>
+    <script src="~/js/welcome-sylva.js" defer asp-append-version="true"></script>
+</head>
+<body>
+    <main>
+        <div class="welcome-scroll-track">
+        <section class="welcome-hero" id="welcomeHero" aria-labelledby="welcomeTitle">
+            <div class="welcome-mascot" id="welcomeMascot" data-directions="@Url.Content("~/mascots/crt-directions.webp")" data-reactions="@Url.Content("~/mascots/crt-reactions.webp")">
+                <div class="mascot-fallback" role="img" aria-label="Nhân vật CRT chào mừng bạn"></div>
+            </div>
+            <div class="welcome-guides" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="welcome-ghost" aria-hidden="true">HELPDESK</div>
+            <header class="dock-wrap">
+                <nav class="welcome-dock" aria-label="Điều hướng chính">
+                    <a class="dock-mark" href="@Url.Action("Welcome", "Home")" aria-label="IT Helpdesk - Trang chủ" title="Trang chủ"><i class="bi bi-pc-display" aria-hidden="true"></i></a>
+                    <a class="dock-item is-active" href="#welcomeHero" aria-current="page">Chào mừng</a>
+                    <a class="dock-item" href="@Url.Action("Landing", "Home")">Khám phá</a>
+                    <a class="dock-item dock-login" href="@Url.Action("Login", "Auth")">Đăng nhập <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+                </nav>
+            </header>
+            <div class="welcome-copy">
+                <p class="welcome-eyebrow"><span></span> CÔNG NGHỆ KẾT NỐI. HỖ TRỢ LIỀN MẠCH.</p>
+                <h1 id="welcomeTitle">IT HELPDESK</h1>
+                <p class="welcome-tagline">Mọi sự cố.<br><em>Một hướng giải quyết.</em></p>
+                <a class="welcome-primary" href="@Url.Action("Landing", "Home")"><span>Khám phá hệ thống</span><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            </div>
+            <p class="welcome-lede">Từ tiếp nhận đến sửa chữa.<br>DeskAI đồng hành cùng kỹ thuật viên, kết nối thông tin và tìm hướng xử lý.</p>
+            <div class="scene-actions">
+                <button id="openWelcomeVideo" type="button" aria-label="Xem video giới thiệu" title="Xem video giới thiệu"><i class="bi bi-play-fill" aria-hidden="true"></i></button>
+            </div>
+            <a class="welcome-card card-knowledge" href="@Url.Action("Landing", "Home")#plates">
+                <img src="~/images/proposals/helpdesk-knowledge.png" alt="Các lớp kết nối tri thức của hệ thống">
+                <span class="card-label">KHO TRI THỨC</span>
+                <h2>Kinh nghiệm được kết nối.</h2>
+                <span class="card-arrow"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+            </a>
+            <a class="welcome-card card-deskai" href="@Url.Action("Landing", "Home")#plates">
+                <span class="card-label">DESKAI / CHẨN ĐOÁN</span>
+                <h2>Hiểu triệu chứng.<br>Tìm đúng giải pháp.</h2>
+                <img src="~/images/proposals/helpdesk-knowledge.png" alt="Minh họa quy trình phân tích sự cố">
+                <span class="card-arrow"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+            </a>
+            <div class="welcome-capabilities">
+                <span><i class="bi bi-ticket-detailed" aria-hidden="true"></i> Phiếu tiếp nhận</span>
+                <span><i class="bi bi-stars" aria-hidden="true"></i> Chẩn đoán AI</span>
+                <span><i class="bi bi-tools" aria-hidden="true"></i> Quản lý sửa chữa</span>
+            </div>
+            <a class="welcome-discover" href="#welcomeNext">Kết nối toàn bộ hành trình <i class="bi bi-arrow-down" aria-hidden="true"></i></a>
+        </section>
+        </div>
+        <section class="welcome-next" id="welcomeNext">
+            <p>IT HELPDESK PLATFORM</p>
+            <h2>Công việc tiếp tục.<br><span>Hỗ trợ luôn liền mạch.</span></h2>
+            <a href="@Url.Action("Landing", "Home")">Mở sổ tay hệ thống <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        </section>
+    </main>
+    <dialog class="welcome-video-dialog" id="welcomeVideoDialog" aria-label="Video giới thiệu IT Helpdesk">
+        <button type="button" class="video-close" id="closeWelcomeVideo" aria-label="Đóng video" title="Đóng video"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        <video id="welcomeVideo" controls playsinline preload="none" poster="@Url.Content("~/images/proposals/helpdesk-workspace.png")" aria-label="Video minh họa hệ thống IT Helpdesk">
+            <source src="~/images/vid_homelanding.mp4" type="video/mp4">
+        </video>
+    </dialog>
+</body>
+</html>

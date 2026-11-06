@@ -1,0 +1,526 @@
+-- DATABASE DESIGN BASELINE V1 / implemented LocalDB schema, 2026-10-25.
+-- Business tables only: 25 tables, 213 columns, 41 FK, 13 CHECK.
+-- Companion DATABASE_EXTENDED_DDL.sql contains the deployed immutable-input trigger.
+-- No CREATE DATABASE / USE / data INSERT / credentials / migration history rows.
+-- Reverse Engineer SQL Server syntax in PowerDesigner; direct PowerDesigner verification not performed.
+-- SQL Server schema captured from sys catalog; no business data.
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+CREATE TABLE [dbo].[AI_TEST_CASE] (
+    [Id] [int] IDENTITY(1,1) NOT NULL,
+    [Symptoms] [nvarchar](max) NOT NULL,
+    [ExpectedFault] [nvarchar](max) NOT NULL,
+    [RulePrediction] [nvarchar](max) NULL,
+    [AIPredictionTop1] [nvarchar](max) NULL,
+    [AIPredictionTop3] [nvarchar](max) NULL,
+    [IsAICorrect] [bit] NULL,
+    [CreatedAt] [datetime2](7) NOT NULL,
+    CONSTRAINT [PK_AI_TEST_CASE] PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+GO
+CREATE TABLE [dbo].[AI_TRAINING_JOB] (
+    [Id] [int] IDENTITY(1,1) NOT NULL,
+    [CreatedAt] [datetime2](7) NOT NULL,
+    [StartedAt] [datetime2](7) NULL,
+    [CompletedAt] [datetime2](7) NULL,
+    [Status] [nvarchar](50) NOT NULL,
+    [ErrorMessage] [nvarchar](max) NULL,
+    [ModelInfoId] [int] NULL,
+    [AuthorizationReference] [nvarchar](255) NULL,
+    [DatasetChecksum] [nvarchar](64) NULL,
+    [DatasetVersion] [nvarchar](64) NULL,
+    [ExternalManifestReference] [nvarchar](255) NULL,
+    [TaskDefinition] [nvarchar](100) NULL,
+    CONSTRAINT [PK_AI_TRAINING_JOB] PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+GO
+CREATE TABLE [dbo].[CHI_TIET_DU_DOAN_AI] (
+    [Id] [bigint] IDENTITY(1,1) NOT NULL,
+    [PredictionRunId] [bigint] NOT NULL,
+    [IssueGroupId] [int] NOT NULL,
+    [Task] [nvarchar](100) NOT NULL,
+    [LabelDefinitionVersion] [nvarchar](64) NOT NULL,
+    [Rank] [int] NOT NULL,
+    [Score] [float] NOT NULL,
+    CONSTRAINT [PK_CHI_TIET_DU_DOAN_AI] PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+GO
+CREATE TABLE [dbo].[CHI_TIET_SUA_CHUA] (
+    [MaCT] [int] IDENTITY(1,1) NOT NULL,
+    [MaPhieu] [int] NOT NULL,
+    [TenHangMuc] [nvarchar](255) NOT NULL,
+    [ChiPhi] [decimal](18,0) NOT NULL,
+    [GhiChu] [nvarchar](255) NULL,
+    [DonGia] [decimal](18,0) NOT NULL CONSTRAINT [DF__CHI_TIET___DonGi__01142BA1] DEFAULT ((0.0)),
+    [IsDeleted] [bit] NOT NULL CONSTRAINT [DF__CHI_TIET___IsDel__02084FDA] DEFAULT (CONVERT([bit],(0))),
+    [MaLK] [int] NULL,
+    [ProcessingType] [int] NOT NULL CONSTRAINT [DF__CHI_TIET___Proce__02FC7413] DEFAULT ((0)),
+    [SoLuong] [int] NOT NULL CONSTRAINT [DF__CHI_TIET___SoLuo__03F0984C] DEFAULT ((0)),
+    [RetestEvidenceReference] [nvarchar](255) NULL,
+    [RetestStatus] [nvarchar](32) NULL,
+    [RetestedAtUtc] [datetime2](7) NULL,
+    [RetestedByUserId] [int] NULL,
+    CONSTRAINT [PK_CHI_TIET_SUA_CHUA] PRIMARY KEY CLUSTERED ([MaCT] ASC)
+);
+GO
+CREATE TABLE [dbo].[DANH_GIA_DICH_VU] (
+    [MaDG] [int] IDENTITY(1,1) NOT NULL,
+    [MaPhieu] [int] NOT NULL,
+    [SoSao] [int] NOT NULL,
+    [BinhLuan] [nvarchar](1000) NULL,
+    [NgayDG] [datetime2](7) NOT NULL,
+    CONSTRAINT [PK_DANH_GIA_DICH_VU] PRIMARY KEY CLUSTERED ([MaDG] ASC)
+);
+GO
+CREATE TABLE [dbo].[GIAI_PHAP] (
+    [MaGP] [int] IDENTITY(1,1) NOT NULL,
+    [MaLoi] [int] NOT NULL,
+    [NoiDungStepByStep] [nvarchar](max) NOT NULL,
+    [MucDoKho] [int] NULL,
+    [Status] [bit] NOT NULL,
+    CONSTRAINT [PK_GIAI_PHAP] PRIMARY KEY CLUSTERED ([MaGP] ASC)
+);
+GO
+CREATE TABLE [dbo].[HINH_ANH_SU_CO] (
+    [MaHA] [int] IDENTITY(1,1) NOT NULL,
+    [MaPhieu] [int] NOT NULL,
+    [DuongDanAnh] [nvarchar](500) NOT NULL,
+    [MoTa] [nvarchar](255) NULL,
+    [NgayChup] [datetime2](7) NOT NULL,
+    CONSTRAINT [PK_HINH_ANH_SU_CO] PRIMARY KEY CLUSTERED ([MaHA] ASC)
+);
+GO
+CREATE TABLE [dbo].[KET_QUA_KIEM_THU_AI] (
+    [Id] [bigint] IDENTITY(1,1) NOT NULL,
+    [TestCaseId] [int] NOT NULL,
+    [ModelInfoId] [int] NOT NULL,
+    [TestDefinitionVersion] [nvarchar](64) NOT NULL,
+    [DatasetVersion] [nvarchar](64) NOT NULL,
+    [AuthorizationReference] [nvarchar](255) NOT NULL,
+    [PredictionJson] [nvarchar](max) NOT NULL,
+    [EvaluationJson] [nvarchar](max) NULL,
+    [EvaluatedAtUtc] [datetime2](7) NOT NULL,
+    CONSTRAINT [PK_KET_QUA_KIEM_THU_AI] PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+GO
+CREATE TABLE [dbo].[KHACH_HANG] (
+    [MaKH] [int] IDENTITY(1,1) NOT NULL,
+    [HoTen] [nvarchar](100) NOT NULL,
+    [SDT] [nvarchar](15) NOT NULL,
+    [DiaChi] [nvarchar](255) NULL,
+    CONSTRAINT [PK_KHACH_HANG] PRIMARY KEY CLUSTERED ([MaKH] ASC)
+);
+GO
+CREATE TABLE [dbo].[LAN_DU_DOAN_AI] (
+    [Id] [bigint] IDENTITY(1,1) NOT NULL,
+    [DiagnosisId] [int] NOT NULL,
+    [MaPhieu] [int] NOT NULL,
+    [InputSnapshotId] [bigint] NOT NULL,
+    [ModelInfoId] [int] NULL,
+    [Task] [nvarchar](100) NOT NULL,
+    [LabelDefinitionVersion] [nvarchar](64) NOT NULL,
+    [Status] [nvarchar](32) NOT NULL,
+    [AbstentionReason] [nvarchar](255) NULL,
+    [ScoreKind] [nvarchar](32) NOT NULL,
+    [CreatedAtUtc] [datetime2](7) NOT NULL,
+    CONSTRAINT [PK_LAN_DU_DOAN_AI] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [AK_LAN_DU_DOAN_AI_Id_Task_LabelDefinitionVersion] UNIQUE NONCLUSTERED ([Id] ASC, [Task] ASC, [LabelDefinitionVersion] ASC)
+);
+GO
+CREATE TABLE [dbo].[LICH_SU_CHAN_DOAN] (
+    [Id] [int] IDENTITY(1,1) NOT NULL,
+    [MaPhieu] [int] NOT NULL,
+    [MaLoiRule] [int] NULL,
+    [MaLoiAITop3] [int] NULL,
+    [MaLoiThucTe] [int] NULL,
+    [TenLoiThucTeSnapshot] [nvarchar](255) NULL,
+    [ThoiGian] [datetime2](7) NOT NULL,
+    [ConfidenceTop1] [real] NULL,
+    [ConfidenceTop2] [real] NULL,
+    [ConfidenceTop3] [real] NULL,
+    [DataSource] [int] NOT NULL CONSTRAINT [DF__LICH_SU_C__DataS__65370702] DEFAULT ((0)),
+    [MaLoiAITop1] [int] NULL,
+    [MaLoiAITop2] [int] NULL,
+    [ActorUserId] [int] NULL,
+    [OperatorDiagnosedFaultId] [int] NULL,
+    [TechnicianReportedFaultId] [int] NULL,
+    [TechnicianReportedAtUtc] [datetime2](7) NULL,
+    [TechnicianReporterUserId] [int] NULL,
+    CONSTRAINT [PK_LICH_SU_CHAN_DOAN] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [AK_LICH_SU_CHAN_DOAN_Id_MaPhieu] UNIQUE NONCLUSTERED ([Id] ASC, [MaPhieu] ASC)
+);
+GO
+CREATE TABLE [dbo].[LICH_SU_CHAN_DOAN_TRIEU_CHUNG] (
+    [Id] [int] IDENTITY(1,1) NOT NULL,
+    [MaLichSuChanDoan] [int] NOT NULL,
+    [MaTrieuChung] [int] NOT NULL,
+    [TenTrieuChungSnapshot] [nvarchar](255) NULL,
+    CONSTRAINT [PK_LICH_SU_CHAN_DOAN_TRIEU_CHUNG] PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+GO
+CREATE TABLE [dbo].[LICH_SU_TRANG_THAI] (
+    [MaLS] [int] IDENTITY(1,1) NOT NULL,
+    [MaPhieu] [int] NOT NULL,
+    [TrangThaiCu] [nvarchar](50) NOT NULL,
+    [TrangThaiMoi] [nvarchar](50) NOT NULL,
+    [ThoiGian] [datetime2](7) NOT NULL,
+    [Ma_KTV] [int] NULL,
+    [EventType] [nvarchar](50) NULL,
+    [MetadataJson] [nvarchar](max) NULL,
+    CONSTRAINT [PK_LICH_SU_TRANG_THAI] PRIMARY KEY CLUSTERED ([MaLS] ASC)
+);
+GO
+CREATE TABLE [dbo].[LINH_KIEN] (
+    [MaLK] [int] IDENTITY(1,1) NOT NULL,
+    [TenLK] [nvarchar](255) NOT NULL,
+    [LoaiLK] [nvarchar](100) NOT NULL,
+    [SoLuongTon] [int] NOT NULL,
+    [DonGia] [decimal](18,0) NOT NULL,
+    [CoTrangThai] [bit] NOT NULL,
+    CONSTRAINT [PK_LINH_KIEN] PRIMARY KEY CLUSTERED ([MaLK] ASC)
+);
+GO
+CREATE TABLE [dbo].[MA_LOI] (
+    [MaLoiID] [int] IDENTITY(1,1) NOT NULL,
+    [TenLoi] [nvarchar](150) NOT NULL,
+    [PhanLoai] [nvarchar](50) NOT NULL,
+    [Status] [bit] NOT NULL,
+    CONSTRAINT [PK_MA_LOI] PRIMARY KEY CLUSTERED ([MaLoiID] ASC)
+);
+GO
+CREATE TABLE [dbo].[ML_MODEL_INFO] (
+    [Id] [int] IDENTITY(1,1) NOT NULL,
+    [Version] [nvarchar](50) NOT NULL,
+    [MicroAccuracy] [float] NOT NULL,
+    [MacroAccuracy] [float] NOT NULL,
+    [LogLoss] [float] NOT NULL,
+    [LogLossReduction] [float] NOT NULL,
+    [TrainingRecordCount] [int] NOT NULL,
+    [CreatedAt] [datetime2](7) NOT NULL,
+    [IsActive] [bit] NOT NULL,
+    [FilePath] [nvarchar](255) NULL,
+    [AIAccuracy] [float] NOT NULL CONSTRAINT [DF__ML_MODEL___AIAcc__607251E5] DEFAULT ((0.0000000000000000e+000)),
+    [ConfusionMatrixJson] [nvarchar](max) NULL,
+    [DatasetGeneratedAt] [datetime2](7) NULL,
+    [DatasetVersion] [nvarchar](50) NULL,
+    [RealRecordsCount] [int] NOT NULL CONSTRAINT [DF__ML_MODEL___RealR__6166761E] DEFAULT ((0)),
+    [RuleAccuracy] [float] NOT NULL CONSTRAINT [DF__ML_MODEL___RuleA__625A9A57] DEFAULT ((0.0000000000000000e+000)),
+    [SyntheticRecordsCount] [int] NOT NULL CONSTRAINT [DF__ML_MODEL___Synth__634EBE90] DEFAULT ((0)),
+    [UserHistoryRecordsCount] [int] NOT NULL CONSTRAINT [DF__ML_MODEL___UserH__6442E2C9] DEFAULT ((0)),
+    [Top3Accuracy] [float] NULL,
+    [Top5Accuracy] [float] NULL,
+    [ApprovalStatus] [nvarchar](32) NOT NULL CONSTRAINT [DF__ML_MODEL___Appro__01142BA1] DEFAULT (N'UNREVIEWED'),
+    [ArtifactSha256] [nvarchar](64) NULL,
+    [DatasetManifestReference] [nvarchar](255) NULL,
+    [DatasetSha256] [nvarchar](64) NULL,
+    [LabelDefinitionVersion] [nvarchar](64) NULL,
+    [ModelIdentity] [nvarchar](100) NULL,
+    [ModelType] [nvarchar](50) NULL,
+    [TaskDefinition] [nvarchar](100) NULL,
+    [TrainingFramework] [nvarchar](50) NULL,
+    [TrainingProvenanceReference] [nvarchar](255) NULL,
+    CONSTRAINT [PK_ML_MODEL_INFO] PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+GO
+CREATE TABLE [dbo].[MODEL_ACTIVATION_LOG] (
+    [Id] [int] IDENTITY(1,1) NOT NULL,
+    [OldVersion] [nvarchar](50) NULL,
+    [NewVersion] [nvarchar](50) NOT NULL,
+    [ActivatedAt] [datetime2](7) NOT NULL,
+    [ActivatedBy] [nvarchar](255) NULL,
+    [ActorUserId] [int] NULL,
+    [NewModelInfoId] [int] NULL,
+    [OldModelInfoId] [int] NULL,
+    [Reason] [nvarchar](500) NULL,
+    [Result] [nvarchar](32) NULL,
+    CONSTRAINT [PK_MODEL_ACTIVATION_LOG] PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+GO
+CREATE TABLE [dbo].[NHOM_SU_CO_AI] (
+    [Id] [int] IDENTITY(1,1) NOT NULL,
+    [Task] [nvarchar](100) NOT NULL,
+    [LabelDefinitionVersion] [nvarchar](64) NOT NULL,
+    [Code] [nvarchar](64) NOT NULL,
+    [Name] [nvarchar](255) NOT NULL,
+    [Description] [nvarchar](2000) NULL,
+    [IsEnabled] [bit] NOT NULL,
+    CONSTRAINT [PK_NHOM_SU_CO_AI] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [AK_NHOM_SU_CO_AI_Id_Task_LabelDefinitionVersion] UNIQUE NONCLUSTERED ([Id] ASC, [Task] ASC, [LabelDefinitionVersion] ASC)
+);
+GO
+CREATE TABLE [dbo].[PHIEU_TIEP_NHAN] (
+    [MaPhieu] [int] IDENTITY(1,1) NOT NULL,
+    [MaTB] [int] NOT NULL,
+    [MaUser_KTV] [int] NOT NULL,
+    [NgayNhan] [datetime2](7) NOT NULL,
+    [NgayTra_DK] [datetime2](7) NULL,
+    [TrangThai] [nvarchar](50) NOT NULL,
+    [MaLoi_CD] [int] NULL,
+    [USERID] [int] NULL,
+    [GhiChuNoiBo] [nvarchar](max) NULL,
+    CONSTRAINT [PK_PHIEU_TIEP_NHAN] PRIMARY KEY CLUSTERED ([MaPhieu] ASC)
+);
+GO
+CREATE TABLE [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] (
+    [Id] [bigint] IDENTITY(1,1) NOT NULL,
+    [MaPhieu] [int] NOT NULL,
+    [EpisodeId] [uniqueidentifier] NOT NULL,
+    [Revision] [int] NOT NULL,
+    [CapturedByUserId] [int] NOT NULL,
+    [CapturedAtUtc] [datetime2](7) NOT NULL CONSTRAINT [DF__SNAPSHOT___Captu__0D7A0286] DEFAULT (sysutcdatetime()),
+    [SymptomsJson] [nvarchar](max) NOT NULL,
+    [InputSha256] [nvarchar](64) NOT NULL,
+    [CatalogSha256] [nvarchar](64) NOT NULL,
+    [InputSchemaVersion] [nvarchar](64) NOT NULL,
+    [Language] [nvarchar](16) NOT NULL,
+    [TimingKind] [nvarchar](64) NOT NULL,
+    [ResearchPermissionStatus] [nvarchar](32) NOT NULL,
+    [CandidateEligible] [bit] NOT NULL,
+    [TrainingEligible] [bit] NOT NULL,
+    [RowVersion] [timestamp] NOT NULL,
+    [OriginalNarrative] [nvarchar](4000) NULL,
+    CONSTRAINT [PK_SNAPSHOT_DAU_VAO_CHAN_DOAN] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [AK_SNAPSHOT_DAU_VAO_CHAN_DOAN_Id_MaPhieu] UNIQUE NONCLUSTERED ([Id] ASC, [MaPhieu] ASC)
+);
+GO
+CREATE TABLE [dbo].[SU_DUNG_LINH_KIEN] (
+    [MaCT] [int] NOT NULL,
+    [MaLK] [int] NOT NULL,
+    [SoLuong] [int] NOT NULL,
+    [DonGiaXuat] [decimal](18,0) NOT NULL,
+    CONSTRAINT [PK_SU_DUNG_LINH_KIEN] PRIMARY KEY CLUSTERED ([MaCT] ASC, [MaLK] ASC)
+);
+GO
+CREATE TABLE [dbo].[THIET_BI] (
+    [MaTB] [int] IDENTITY(1,1) NOT NULL,
+    [TenTB] [nvarchar](100) NOT NULL,
+    [CauHinh] [nvarchar](255) NULL,
+    [MaKH] [int] NOT NULL,
+    [NgoaiQuan] [nvarchar](500) NULL,
+    CONSTRAINT [PK_THIET_BI] PRIMARY KEY CLUSTERED ([MaTB] ASC)
+);
+GO
+CREATE TABLE [dbo].[TRIEU_CHUNG] (
+    [MaTC] [int] IDENTITY(1,1) NOT NULL,
+    [TenTC] [nvarchar](100) NOT NULL,
+    [MoTa] [nvarchar](max) NULL,
+    CONSTRAINT [PK_TRIEU_CHUNG] PRIMARY KEY CLUSTERED ([MaTC] ASC)
+);
+GO
+CREATE TABLE [dbo].[TRIEU_CHUNG_LOI] (
+    [MaTC] [int] NOT NULL,
+    [MaLoi] [int] NOT NULL,
+    CONSTRAINT [PK_TRIEU_CHUNG_LOI] PRIMARY KEY CLUSTERED ([MaTC] ASC, [MaLoi] ASC)
+);
+GO
+CREATE TABLE [dbo].[USER] (
+    [USERID] [int] IDENTITY(1,1) NOT NULL,
+    [Username] [nvarchar](50) NOT NULL,
+    [Password_Hash] [nvarchar](255) NOT NULL,
+    [FullName] [nvarchar](100) NOT NULL,
+    [Role] [nvarchar](20) NOT NULL,
+    [Status] [bit] NOT NULL,
+    CONSTRAINT [PK_USER] PRIMARY KEY CLUSTERED ([USERID] ASC)
+);
+GO
+CREATE NONCLUSTERED INDEX [IX_AI_TRAINING_JOB_ModelInfoId] ON [dbo].[AI_TRAINING_JOB] ([ModelInfoId] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_CHI_TIET_DU_DOAN_AI_IssueGroupId_Task_LabelDefinitionVersion] ON [dbo].[CHI_TIET_DU_DOAN_AI] ([IssueGroupId] ASC, [Task] ASC, [LabelDefinitionVersion] ASC);
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_CHI_TIET_DU_DOAN_AI_PredictionRunId_IssueGroupId] ON [dbo].[CHI_TIET_DU_DOAN_AI] ([PredictionRunId] ASC, [IssueGroupId] ASC);
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_CHI_TIET_DU_DOAN_AI_PredictionRunId_Rank] ON [dbo].[CHI_TIET_DU_DOAN_AI] ([PredictionRunId] ASC, [Rank] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_CHI_TIET_DU_DOAN_AI_PredictionRunId_Task_LabelDefinitionVersion] ON [dbo].[CHI_TIET_DU_DOAN_AI] ([PredictionRunId] ASC, [Task] ASC, [LabelDefinitionVersion] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_CHI_TIET_SUA_CHUA_MaPhieu] ON [dbo].[CHI_TIET_SUA_CHUA] ([MaPhieu] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_CHI_TIET_SUA_CHUA_MaLK] ON [dbo].[CHI_TIET_SUA_CHUA] ([MaLK] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_CHI_TIET_SUA_CHUA_RetestedByUserId] ON [dbo].[CHI_TIET_SUA_CHUA] ([RetestedByUserId] ASC);
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_DANH_GIA_DICH_VU_MaPhieu] ON [dbo].[DANH_GIA_DICH_VU] ([MaPhieu] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_GIAI_PHAP_MaLoi] ON [dbo].[GIAI_PHAP] ([MaLoi] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_HINH_ANH_SU_CO_MaPhieu] ON [dbo].[HINH_ANH_SU_CO] ([MaPhieu] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_KET_QUA_KIEM_THU_AI_ModelInfoId] ON [dbo].[KET_QUA_KIEM_THU_AI] ([ModelInfoId] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_KET_QUA_KIEM_THU_AI_TestCaseId] ON [dbo].[KET_QUA_KIEM_THU_AI] ([TestCaseId] ASC);
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_KHACH_HANG_SDT] ON [dbo].[KHACH_HANG] ([SDT] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LAN_DU_DOAN_AI_DiagnosisId_MaPhieu] ON [dbo].[LAN_DU_DOAN_AI] ([DiagnosisId] ASC, [MaPhieu] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LAN_DU_DOAN_AI_InputSnapshotId_MaPhieu] ON [dbo].[LAN_DU_DOAN_AI] ([InputSnapshotId] ASC, [MaPhieu] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LAN_DU_DOAN_AI_ModelInfoId] ON [dbo].[LAN_DU_DOAN_AI] ([ModelInfoId] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_MaPhieu] ON [dbo].[LICH_SU_CHAN_DOAN] ([MaPhieu] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_ActorUserId] ON [dbo].[LICH_SU_CHAN_DOAN] ([ActorUserId] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_MaLoiAITop1] ON [dbo].[LICH_SU_CHAN_DOAN] ([MaLoiAITop1] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_MaLoiAITop2] ON [dbo].[LICH_SU_CHAN_DOAN] ([MaLoiAITop2] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_MaLoiAITop3] ON [dbo].[LICH_SU_CHAN_DOAN] ([MaLoiAITop3] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_MaLoiRule] ON [dbo].[LICH_SU_CHAN_DOAN] ([MaLoiRule] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_OperatorDiagnosedFaultId] ON [dbo].[LICH_SU_CHAN_DOAN] ([OperatorDiagnosedFaultId] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_TechnicianReportedFaultId] ON [dbo].[LICH_SU_CHAN_DOAN] ([TechnicianReportedFaultId] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_MaLoiThucTe] ON [dbo].[LICH_SU_CHAN_DOAN] ([MaLoiThucTe] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_TechnicianReporterUserId] ON [dbo].[LICH_SU_CHAN_DOAN] ([TechnicianReporterUserId] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_TRIEU_CHUNG_MaLichSuChanDoan] ON [dbo].[LICH_SU_CHAN_DOAN_TRIEU_CHUNG] ([MaLichSuChanDoan] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_CHAN_DOAN_TRIEU_CHUNG_MaTrieuChung] ON [dbo].[LICH_SU_CHAN_DOAN_TRIEU_CHUNG] ([MaTrieuChung] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_TRANG_THAI_Ma_KTV] ON [dbo].[LICH_SU_TRANG_THAI] ([Ma_KTV] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_LICH_SU_TRANG_THAI_MaPhieu] ON [dbo].[LICH_SU_TRANG_THAI] ([MaPhieu] ASC);
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_ML_MODEL_INFO_ModelIdentity_Version] ON [dbo].[ML_MODEL_INFO] ([ModelIdentity] ASC, [Version] ASC) WHERE ([ModelIdentity] IS NOT NULL);
+GO
+CREATE NONCLUSTERED INDEX [IX_MODEL_ACTIVATION_LOG_ActorUserId] ON [dbo].[MODEL_ACTIVATION_LOG] ([ActorUserId] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_MODEL_ACTIVATION_LOG_NewModelInfoId] ON [dbo].[MODEL_ACTIVATION_LOG] ([NewModelInfoId] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_MODEL_ACTIVATION_LOG_OldModelInfoId] ON [dbo].[MODEL_ACTIVATION_LOG] ([OldModelInfoId] ASC);
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_NHOM_SU_CO_AI_Task_LabelDefinitionVersion_Code] ON [dbo].[NHOM_SU_CO_AI] ([Task] ASC, [LabelDefinitionVersion] ASC, [Code] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_PHIEU_TIEP_NHAN_MaLoi_CD] ON [dbo].[PHIEU_TIEP_NHAN] ([MaLoi_CD] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_PHIEU_TIEP_NHAN_MaTB] ON [dbo].[PHIEU_TIEP_NHAN] ([MaTB] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_PHIEU_TIEP_NHAN_MaUser_KTV] ON [dbo].[PHIEU_TIEP_NHAN] ([MaUser_KTV] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_PHIEU_TIEP_NHAN_USERID] ON [dbo].[PHIEU_TIEP_NHAN] ([USERID] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_SNAPSHOT_DAU_VAO_CHAN_DOAN_CapturedByUserId] ON [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] ([CapturedByUserId] ASC);
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_SNAPSHOT_DAU_VAO_CHAN_DOAN_MaPhieu_Revision] ON [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] ([MaPhieu] ASC, [Revision] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_SU_DUNG_LINH_KIEN_MaLK] ON [dbo].[SU_DUNG_LINH_KIEN] ([MaLK] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_THIET_BI_MaKH] ON [dbo].[THIET_BI] ([MaKH] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_TRIEU_CHUNG_LOI_MaLoi] ON [dbo].[TRIEU_CHUNG_LOI] ([MaLoi] ASC);
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_USER_Username] ON [dbo].[USER] ([Username] ASC);
+GO
+ALTER TABLE [dbo].[AI_TRAINING_JOB] WITH CHECK ADD CONSTRAINT [FK_AI_TRAINING_JOB_ML_MODEL_INFO_ModelInfoId] FOREIGN KEY ([ModelInfoId]) REFERENCES [dbo].[ML_MODEL_INFO] ([Id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[CHI_TIET_DU_DOAN_AI] WITH CHECK ADD CONSTRAINT [FK_CHI_TIET_DU_DOAN_AI_LAN_DU_DOAN_AI_PredictionRunId_Task_LabelDefinitionVersion] FOREIGN KEY ([PredictionRunId], [Task], [LabelDefinitionVersion]) REFERENCES [dbo].[LAN_DU_DOAN_AI] ([Id], [Task], [LabelDefinitionVersion]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[CHI_TIET_DU_DOAN_AI] WITH CHECK ADD CONSTRAINT [FK_CHI_TIET_DU_DOAN_AI_NHOM_SU_CO_AI_IssueGroupId_Task_LabelDefinitionVersion] FOREIGN KEY ([IssueGroupId], [Task], [LabelDefinitionVersion]) REFERENCES [dbo].[NHOM_SU_CO_AI] ([Id], [Task], [LabelDefinitionVersion]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[CHI_TIET_SUA_CHUA] WITH CHECK ADD CONSTRAINT [FK_CHI_TIET_SUA_CHUA_PHIEU_TIEP_NHAN_MaPhieu] FOREIGN KEY ([MaPhieu]) REFERENCES [dbo].[PHIEU_TIEP_NHAN] ([MaPhieu]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[CHI_TIET_SUA_CHUA] WITH CHECK ADD CONSTRAINT [FK_CHI_TIET_SUA_CHUA_USER_RetestedByUserId] FOREIGN KEY ([RetestedByUserId]) REFERENCES [dbo].[USER] ([USERID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[DANH_GIA_DICH_VU] WITH CHECK ADD CONSTRAINT [FK_DANH_GIA_DICH_VU_PHIEU_TIEP_NHAN_MaPhieu] FOREIGN KEY ([MaPhieu]) REFERENCES [dbo].[PHIEU_TIEP_NHAN] ([MaPhieu]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[GIAI_PHAP] WITH CHECK ADD CONSTRAINT [FK_GIAI_PHAP_MA_LOI_MaLoi] FOREIGN KEY ([MaLoi]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE CASCADE ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[HINH_ANH_SU_CO] WITH CHECK ADD CONSTRAINT [FK_HINH_ANH_SU_CO_PHIEU_TIEP_NHAN_MaPhieu] FOREIGN KEY ([MaPhieu]) REFERENCES [dbo].[PHIEU_TIEP_NHAN] ([MaPhieu]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[KET_QUA_KIEM_THU_AI] WITH CHECK ADD CONSTRAINT [FK_KET_QUA_KIEM_THU_AI_AI_TEST_CASE_TestCaseId] FOREIGN KEY ([TestCaseId]) REFERENCES [dbo].[AI_TEST_CASE] ([Id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[KET_QUA_KIEM_THU_AI] WITH CHECK ADD CONSTRAINT [FK_KET_QUA_KIEM_THU_AI_ML_MODEL_INFO_ModelInfoId] FOREIGN KEY ([ModelInfoId]) REFERENCES [dbo].[ML_MODEL_INFO] ([Id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LAN_DU_DOAN_AI] WITH CHECK ADD CONSTRAINT [FK_LAN_DU_DOAN_AI_LICH_SU_CHAN_DOAN_DiagnosisId_MaPhieu] FOREIGN KEY ([DiagnosisId], [MaPhieu]) REFERENCES [dbo].[LICH_SU_CHAN_DOAN] ([Id], [MaPhieu]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LAN_DU_DOAN_AI] WITH CHECK ADD CONSTRAINT [FK_LAN_DU_DOAN_AI_ML_MODEL_INFO_ModelInfoId] FOREIGN KEY ([ModelInfoId]) REFERENCES [dbo].[ML_MODEL_INFO] ([Id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LAN_DU_DOAN_AI] WITH CHECK ADD CONSTRAINT [FK_LAN_DU_DOAN_AI_SNAPSHOT_DAU_VAO_CHAN_DOAN_InputSnapshotId_MaPhieu] FOREIGN KEY ([InputSnapshotId], [MaPhieu]) REFERENCES [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] ([Id], [MaPhieu]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_MA_LOI_MaLoiAITop1] FOREIGN KEY ([MaLoiAITop1]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_MA_LOI_MaLoiAITop2] FOREIGN KEY ([MaLoiAITop2]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_MA_LOI_MaLoiAITop3] FOREIGN KEY ([MaLoiAITop3]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_MA_LOI_MaLoiRule] FOREIGN KEY ([MaLoiRule]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_MA_LOI_MaLoiThucTe] FOREIGN KEY ([MaLoiThucTe]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_MA_LOI_OperatorDiagnosedFaultId] FOREIGN KEY ([OperatorDiagnosedFaultId]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_MA_LOI_TechnicianReportedFaultId] FOREIGN KEY ([TechnicianReportedFaultId]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_PHIEU_TIEP_NHAN_MaPhieu] FOREIGN KEY ([MaPhieu]) REFERENCES [dbo].[PHIEU_TIEP_NHAN] ([MaPhieu]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN_TRIEU_CHUNG] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_TRIEU_CHUNG_LICH_SU_CHAN_DOAN_MaLichSuChanDoan] FOREIGN KEY ([MaLichSuChanDoan]) REFERENCES [dbo].[LICH_SU_CHAN_DOAN] ([Id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN_TRIEU_CHUNG] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_TRIEU_CHUNG_TRIEU_CHUNG_MaTrieuChung] FOREIGN KEY ([MaTrieuChung]) REFERENCES [dbo].[TRIEU_CHUNG] ([MaTC]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_USER_ActorUserId] FOREIGN KEY ([ActorUserId]) REFERENCES [dbo].[USER] ([USERID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_CHAN_DOAN_USER_TechnicianReporterUserId] FOREIGN KEY ([TechnicianReporterUserId]) REFERENCES [dbo].[USER] ([USERID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_TRANG_THAI] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_TRANG_THAI_PHIEU_TIEP_NHAN_MaPhieu] FOREIGN KEY ([MaPhieu]) REFERENCES [dbo].[PHIEU_TIEP_NHAN] ([MaPhieu]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[LICH_SU_TRANG_THAI] WITH CHECK ADD CONSTRAINT [FK_LICH_SU_TRANG_THAI_USER_Ma_KTV] FOREIGN KEY ([Ma_KTV]) REFERENCES [dbo].[USER] ([USERID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[MODEL_ACTIVATION_LOG] WITH CHECK ADD CONSTRAINT [FK_MODEL_ACTIVATION_LOG_ML_MODEL_INFO_NewModelInfoId] FOREIGN KEY ([NewModelInfoId]) REFERENCES [dbo].[ML_MODEL_INFO] ([Id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[MODEL_ACTIVATION_LOG] WITH CHECK ADD CONSTRAINT [FK_MODEL_ACTIVATION_LOG_ML_MODEL_INFO_OldModelInfoId] FOREIGN KEY ([OldModelInfoId]) REFERENCES [dbo].[ML_MODEL_INFO] ([Id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[MODEL_ACTIVATION_LOG] WITH CHECK ADD CONSTRAINT [FK_MODEL_ACTIVATION_LOG_USER_ActorUserId] FOREIGN KEY ([ActorUserId]) REFERENCES [dbo].[USER] ([USERID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[PHIEU_TIEP_NHAN] WITH CHECK ADD CONSTRAINT [FK_PHIEU_TIEP_NHAN_MA_LOI_MaLoi_CD] FOREIGN KEY ([MaLoi_CD]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[PHIEU_TIEP_NHAN] WITH CHECK ADD CONSTRAINT [FK_PHIEU_TIEP_NHAN_THIET_BI_MaTB] FOREIGN KEY ([MaTB]) REFERENCES [dbo].[THIET_BI] ([MaTB]) ON DELETE CASCADE ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[PHIEU_TIEP_NHAN] WITH CHECK ADD CONSTRAINT [FK_PHIEU_TIEP_NHAN_USER_MaUser_KTV] FOREIGN KEY ([MaUser_KTV]) REFERENCES [dbo].[USER] ([USERID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[PHIEU_TIEP_NHAN] WITH CHECK ADD CONSTRAINT [FK_PHIEU_TIEP_NHAN_USER_USERID] FOREIGN KEY ([USERID]) REFERENCES [dbo].[USER] ([USERID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_SNAPSHOT_DAU_VAO_CHAN_DOAN_PHIEU_TIEP_NHAN_MaPhieu] FOREIGN KEY ([MaPhieu]) REFERENCES [dbo].[PHIEU_TIEP_NHAN] ([MaPhieu]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [FK_SNAPSHOT_DAU_VAO_CHAN_DOAN_USER_CapturedByUserId] FOREIGN KEY ([CapturedByUserId]) REFERENCES [dbo].[USER] ([USERID]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[SU_DUNG_LINH_KIEN] WITH CHECK ADD CONSTRAINT [FK_SU_DUNG_LINH_KIEN_CHI_TIET_SUA_CHUA_MaCT] FOREIGN KEY ([MaCT]) REFERENCES [dbo].[CHI_TIET_SUA_CHUA] ([MaCT]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[SU_DUNG_LINH_KIEN] WITH CHECK ADD CONSTRAINT [FK_SU_DUNG_LINH_KIEN_LINH_KIEN_MaLK] FOREIGN KEY ([MaLK]) REFERENCES [dbo].[LINH_KIEN] ([MaLK]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[THIET_BI] WITH CHECK ADD CONSTRAINT [FK_THIET_BI_KHACH_HANG_MaKH] FOREIGN KEY ([MaKH]) REFERENCES [dbo].[KHACH_HANG] ([MaKH]) ON DELETE CASCADE ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[TRIEU_CHUNG_LOI] WITH CHECK ADD CONSTRAINT [FK_TRIEU_CHUNG_LOI_MA_LOI_MaLoi] FOREIGN KEY ([MaLoi]) REFERENCES [dbo].[MA_LOI] ([MaLoiID]) ON DELETE CASCADE ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[TRIEU_CHUNG_LOI] WITH CHECK ADD CONSTRAINT [FK_TRIEU_CHUNG_LOI_TRIEU_CHUNG_MaTC] FOREIGN KEY ([MaTC]) REFERENCES [dbo].[TRIEU_CHUNG] ([MaTC]) ON DELETE CASCADE ON UPDATE NO ACTION;
+GO
+ALTER TABLE [dbo].[CHI_TIET_DU_DOAN_AI] WITH CHECK ADD CONSTRAINT [CK_Detail_Rank] CHECK ([Rank]>(0));
+GO
+ALTER TABLE [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [CK_Input_Hashes] CHECK (len([InputSha256])=(64) AND len([CatalogSha256])=(64));
+GO
+ALTER TABLE [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [CK_Input_Language] CHECK ([Language]=N'und' OR [Language]=N'en' OR [Language]=N'vi');
+GO
+ALTER TABLE [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [CK_Input_NoAutoEligibility] CHECK ([CandidateEligible]=(0) AND [TrainingEligible]=(0) AND [ResearchPermissionStatus]=N'NOT_GRANTED');
+GO
+ALTER TABLE [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [CK_Input_Revision] CHECK ([Revision]>(0));
+GO
+ALTER TABLE [dbo].[SNAPSHOT_DAU_VAO_CHAN_DOAN] WITH CHECK ADD CONSTRAINT [CK_Input_SymptomsJson] CHECK (isjson([SymptomsJson])=(1));
+GO
+ALTER TABLE [dbo].[SU_DUNG_LINH_KIEN] WITH CHECK ADD CONSTRAINT [CK_Parts_QuantityPrice] CHECK ([SoLuong]>(0) AND [DonGiaXuat]>=(0));
+GO
+ALTER TABLE [dbo].[CHI_TIET_SUA_CHUA] WITH CHECK ADD CONSTRAINT [CK_Repair_Nonnegative] CHECK ([ChiPhi]>=(0));
+GO
+ALTER TABLE [dbo].[CHI_TIET_SUA_CHUA] WITH CHECK ADD CONSTRAINT [CK_Repair_Retest] CHECK ([RetestStatus] IS NULL OR ([RetestStatus]=N'INCONCLUSIVE' OR [RetestStatus]=N'FAIL' OR [RetestStatus]=N'PASS') AND [RetestedAtUtc] IS NOT NULL AND [RetestedByUserId] IS NOT NULL);
+GO
+ALTER TABLE [dbo].[KET_QUA_KIEM_THU_AI] WITH CHECK ADD CONSTRAINT [CK_Result_Authorization] CHECK (len([AuthorizationReference])>(0) AND len([TestDefinitionVersion])>(0) AND isjson([PredictionJson])=(1));
+GO
+ALTER TABLE [dbo].[LAN_DU_DOAN_AI] WITH CHECK ADD CONSTRAINT [CK_Run_Status] CHECK ([Status]=N'COMPLETED' AND [ModelInfoId] IS NOT NULL OR [Status]=N'ABSTAINED' AND [AbstentionReason] IS NOT NULL);
+GO
+ALTER TABLE [dbo].[LICH_SU_TRANG_THAI] WITH CHECK ADD CONSTRAINT [CK_StatusEvent_MetadataJson] CHECK ([MetadataJson] IS NULL OR isjson([MetadataJson])=(1));
+GO
+ALTER TABLE [dbo].[LINH_KIEN] WITH CHECK ADD CONSTRAINT [CK_Stock_QuantityPrice] CHECK ([SoLuongTon]>=(0) AND [DonGia]>=(0));
+GO

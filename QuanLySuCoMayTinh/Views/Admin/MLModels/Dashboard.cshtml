@@ -1,0 +1,275 @@
+@{
+    ViewData["Title"] = "AI Monitoring Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    var composition = ViewBag.Composition;
+    var trendLabels = System.Text.Json.JsonSerializer.Serialize(ViewBag.TrendLabels);
+    var aiAccuracyTrend = System.Text.Json.JsonSerializer.Serialize(ViewBag.AIAccuracyTrend);
+    var ruleAccuracyTrend = System.Text.Json.JsonSerializer.Serialize(ViewBag.RuleAccuracyTrend);
+    var logLossTrend = System.Text.Json.JsonSerializer.Serialize(ViewBag.LogLossTrend);
+}
+
+<style>
+    /* ── MLModels Dashboard — Candy Blue tokens ── */
+    .dash-page { font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
+
+    .dash-header {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        margin-bottom: 26px; flex-wrap: wrap; gap: 12px;
+    }
+    .dash-title {
+        font-size: 21px; font-weight: 700; color: var(--text);
+        display: flex; align-items: center; gap: 10px; margin: 0 0 4px;
+    }
+    .dash-title .icon-w {
+        width: 36px; height: 36px; border-radius: 10px;
+        background: linear-gradient(135deg, var(--lav-deeper), var(--lav-deep));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; color: var(--lav);
+    }
+    .dash-subtitle { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+    .btn-back {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+        border: 1.5px solid var(--border); color: var(--text-muted);
+        background: transparent; text-decoration: none; transition: all .2s;
+    }
+    .btn-back:hover { border-color: var(--lav-mid); color: var(--lav); background: rgba(91,91,214,.12); }
+
+    /* Cards */
+    .d-card { background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 22px; }
+    .d-card-header {
+        padding: 13px 20px; border-bottom: 1.5px solid var(--border);
+        display: flex; align-items: center; gap: 9px;
+        font-size: 13px; font-weight: 600; color: var(--text);
+    }
+    .d-card-header .hico { font-size: 14px; }
+    .d-card-header .hico-green  { color: var(--green); }
+    .d-card-header .hico-blue   { color: var(--lav-mid); }
+    .d-card-header .hico-red    { color: var(--danger); }
+    .d-card-body { padding: 20px; }
+
+    /* Legend */
+    .legend { display: flex; gap: 20px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+</style>
+
+<div class="dash-page">
+    <div class="dash-header">
+        <div>
+            <h2 class="dash-title">
+                <span class="icon-w"><i class="bi bi-bar-chart-fill"></i></span>
+                Dashboard Phase 1
+            </h2>
+            <p class="dash-subtitle">Theo dõi sự trưởng thành của mô hình AI theo thời gian</p>
+        </div>
+        <a href="@Url.Action("MLModels", "Admin")" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Dataset Composition -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-pie-chart hico hico-green"></i>
+                    Dataset Composition
+                </div>
+                <div class="d-card-body">
+                    <div style="height: 280px; position: relative;">
+                        <canvas id="compositionChart"></canvas>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background:#2ea84c;"></div> RealRepair
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background:#d4933a;"></div> UserHistory
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background:#3d8ef0;"></div> Synthetic
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accuracy Trends -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-chart-area hico hico-blue"></i>
+                    Accuracy Trends — Rule Engine vs AI Model
+                </div>
+                <div class="d-card-body">
+                    <div style="height: 280px; position: relative;">
+                        <canvas id="accuracyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LogLoss Trend -->
+        <div class="col-12">
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-sort-down hico hico-red"></i>
+                    LogLoss Trend — Model Confidence Over Time
+                    <span style="margin-left:auto;font-size:11px;color:var(--text-dim);font-weight:400;">Giá trị càng thấp càng tốt</span>
+                </div>
+                <div class="d-card-body">
+                    <div style="height: 220px; position: relative;">
+                        <canvas id="loglossChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var labels    = @Html.Raw(trendLabels);
+            var aiAcc     = @Html.Raw(aiAccuracyTrend);
+            var ruleAcc   = @Html.Raw(ruleAccuracyTrend);
+            var logLoss   = @Html.Raw(logLossTrend);
+            var real      = @composition.Real;
+            var synth     = @composition.Synthetic;
+            var userHist  = @composition.UserHistory;
+
+            var gridColor  = 'rgba(255,255,255,.06)';
+            var tickColor  = '#4d6070';
+
+            Chart.defaults.color = tickColor;
+            Chart.defaults.font.family = "'Space Grotesk', sans-serif";
+
+            // 1. Doughnut
+            new Chart(document.getElementById("compositionChart"), {
+                type: 'doughnut',
+                data: {
+                    labels: ["RealRepair", "UserHistory", "Synthetic"],
+                    datasets: [{
+                        data: [real, userHist, synth],
+                        backgroundColor: ['#2ea84c', '#d4933a', '#3d8ef0'],
+                        hoverBackgroundColor: ['#34c45a', '#e0a040', '#4d9ef7'],
+                        borderColor: '#0e1621',
+                        borderWidth: 3,
+                    }],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1c2d40',
+                            borderColor: '#254560',
+                            borderWidth: 1,
+                            titleColor: '#cdd9e5',
+                            bodyColor: '#8fb3cc',
+                            padding: 12,
+                        }
+                    },
+                    cutout: '72%',
+                },
+            });
+
+            // 2. Accuracy
+            new Chart(document.getElementById("accuracyChart"), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: "AI Accuracy",
+                            tension: 0.4,
+                            backgroundColor: "rgba(46,168,76,.08)",
+                            borderColor: "#2ea84c",
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointBackgroundColor: "#2ea84c",
+                            pointBorderColor: "#0e1621",
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            data: aiAcc,
+                        },
+                        {
+                            label: "Rule Accuracy",
+                            tension: 0.4,
+                            backgroundColor: "rgba(61,142,240,.08)",
+                            borderColor: "#3d8ef0",
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointBackgroundColor: "#3d8ef0",
+                            pointBorderColor: "#0e1621",
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            data: ruleAcc,
+                        }
+                    ],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: {
+                        legend: {
+                            position: 'top', align: 'end',
+                            labels: { boxWidth: 12, boxHeight: 12, borderRadius: 3, useBorderRadius: true, padding: 16, color: '#8fb3cc' }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1c2d40', borderColor: '#254560', borderWidth: 1,
+                            titleColor: '#cdd9e5', bodyColor: '#8fb3cc', padding: 12,
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                        y: { min: 0, max: 100, grid: { color: gridColor }, ticks: { color: tickColor, callback: v => v + '%' } }
+                    }
+                }
+            });
+
+            // 3. LogLoss
+            new Chart(document.getElementById("loglossChart"), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "LogLoss",
+                        tension: 0.4,
+                        backgroundColor: "rgba(232,64,64,.08)",
+                        borderColor: "#e84040",
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: "#e84040",
+                        pointBorderColor: "#0e1621",
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        data: logLoss,
+                    }],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1c2d40', borderColor: '#254560', borderWidth: 1,
+                            titleColor: '#cdd9e5', bodyColor: '#8fb3cc', padding: 12,
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                        y: { min: 0, grid: { color: gridColor }, ticks: { color: tickColor } }
+                    }
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,337 @@
+@model QuanLySuCoMayTinh.Models.PhieuTiepNhan
+@{
+    Layout = null;
+    var daDanhGia = Model.DanhGiaDichVu != null;
+    var thankYou = ViewBag.ThankYou == true;
+    var errorMsg = ViewBag.ErrorMsg as string;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <partial name="_SystemIcons" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đánh giá dịch vụ - Phiếu #HD-@Model.MaPhieu.ToString("D4")</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0f1c 0%, #101829 40%, #0d1424 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Background glow */
+        body::before {
+            content: '';
+            position: fixed;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(234,179,8,0.12) 0%, transparent 70%);
+            top: -100px; left: -100px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%);
+            bottom: -80px; right: -80px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .review-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 36px 32px;
+            max-width: 480px;
+            width: 100%;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .review-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #eab308, #22c55e, #3b82f6);
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .logo-icon {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, #eab308, #f59e0b);
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 24px rgba(234,179,8,0.3);
+            margin-bottom: 12px;
+        }
+        .logo-title {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .logo-sub {
+            font-size: 12.5px;
+            color: rgba(255,255,255,0.45);
+            margin-top: 4px;
+        }
+
+        .ticket-info {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+        .ticket-info div {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+        }
+        .ticket-info .label { color: rgba(255,255,255,0.45); }
+        .ticket-info .value { color: #fff; font-weight: 500; }
+
+        .stars-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .star-btn {
+            background: none;
+            border: none;
+            font-size: 36px;
+            color: rgba(255,255,255,0.15);
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 4px;
+        }
+        .star-btn.active { color: #facc15; transform: scale(1.1); }
+        .star-btn:hover { transform: scale(1.2); }
+
+        .comment-box {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 20px;
+        }
+        .comment-box:focus { border-color: rgba(234,179,8,0.5); }
+        .comment-box::placeholder { color: rgba(255,255,255,0.25); }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #eab308, #f59e0b);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 6px 20px rgba(234,179,8,0.3);
+        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(234,179,8,0.45); }
+        .submit-btn:active { transform: translateY(0); }
+
+        /* Thank you / Already rated states */
+        .result-icon {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 16px;
+        }
+        .result-title {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .result-sub {
+            font-size: 13.5px;
+            color: rgba(255,255,255,0.5);
+            text-align: center;
+            line-height: 1.5;
+        }
+        .stars-display {
+            text-align: center;
+            font-size: 28px;
+            color: #facc15;
+            margin: 16px 0;
+            letter-spacing: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="review-card">
+        <div class="logo-area">
+            <div class="logo-icon">⭐</div>
+            <div class="logo-title">Đánh giá dịch vụ</div>
+            <div class="logo-sub">Smart Repair — Trung tâm sửa chữa máy tính</div>
+        </div>
+
+        <div class="ticket-info">
+            <div>
+                <span class="label">Mã phiếu</span>
+                <span class="value">#HD-@Model.MaPhieu.ToString("D4")</span>
+            </div>
+            <div>
+                <span class="label">Khách hàng</span>
+                <span class="value">@(Model.ThietBi?.KhachHang?.HoTen ?? "Khách lẻ")</span>
+            </div>
+            <div>
+                <span class="label">Thiết bị</span>
+                <span class="value">@(Model.ThietBi?.TenTB ?? "—")</span>
+            </div>
+            <div>
+                <span class="label">KTV phụ trách</span>
+                <span class="value">@(Model.User_KTV?.FullName ?? "—")</span>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMsg))
+        {
+            <div style="text-align:center; padding:20px 0;">
+                <div class="result-icon" style="background:rgba(239,68,68,0.15);">
+                    <i class="bi bi-exclamation-triangle" style="color:#ef4444;"></i>
+                </div>
+                <div class="result-title" style="color:#fca5a5;">Không thể đánh giá</div>
+                <div class="result-sub">@errorMsg</div>
+            </div>
+        }
+        else if (thankYou)
+        {
+            <!-- Trạng thái: Cảm ơn, vừa gửi thành công -->
+            <div style="text-align:center; padding:20px 0;">
+                <div class="result-icon" style="background:rgba(34,197,94,0.15);">
+                    <i class="bi bi-check-circle-fill" style="color:#22c55e;"></i>
+                </div>
+                <div class="result-title" style="color:#4ade80;">Cảm ơn bạn!</div>
+                <div class="stars-display">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="bi @(i <= (Model.DanhGiaDichVu?.SoSao ?? 0) ? "bi-star-fill" : "bi-star")"></i>
+                    }
+                </div>
+                <div class="result-sub">
+                    Đánh giá của bạn đã được ghi nhận. <br/>
+                    Phản hồi quý báu của bạn giúp chúng tôi cải thiện dịch vụ tốt hơn mỗi ngày! 🙏
+                </div>
+            </div>
+        }
+        else if (daDanhGia)
+        {
+            <!-- Trạng thái: Phiếu này đã được đánh giá trước đó -->
+            <div style="text-align:center; padding:20px 0;">
+                <div class="result-icon" style="background:rgba(234,179,8,0.15);">
+                    <i class="bi bi-star-fill" style="color:#eab308;"></i>
+                </div>
+                <div class="result-title" style="color:#fbbf24;">Đã đánh giá</div>
+                <div class="stars-display">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="bi @(i <= Model.DanhGiaDichVu!.SoSao ? "bi-star-fill" : "bi-star")"></i>
+                    }
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.DanhGiaDichVu.BinhLuan))
+                {
+                    <div style="font-size:14px; color:rgba(255,255,255,0.7); font-style:italic; margin-top:8px;">
+                        "@Model.DanhGiaDichVu.BinhLuan"
+                    </div>
+                }
+                <div class="result-sub" style="margin-top:12px;">
+                    Phiếu này đã được đánh giá vào lúc @Model.DanhGiaDichVu.NgayDG.ToString("HH:mm, dd/MM/yyyy").<br/>
+                    Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Trạng thái: Form đánh giá -->
+            <form method="post" asp-action="DanhGiaPublic" asp-controller="PhieuTiepNhan">
+                <input type="hidden" name="id" value="@Model.MaPhieu" />
+                @Html.AntiForgeryToken()
+
+                <div style="text-align:center; font-size:14px; color:rgba(255,255,255,0.6); margin-bottom:16px; font-weight:500;">
+                    Bạn hài lòng với dịch vụ sửa chữa không?
+                </div>
+
+                <div class="stars-row" id="starsRow">
+                    <button type="button" class="star-btn" data-val="1"><i class="bi bi-star-fill"></i></button>
+                    <button type="button" class="star-btn" data-val="2"><i class="bi bi-star-fill"></i></button>
+                    <button type="button" class="star-btn" data-val="3"><i class="bi bi-star-fill"></i></button>
+                    <button type="button" class="star-btn" data-val="4"><i class="bi bi-star-fill"></i></button>
+                    <button type="button" class="star-btn active" data-val="5"><i class="bi bi-star-fill"></i></button>
+                </div>
+                <input type="hidden" name="soSao" id="soSaoInput" value="5" />
+
+                <div id="starLabel" style="text-align:center; font-size:12.5px; color:#fbbf24; font-weight:600; margin-bottom:16px;">
+                    Tuyệt vời! ⭐
+                </div>
+
+                <textarea name="binhLuan" class="comment-box" placeholder="Chia sẻ trải nghiệm của bạn (tùy chọn)..."></textarea>
+
+                <button type="submit" class="submit-btn">
+                    <i class="bi bi-send me-1"></i> Gửi đánh giá
+                </button>
+            </form>
+
+            <script>
+                const labels = { 1:'Tệ 😞', 2:'Chưa tốt 😐', 3:'Bình thường 🙂', 4:'Tốt 😊', 5:'Tuyệt vời! ⭐' };
+                const stars = document.querySelectorAll('#starsRow .star-btn');
+                const input = document.getElementById('soSaoInput');
+                const label = document.getElementById('starLabel');
+
+                function setStars(val) {
+                    stars.forEach(s => {
+                        const v = parseInt(s.getAttribute('data-val'));
+                        s.classList.toggle('active', v <= val);
+                    });
+                    input.value = val;
+                    label.textContent = labels[val] || '';
+                }
+
+                stars.forEach(s => {
+                    s.addEventListener('click', () => setStars(parseInt(s.getAttribute('data-val'))));
+                });
+
+                setStars(5);
+            </script>
+        }
+    </div>
+</body>
+</html>

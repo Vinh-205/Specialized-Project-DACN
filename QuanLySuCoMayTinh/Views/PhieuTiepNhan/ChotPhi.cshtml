@@ -1,0 +1,312 @@
+@model QuanLySuCoMayTinh.Models.PhieuTiepNhan
+
+@{
+    ViewData["Title"] = "Chốt phí và Bàn giao máy";
+    decimal tongLinhKien = ViewBag.TongLinhKien ?? 0m;
+}
+
+<style>
+.cp-page { max-width: 720px; margin: 0 auto; color:var(--text); }
+
+.cp-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 16px;
+    position: relative; overflow: hidden;
+}
+.cp-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 0% 50%, rgba(34,197,94,0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+.cp-hero-icon {
+    width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0;
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 6px 20px rgba(34,197,94,0.35);
+}
+.cp-hero-title { font-size: 20px; font-weight: 700; }
+.cp-hero-sub { font-size: 13px; color:var(--text-muted); margin-top: 2px; }
+
+/* Card sections */
+.cp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.cp-card-hdr {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+    letter-spacing: 0.3px;
+}
+.cp-card-body { padding: 0; }
+
+/* Parts table */
+.cp-table { width: 100%; border-collapse: collapse; }
+.cp-table th {
+    padding: 10px 20px;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.5px; color:var(--text-muted);
+    font-weight: 600; text-align: left;
+    background: var(--surface2);
+}
+.cp-table th:last-child { text-align: right; }
+.cp-table td {
+    padding: 12px 20px;
+    font-size: 13.5px; color:var(--text-muted);
+    border-bottom:1px solid var(--border);
+    vertical-align: middle;
+}
+.cp-table td:last-child { text-align: right; font-weight: 600; color:var(--c-err); font-family: 'JetBrains Mono', monospace; }
+.cp-table tr:last-child td { border-bottom: none; }
+.cp-table-sub { font-size: 11.5px; color:var(--text-muted); margin-top: 3px; }
+
+/* Empty state */
+.cp-empty {
+    text-align: center; padding: 32px 20px;
+    color:var(--text-muted);
+    font-size: 13px;
+}
+.cp-empty i { font-size: 36px; display: block; margin-bottom: 8px; opacity: 0.3; }
+
+/* Totals */
+.cp-total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 20px;
+    border-bottom:1px solid var(--border);
+    font-size: 13.5px;
+}
+.cp-total-row:last-child { border-bottom: none; }
+.cp-total-row.grand {
+    background: rgba(34,197,94,0.08);
+    border-top: 1px solid rgba(34,197,94,0.2);
+    padding: 14px 20px;
+    font-size: 15px; font-weight: 700;
+}
+.cp-total-label { color:var(--text-muted); }
+.cp-total-label.grand { color:var(--c-ok); }
+.cp-total-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; color:var(--c-err); }
+.cp-total-val.grand { color:var(--c-ok); font-size: 18px; }
+.cp-total-val.labor { color:var(--c-info); }
+
+/* Input section */
+.cp-input-group { padding: 20px; }
+.cp-label {
+    display: block; font-size: 12px; font-weight: 600;
+    color:var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.cp-input {
+    width: 100%;
+    padding: 11px 16px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 8px; color:var(--text); font-size: 14px;
+    outline: none; transition: border-color 0.2s, background 0.2s;
+    font-family: 'Be Vietnam Pro', sans-serif;
+}
+.cp-input::placeholder { color:var(--text-light); }
+.cp-input:focus { border-color: rgba(56,189,248,0.5); background:var(--surface2); }
+.cp-input.money { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color:var(--c-info); }
+.cp-input.money:focus { border-color: rgba(56,189,248,0.6); box-shadow: 0 0 0 3px rgba(56,189,248,0.15); }
+
+/* Action buttons */
+.cp-actions {
+    display: flex; gap: 10px; justify-content: flex-end;
+    padding: 16px 20px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+}
+.cp-btn-cancel {
+    padding: 10px 22px; border-radius: 8px; font-size: 13.5px; font-weight: 600;
+    background:var(--surface2); border:1px solid var(--border);
+    color:var(--text-muted); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+}
+.cp-btn-cancel:hover { background:var(--surface2); color:var(--text); }
+.cp-btn-submit {
+    padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    border: none; color: #fff; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    box-shadow: 0 4px 16px rgba(34,197,94,0.35);
+    transition: all 0.2s;
+}
+.cp-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(34,197,94,0.5); }
+
+/* Live total indicator */
+#liveTotalBox {
+    background: rgba(34,197,94,0.07);
+    border: 1px solid rgba(34,197,94,0.2);
+    border-radius: 10px; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 0 20px 20px;
+}
+.lt-label { font-size: 12.5px; color:var(--text-muted); }
+.lt-val { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color:var(--c-ok); }
+</style>
+
+<div class="helpdesk-breadcrumb">
+    <span>Quản lý</span><span class="sep">›</span>
+    <a href="@Url.Action("Index", "PhieuTiepNhan")" style="color:var(--text3);text-decoration:none">Tiếp nhận sự cố</a>
+    <span class="sep">›</span>
+    <a href="@Url.Action("Details", "PhieuTiepNhan", new { id = Model.MaPhieu })" style="color:var(--text3);text-decoration:none">Chi tiết #HD-@Model.MaPhieu.ToString("D4")</a>
+    <span class="sep">›</span><span class="cur">Chốt phí</span>
+</div>
+
+<div class="cp-page">
+
+    <!-- HERO -->
+    <div class="cp-hero">
+        <div class="cp-hero-icon"><i class="bi bi-cash-coin"></i></div>
+        <div>
+            <div class="cp-hero-title">Chốt phí và Bàn giao máy</div>
+            <div class="cp-hero-sub">
+                Phiếu #HD-@Model.MaPhieu.ToString("D4")
+                &nbsp;·&nbsp; Khách hàng: <strong>@Model.ThietBi?.KhachHang?.HoTen</strong>
+                &nbsp;·&nbsp; Thiết bị: <strong>@Model.ThietBi?.TenTB</strong>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="ChotPhi" method="post" id="chotPhiForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="MaPhieu" />
+
+        <!-- BẢNG LINH KIỆN ĐÃ XUẤT KHO (readonly) -->
+        <div class="cp-card">
+            <div class="cp-card-hdr">
+                <i class="bi bi-boxes" style="color:#a855f7;"></i>
+                Chi phí linh kiện đã sử dụng
+                <span style="margin-left:auto; font-size:11px; color:var(--text-muted); font-weight:400;">Từ kho, không thể chỉnh sửa ở bước này</span>
+            </div>
+            <div class="cp-card-body">
+                @if (Model.ChiTietSuaChuas != null && Model.ChiTietSuaChuas.Any())
+                {
+                    <table class="cp-table">
+                        <thead>
+                            <tr>
+                                <th>Hạng mục</th>
+                                <th style="text-align:right">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.ChiTietSuaChuas)
+                            {
+                                <tr>
+                                    <td>
+                                        <div>@item.TenHangMuc</div>
+                                        @if (item.SuDungLinhKiens != null && item.SuDungLinhKiens.Any())
+                                        {
+                                            <div class="cp-table-sub">
+                                                @foreach (var sd in item.SuDungLinhKiens)
+                                                {
+                                                    <span>@sd.SoLuong × @sd.LinhKien?.TenLK (@string.Format("{0:N0}đ/cái", sd.DonGiaXuat))</span>
+                                                }
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>@string.Format("{0:N0} đ", item.ChiPhi)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <!-- Subtotal: linh kiện -->
+                    <div class="cp-total-row" style="background:rgba(168,85,247,0.05); border-top:1px solid rgba(168,85,247,0.15);">
+                        <span class="cp-total-label"><i class="bi bi-boxes me-1" style="color:#a855f7;"></i>Tổng linh kiện</span>
+                        <span class="cp-total-val" style="color:var(--c-purple);" id="tongLKDisplay">@string.Format("{0:N0} đ", tongLinhKien)</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="cp-empty">
+                        <i class="bi bi-box-seam"></i>
+                        Không có linh kiện nào được xuất kho cho phiếu này.<br>
+                        <span style="font-size:12px;">Tiền linh kiện = 0 đ</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- NHẬP TIỀN CÔNG -->
+        <div class="cp-card">
+            <div class="cp-card-hdr">
+                <i class="bi bi-tools" style="color:var(--c-info);"></i>
+                Thêm tiền công sửa chữa
+            </div>
+            <div class="cp-input-group">
+                <div class="mb-4">
+                    <label class="cp-label" for="tenCongViec">Tên hạng mục công việc</label>
+                    <input type="text" id="tenCongViec" name="tenCongViec" class="cp-input"
+                           placeholder="VD: Tiền công vệ sinh, lắp ráp, kiểm tra..." />
+                </div>
+                <div>
+                    <label class="cp-label" for="tienCong">Tiền công (VNĐ) <span style="color:var(--text-light);">— để trống nếu không tính</span></label>
+                    <input type="number" id="tienCong" name="tienCong" class="cp-input money"
+                           placeholder="0" min="0" step="10000" value="0"
+                           oninput="updateLiveTotal(this.value)" />
+                </div>
+            </div>
+
+            <!-- TỔNG CỘNG LIVE -->
+            <div id="liveTotalBox">
+                <div>
+                    <div class="lt-label"><i class="bi bi-calculator me-1"></i>Tổng thu khách hàng</div>
+                    <div style="font-size:11.5px; color:var(--text-light); margin-top:2px;">= Linh kiện + Tiền công</div>
+                </div>
+                <div class="lt-val" id="liveTotalVal">@string.Format("{0:N0} đ", tongLinhKien)</div>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="cp-card" style="overflow:visible;">
+            <div class="cp-actions">
+                <a href="@Url.Action("Details", "PhieuTiepNhan", new { id = Model.MaPhieu })" class="cp-btn-cancel">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+                <button type="submit" class="cp-btn-submit" id="submitBtn">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Xác nhận hoàn thành &amp; Bàn giao
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    // Tổng linh kiện từ server (bất biến)
+    const tongLK = @tongLinhKien;
+
+    function updateLiveTotal(val) {
+        const cong   = parseFloat(val) || 0;
+        const total  = tongLK + cong;
+        document.getElementById('liveTotalVal').textContent = formatVND(total);
+    }
+
+    function formatVND(n) {
+        return new Intl.NumberFormat('vi-VN').format(n) + ' đ';
+    }
+
+    // Khi load, sync lần đầu
+    updateLiveTotal(document.getElementById('tienCong').value);
+
+    // Prevent double submit
+    document.getElementById('chotPhiForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+    });
+</script>
+}

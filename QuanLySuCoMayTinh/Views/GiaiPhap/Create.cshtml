@@ -1,0 +1,43 @@
+@model QuanLySuCoMayTinh.Models.GiaiPhap
+
+@{
+    ViewData["Title"] = "Thêm Giải Pháp";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 border-top border-primary border-4">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 text-dark fw-bold">Thêm Giải Pháp Mới</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-4">
+                            <label asp-for="MaLoi" class="form-label fw-bold">Thuộc Mã Lỗi (Bệnh) <span class="text-danger">*</span></label>
+                            <select asp-for="MaLoi" class="form-select" asp-items="ViewBag.DanhSachMaLoi">
+                                <option value="">-- Chọn bệnh lý cần khắc phục --</option>
+                            </select>
+                            <span asp-validation-for="MaLoi" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="NoiDungStepByStep" class="form-label fw-bold">Chi tiết các bước sửa chữa (Step by Step) <span class="text-danger">*</span></label>
+                            <textarea asp-for="NoiDungStepByStep" class="form-control" rows="6" placeholder="Bước 1: ...&#10;Bước 2: ..." required></textarea>
+                            <span asp-validation-for="NoiDungStepByStep" class="text-danger"></span>
+                        </div>
+
+                        <hr class="mb-4">
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold">Thêm mới</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

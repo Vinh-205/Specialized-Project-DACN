@@ -1,0 +1,601 @@
+@model IEnumerable<QuanLySuCoMayTinh.Models.TrieuChung>
+
+@{
+    ViewData["Title"] = "Trợ lý Chẩn đoán AI";
+
+    // Phân nhóm triệu chứng theo từ khóa đầu tiên trong tên
+    var nhomMap = new Dictionary<string, string>
+    {
+        { "Màn hình", "Màn hình" },
+        { "Phân giải", "Màn hình" },
+        { "Dead pixel", "Màn hình" },
+        { "Máy không bật", "Nguồn & Pin" },
+        { "Máy tự tắt", "Nguồn & Pin" },
+        { "Máy bật lên", "Nguồn & Pin" },
+        { "Pin", "Nguồn & Pin" },
+        { "Sạc", "Nguồn & Pin" },
+        { "Máy bị nóng", "Nguồn & Pin" },
+        { "Máy chạy", "Bộ nhớ & Lưu trữ" },
+        { "Máy bị đơ", "Bộ nhớ & Lưu trữ" },
+        { "Màn hình xanh", "Bộ nhớ & Lưu trữ" },
+        { "Xuất hiện thông báo", "Bộ nhớ & Lưu trữ" },
+        { "Ổ cứng", "Bộ nhớ & Lưu trữ" },
+        { "File", "Bộ nhớ & Lưu trữ" },
+        { "SSD", "Bộ nhớ & Lưu trữ" },
+        { "RAM", "Bộ nhớ & Lưu trữ" },
+        { "Máy không nhận", "Bộ nhớ & Lưu trữ" },
+        { "Windows", "Hệ điều hành" },
+        { "Bị lỗi", "Hệ điều hành" },
+        { "Ứng dụng", "Hệ điều hành" },
+        { "Máy bị nhiễm", "Hệ điều hành" },
+        { "Desktop", "Hệ điều hành" },
+        { "Driver thiết bị", "Hệ điều hành" },
+        { "Không kết nối", "Mạng & Kết nối" },
+        { "WiFi", "Mạng & Kết nối" },
+        { "Bluetooth", "Mạng & Kết nối" },
+        { "Không vào được", "Mạng & Kết nối" },
+        { "Bàn phím", "Phần cứng khác" },
+        { "Touchpad", "Phần cứng khác" },
+        { "Loa", "Phần cứng khác" },
+        { "Âm thanh", "Phần cứng khác" },
+        { "Webcam", "Phần cứng khác" },
+        { "Cổng USB", "Phần cứng khác" },
+        { "Máy in", "Phần cứng khác" },
+        { "Quạt", "Phần cứng khác" },
+    };
+
+    var iconMap = new Dictionary<string, string>
+    {
+        { "Màn hình", "<i class=\"bi bi-display\" style=\"color:var(--c-info); font-size:15px; margin-right:8px\"></i>" },
+        { "Nguồn & Pin", "<i class=\"bi bi-battery-charging\" style=\"color:var(--c-ok); font-size:15px; margin-right:8px\"></i>" },
+        { "Bộ nhớ & Lưu trữ", "<i class=\"bi bi-device-hdd\" style=\"color:var(--c-warn); font-size:15px; margin-right:8px\"></i>" },
+        { "Hệ điều hành", "<i class=\"bi bi-windows\" style=\"color:#0ea5e9; font-size:15px; margin-right:8px\"></i>" },
+        { "Mạng & Kết nối", "<i class=\"bi bi-globe\" style=\"color:var(--c-purple); font-size:15px; margin-right:8px\"></i>" },
+        { "Phần cứng khác", "<i class=\"bi bi-pc-display-horizontal\" style=\"color:#a8a29e; font-size:15px; margin-right:8px\"></i>" },
+        { "Khác", "<i class=\"bi bi-box\" style=\"color:#9ca3af; font-size:15px; margin-right:8px\"></i>" }
+    };
+
+    Func<string, string> GetNhom = (tenTC) => {
+        foreach (var kv in nhomMap)
+        {
+            if (tenTC.StartsWith(kv.Key, StringComparison.OrdinalIgnoreCase)) return kv.Value;
+        }
+        return "Khác";
+    };
+
+    var grouped = Model
+        .GroupBy(tc => GetNhom(tc.TenTC))
+        .OrderBy(g => g.Key)
+        .ToList();
+}
+
+<style>
+    .ai-page {
+        color: var(--text);
+        max-width: 1100px;
+        margin: 0 auto;
+        font-family: 'Sora', sans-serif;
+    }
+
+    .ai-hero {
+        background: linear-gradient(135deg, var(--orange-light) 0%, var(--surface) 70%);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px 28px;
+        margin-bottom: 22px;
+        position: relative; overflow: hidden;
+        display: flex; align-items: center; justify-content: space-between;
+        box-shadow: var(--card-shadow);
+    }
+    .ai-hero::before {
+        content: ''; position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 100% 0%, rgba(255,122,69,0.08) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    .ai-hero-icon {
+        width: 46px; height: 46px;
+        background: linear-gradient(135deg, #FF7A45, #FFA53E);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; color: #fff; box-shadow: 0 6px 20px rgba(255,122,69,0.35);
+        margin-right: 14px; flex-shrink: 0;
+    }
+    .ai-hero h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .ai-hero p { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+    .ai-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius); overflow: hidden;
+        box-shadow: var(--card-shadow);
+        height: 100%; display: flex; flex-direction: column;
+    }
+    .ai-card-header {
+        padding: 13px 18px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface2);
+        font-weight: 600; font-size: 13.5px; color: var(--text);
+        font-family: 'Sora', sans-serif;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .ai-card-body { padding: 16px; flex: 1; }
+
+    .ai-select {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: var(--radius-sm);
+        padding: 9px 12px;
+        width: 100%; outline: none;
+        font-family: 'Sora', sans-serif;
+        font-size: 13px;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .ai-select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,165,62,0.15); }
+    .ai-select option { background: var(--surface); color: var(--text); }
+
+    /* Search Box */
+    .tc-search-box {
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-pill);
+        padding: 7px 14px;
+        margin-bottom: 14px;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .tc-search-box:focus-within {
+        border-color: var(--orange);
+        box-shadow: 0 0 0 3px rgba(255,165,62,0.15);
+    }
+    .tc-search-box i { color: var(--text-light); font-size: 13px; }
+    .tc-search-input {
+        background: transparent; border: none; outline: none;
+        color: var(--text); flex: 1; min-width: 120px;
+        font-family: 'Sora', sans-serif; font-size: 13px;
+    }
+    .tc-search-input::placeholder { color: var(--text-light); }
+
+    /* Selected pills in search box */
+    .tc-search-pills-container {
+        display: flex; flex-wrap: wrap; gap: 5px;
+    }
+    .tc-search-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: var(--orange-light);
+        border: 1px solid rgba(255,122,69,0.25);
+        color: var(--orange-dark); border-radius: var(--radius-pill);
+        padding: 2px 8px; font-size: 11.5px; font-weight: 600;
+        font-family: 'Sora', sans-serif;
+        user-select: none;
+    }
+    .tc-search-pill-close {
+        cursor: pointer; font-weight: bold; opacity: 0.6; transition: all .15s;
+        font-size: 13px; line-height: 1; display: inline-block; padding: 0 1px;
+    }
+    .tc-search-pill-close:hover { opacity: 1; color: var(--danger); }
+
+    /* Selected badge */
+    .tc-selected-badge {
+        display: none;
+        align-items: center; gap: 5px;
+        background: var(--orange-light);
+        border: 1px solid rgba(255,122,69,0.25);
+        color: var(--orange-dark); border-radius: var(--radius-pill);
+        padding: 3px 11px; font-size: 11.5px; font-weight: 600;
+        margin-left: auto;
+    }
+
+    /* Accordion */
+    .tc-group { margin-bottom: 7px; }
+    .tc-group-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 9px 14px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        cursor: pointer; user-select: none;
+        transition: all .15s;
+        color: var(--text); font-weight: 600; font-size: 13px;
+        font-family: 'Sora', sans-serif;
+    }
+    .tc-group-header:hover { background: var(--orange-light); border-color: rgba(255,122,69,0.2); }
+    .tc-group-header.active {
+        background: var(--orange-light);
+        border-color: rgba(255,122,69,0.3);
+        color: var(--orange-dark);
+        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    }
+    .tc-group-badge {
+        font-size: 10.5px; font-weight: 600;
+        background: var(--surface3);
+        padding: 2px 8px; border-radius: var(--radius-pill);
+        color: var(--text);
+    }
+    .tc-group-header.active .tc-group-badge { background: rgba(255,122,69,0.15); color: var(--orange-dark); }
+    .tc-group-body {
+        border: 1px solid var(--border); border-top: none;
+        border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+        padding: 12px;
+        background: var(--surface);
+        display: none;
+    }
+    .tc-group-body.open { display: block; animation: fadeSlideIn .18s ease; }
+    @@keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(-3px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Pill checkboxes */
+    .tc-pill-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tc-pill-wrapper { cursor: pointer; display: inline-block; }
+    .tc-pill-wrapper input { display: none; }
+    .tc-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 13px;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--border);
+        background: var(--surface2);
+        color: var(--text-muted);
+        font-size: 12.5px; font-weight: 500;
+        transition: all .15s;
+        font-family: 'Sora', sans-serif;
+        white-space: nowrap;
+        user-select: none;
+    }
+    .tc-pill:hover {
+        background: var(--orange-light);
+        border-color: rgba(255,122,69,0.3);
+        color: var(--orange-dark);
+    }
+    .tc-pill-wrapper input:checked ~ .tc-pill {
+        background: var(--orange-light);
+        border-color: rgba(255,122,69,0.4);
+        color: var(--orange-dark);
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(255,122,69,0.15);
+    }
+    .tc-pill .pill-check { display: none; font-size: 10px; }
+    .tc-pill-wrapper input:checked ~ .tc-pill .pill-check { display: inline; }
+
+    .tc-hidden { display: none !important; }
+    .tc-no-result { text-align:center; padding:24px; color:var(--text-muted); font-size:13px; display:none; }
+
+    /* Buttons */
+    .btn-train {
+        background: var(--green-light);
+        color: var(--green-dark); border: 1px solid rgba(72,199,142,0.3);
+        padding: 7px 16px; border-radius: var(--radius-pill); font-weight: 600; font-size: 12.5px;
+        font-family: 'Sora', sans-serif;
+        transition: all .15s; cursor: pointer;
+    }
+    .btn-train:hover { background: var(--green); border-color: var(--green); color: #fff; }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #FF7A45, #FFA53E);
+        color: #fff; border: none; font-weight: 700; font-size: 15px;
+        padding: 12px 36px; border-radius: var(--radius-pill);
+        box-shadow: 0 6px 20px rgba(255,122,69,0.3);
+        transition: all .22s; cursor: pointer;
+        font-family: 'Sora', sans-serif;
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,122,69,0.45); }
+
+    .btn-clear {
+        background: transparent; color: var(--text-muted);
+        border: 1px solid var(--border);
+        padding: 4px 11px; border-radius: var(--radius-pill);
+        font-size: 11.5px; cursor: pointer;
+        font-family: 'Sora', sans-serif;
+        transition: all .15s; white-space: nowrap;
+    }
+    .btn-clear:hover { color: var(--danger-dark); border-color: rgba(240,101,79,0.3); background: var(--danger-light); }
+
+    .info-box {
+        background: var(--cyan-light);
+        border: 1px solid rgba(58,184,201,0.25);
+        color: var(--cyan);
+        padding: 10px 13px; border-radius: var(--radius-sm);
+        font-size: 12.5px; margin-top: 12px;
+        font-family: 'Sora', sans-serif;
+    }
+
+    .form-label-text {
+        font-size: 13px; color: var(--text-muted);
+        font-family: 'Sora', sans-serif;
+        font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
+        display: block; margin-bottom: 8px;
+    }
+</style>
+
+<div class="ai-page">
+    <!-- Hero -->
+    <div class="ai-hero">
+        <div class="d-flex align-items-center">
+            <div class="ai-hero-icon"><i class="bi bi-robot" style="color:var(--text);"></i></div>
+            <div>
+                <h3>Trợ lý Chẩn đoán AI</h3>
+                <p>Chọn phiếu tiếp nhận và đánh dấu các triệu chứng để AI tự động nội suy mã lỗi &amp; giải pháp</p>
+            </div>
+        </div>
+        <form id="frmHuanLuyen" asp-action="HuanLuyen" method="post">
+            <button type="submit" class="btn-train">
+                <i class="bi bi-cpu-fill me-1"></i> Cập nhật mô hình
+            </button>
+        </form>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="XuLyChanDoan" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row g-4">
+            <!-- Left: Chọn phiếu -->
+            <div class="col-md-4">
+                <div class="ai-card">
+                    <div class="ai-card-header">
+                        <i class="bi bi-1-circle" style="color:var(--orange-dark)"></i> Chọn Phiếu Khám
+                    </div>
+                    <div class="ai-card-body">
+                        <span class="form-label-text">Phiếu đang chờ khám <span class="text-danger">*</span></span>
+                        <select name="MaPhieu" class="ai-select mb-3" required>
+                            <option value="">-- Chọn phiếu tiếp nhận --</option>
+                            @foreach (var phieu in ViewBag.DanhSachPhieu)
+                            {
+                                if (ViewBag.SelectedMaPhieu != null && (int)ViewBag.SelectedMaPhieu == (int)phieu.MaPhieu)
+                                {
+                                    <option value="@phieu.MaPhieu" selected="selected">
+                                        #@phieu.MaPhieu - @phieu.ThietBi?.KhachHang?.HoTen (@phieu.ThietBi?.TenTB)
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@phieu.MaPhieu">
+                                        #@phieu.MaPhieu - @phieu.ThietBi?.KhachHang?.HoTen (@phieu.ThietBi?.TenTB)
+                                    </option>
+                                }
+                            }
+                        </select>
+                        <div class="info-box">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Chỉ hiển thị các phiếu đang ở trạng thái <b>Chờ khám</b>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Triệu chứng nhóm accordion -->
+            <div class="col-md-8">
+                <div class="ai-card">
+                    <div class="ai-card-header">
+                        <i class="bi bi-2-circle" style="color:var(--orange-dark)"></i>
+                        Ghi nhận Triệu chứng
+                        <span id="selectedBadge" class="tc-selected-badge">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span id="selectedNum">0</span> đã chọn
+                        </span>
+                    </div>
+                    <div class="ai-card-body">
+                        <!-- Mô tả tự do (Việt/Anh) -> gợi ý triệu chứng -->
+                        <div class="mb-3" style="border:1px solid var(--border); border-radius:10px; padding:12px; background:var(--surface2);">
+                            <label for="moTaTuDo" class="form-label fw-bold mb-1" style="font-size:13.5px; color:var(--text);">
+                                <i class="bi bi-chat-left-text me-1"></i>Mô tả sự cố bằng lời (tiếng Việt hoặc tiếng Anh)
+                            </label>
+                            <div class="d-flex gap-2">
+                                <input type="text" id="moTaTuDo" name="moTaTuDo" class="form-control" maxlength="2000"
+                                       placeholder="VD: máy tự tắt, quạt kêu to, rất nóng / laptop won't charge and drains fast">
+                                <button type="button" class="btn btn-outline-primary" style="white-space:nowrap" onclick="goiYTrieuChung()">
+                                    <i class="bi bi-magic me-1"></i>Gợi ý
+                                </button>
+                            </div>
+                            <div id="goiYKetQua" class="small mt-2" style="color:var(--text-muted); display:none;"></div>
+                        </div>
+                        <!-- Search + Clear -->
+                        <div class="tc-search-box">
+                            <i class="bi bi-search"></i>
+                            <div class="tc-search-pills-container" id="tcSearchPills"></div>
+                            <input type="text" id="tcSearch" class="tc-search-input"
+                                   placeholder="Tìm nhanh triệu chứng... (VD: màn hình, wifi, pin...)">
+                            <button type="button" class="btn-clear" onclick="clearAll()">
+                                <i class="bi bi-x-circle me-1"></i>Bỏ chọn tất cả
+                            </button>
+                        </div>
+
+                        <!-- Accordion groups -->
+                        <div id="tcGroupContainer">
+                            @foreach (var group in grouped)
+                            {
+                                <div class="tc-group">
+                                    <div class="tc-group-header" onclick="toggleTrieuChungGroup(this)">
+                                        <div class="d-flex align-items-center">
+                                            @Html.Raw(iconMap.ContainsKey(group.Key) ? iconMap[group.Key] : iconMap["Khác"])
+                                            <span>@group.Key</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="tc-group-badge">@group.Count() triệu chứng</span>
+                                            <i class="bi bi-chevron-down" style="font-size:11px;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="tc-group-body">
+                                        <div class="tc-pill-grid">
+                                            @foreach (var tc in group)
+                                            {
+                                                <label class="tc-pill-wrapper" data-tc-name="@tc.TenTC.ToLower()">
+                                                    <input type="checkbox" name="selectedTrieuChungs" value="@tc.MaTC"
+                                                           onchange="updateCount()">
+                                                    <span class="tc-pill" title="@tc.MoTa">
+                                                        <i class="bi bi-check-lg pill-check"></i>
+                                                        @tc.TenTC
+                                                    </span>
+                                                </label>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="tc-no-result" id="tcNoResult">
+                            <i class="bi bi-search" style="font-size:28px;display:block;margin-bottom:8px;opacity:0.4;"></i>
+                            Không tìm thấy triệu chứng phù hợp
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 mb-4">
+            <button type="submit" class="btn-submit">
+                <i class="bi bi-magic me-2"></i> Bắt đầu Chẩn đoán
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleTrieuChungGroup(header) {
+        const body = header.nextElementSibling;
+        const icon = header.querySelector('.bi-chevron-down, .bi-chevron-up');
+        header.classList.toggle('active');
+        body.classList.toggle('open');
+        if (icon) icon.className = body.classList.contains('open') ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+    }
+
+    function updateCount() {
+        const checkedBoxes = document.querySelectorAll('input[name="selectedTrieuChungs"]:checked');
+        const count = checkedBoxes.length;
+        const badge = document.getElementById('selectedBadge');
+        document.getElementById('selectedNum').textContent = count;
+        badge.style.display = count > 0 ? 'inline-flex' : 'none';
+
+        // Cập nhật các pill vào ô tìm kiếm
+        const pillsContainer = document.getElementById('tcSearchPills');
+        const searchInput = document.getElementById('tcSearch');
+        
+        if (pillsContainer) {
+            pillsContainer.innerHTML = '';
+            
+            checkedBoxes.forEach(cb => {
+                const pillSpan = cb.nextElementSibling;
+                if (pillSpan) {
+                    const name = pillSpan.textContent.trim();
+                    const maTC = cb.value;
+                    
+                    const pillTag = document.createElement('span');
+                    pillTag.className = 'tc-search-pill';
+                    pillTag.innerHTML = `
+                        <span>${name}</span>
+                        <span class="tc-search-pill-close" onclick="deselectPill('${maTC}')">&times;</span>
+                    `;
+                    pillsContainer.appendChild(pillTag);
+                }
+            });
+            
+            if (searchInput) {
+                searchInput.placeholder = count > 0 ? 'Tìm thêm...' : 'Tìm nhanh triệu chứng... (VD: màn hình, wifi, pin...)';
+            }
+        }
+    }
+
+    function deselectPill(maTC) {
+        const checkbox = document.querySelector(`input[name="selectedTrieuChungs"][value="${maTC}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            updateCount();
+        }
+    }
+
+    async function goiYTrieuChung() {
+        const box = document.getElementById('goiYKetQua');
+        const q = document.getElementById('moTaTuDo').value.trim();
+        if (q.length < 3) { box.style.display = 'none'; return; }
+        box.style.display = 'block'; box.textContent = 'Đang phân tích...';
+        try {
+            const r = await fetch('@Url.Action("GoiYTrieuChung", "TroLyChanDoan")?moTa=' + encodeURIComponent(q));
+            if (!r.ok) { box.textContent = 'Không phân tích được mô tả này.'; return; }
+            const d = await r.json();
+            if (!d.sanSang) { box.textContent = 'Mô hình song ngữ chưa sẵn sàng; hãy chọn triệu chứng thủ công.'; return; }
+            const names = [];
+            d.ketQua.forEach(k => {
+                const cb = document.querySelector(`input[name="selectedTrieuChungs"][value="${k.ma}"]`);
+                if (cb) { cb.checked = true; names.push(k.ten + ' (' + Math.round(k.doTuongDong * 100) + '%)'); }
+            });
+            updateCount();
+            const nhom = (d.nhomLoi || []).map(n => n.ten + ' ' + Math.round(n.xacSuat * 100) + '%').join(', ');
+            box.textContent = (nhom ? 'AI dự đoán nhóm lỗi: ' + nhom + '. ' : '') + (names.length ? 'Đã tích gợi ý: ' + names.join('; ') + '. Hãy kiểm tra và bỏ chọn mục không đúng trước khi chẩn đoán.' : 'Không tìm thấy triệu chứng phù hợp.');
+        } catch (e) { box.textContent = 'Không phân tích được mô tả này.'; }
+    }
+    document.getElementById('moTaTuDo').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); goiYTrieuChung(); } });
+
+    function clearAll() {
+        document.querySelectorAll('input[name="selectedTrieuChungs"]').forEach(cb => cb.checked = false);
+        updateCount();
+    }
+
+    document.getElementById('tcSearch').addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        const groups = document.querySelectorAll('.tc-group');
+        let anyVisible = false;
+
+        groups.forEach(group => {
+            const pills = group.querySelectorAll('.tc-pill-wrapper');
+            let groupHasVisible = false;
+            pills.forEach(pill => {
+                const show = !q || (pill.dataset.tcName || '').includes(q);
+                pill.classList.toggle('tc-hidden', !show);
+                if (show) groupHasVisible = true;
+            });
+            group.classList.toggle('tc-hidden', !groupHasVisible);
+            if (groupHasVisible) {
+                anyVisible = true;
+                // Auto-open groups when searching
+                if (q) {
+                    const header = group.querySelector('.tc-group-header');
+                    const body = group.querySelector('.tc-group-body');
+                    const icon = header.querySelector('i:last-child');
+                    header.classList.add('active');
+                    body.classList.add('open');
+                    if (icon) icon.className = 'bi bi-chevron-up';
+                }
+            }
+        });
+
+        document.getElementById('tcNoResult').style.display = anyVisible ? 'none' : 'block';
+    });
+
+    document.getElementById('frmHuanLuyen').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+        
+        showToast('🤖 Đang nạp dữ liệu tri thức...', 'info', 2000);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => {
+            if (res.ok) {
+                setTimeout(() => {
+                    showToast('Cập nhật tiến trình huấn luyện thành công!', 'success', 4000);
+                }, 1000);
+            } else {
+                showToast('Có lỗi xảy ra khi huấn luyện.', 'error', 4000);
+            }
+        })
+        .catch(err => {
+            showToast('Có lỗi kết nối.', 'error', 4000);
+        });
+    });
+</script>

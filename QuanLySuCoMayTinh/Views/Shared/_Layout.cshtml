@@ -1,0 +1,952 @@
+@using Microsoft.EntityFrameworkCore
+@using QuanLySuCoMayTinh.Data
+@inject ApplicationDbContext _context
+@{
+    // Lấy số lượng thực tế từ Database (Chỉ đếm Chờ khám để làm thông báo mới)
+    int countPhieu = await _context.PhieuTiepNhans.CountAsync(p => p.TrangThai == "Chờ khám");
+    int countTrieuChung = await _context.TrieuChungs.CountAsync();
+    int countMaLoi = await _context.MaLois.CountAsync();
+    int countGiaiPhap = await _context.GiaiPhaps.CountAsync();
+
+    // Đếm tổng số đánh giá
+    int countDanhGia = await _context.DanhGiaDichVus.CountAsync();
+    var recentDanhGias = await _context.DanhGiaDichVus
+        .Include(d => d.PhieuTiepNhan).ThenInclude(p => p.ThietBi).ThenInclude(t => t.KhachHang)
+        .OrderByDescending(d => d.NgayDG)
+        .Take(3)
+        .ToListAsync();
+    int totalNotif = countPhieu + countDanhGia;
+
+    var recentPhieus = await _context.PhieuTiepNhans
+        .Include(p => p.ThietBi)
+        .ThenInclude(t => t.KhachHang)
+        .Where(p => p.TrangThai == "Chờ khám")
+        .OrderByDescending(p => p.NgayNhan)
+        .Take(5)
+        .ToListAsync();
+}
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <script src="~/js/auth-arrival.js" defer asp-append-version="true"></script>
+    <partial name="_SystemIcons" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="IT Helpdesk — Hệ thống quản lý sự cố và chẩn đoán máy tính với AI" />
+    <title>@ViewData["Title"] — IT Helpdesk</title>
+
+    <!-- FOUC Prevention: Đọc theme từ localStorage trước khi render -->
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('hd_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Google Fonts: Inter + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Design System Tokens (generated from DESIGN.md) -->
+    <link rel="stylesheet" href="~/css/design-tokens.css" asp-append-version="true">
+
+    <!-- IT Helpdesk Design System -->
+    <link rel="stylesheet" href="~/css/helpdesk-theme.css" asp-append-version="true">
+
+
+    @await RenderSectionAsync("Styles", required: false)
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="~/css/dashboard-shell.css" rel="stylesheet" asp-append-version="true">
+</head>
+<body class="helpdesk-workspace">
+
+    <!-- ═══════════════════════════════════════
+         LIQUID BLOBS — Ambient Background
+         Shared across all authenticated pages
+         ═══════════════════════════════════════ -->
+    <div class="app-blobs-wrapper" aria-hidden="true">
+        <div class="app-blob app-blob-1"></div>
+        <div class="app-blob app-blob-2"></div>
+        <div class="app-blob app-blob-3"></div>
+        <div class="app-blob app-blob-4"></div>
+    </div>
+
+    <!-- ===== TOPBAR ===== -->
+    <header>
+        <nav class="helpdesk-topbar">
+            <div class="d-flex align-items-center gap-2">
+                <!-- Hamburger toggle -->
+                <button id="sidebarToggle" class="btn p-0 border-0 d-flex align-items-center justify-content-center"
+                        style="width:34px;height:34px;background:rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:18px;cursor:pointer;border:1px solid rgba(255,255,255,0.25)!important;"
+                        title="Ẩn/hiện menu">
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <!-- Brand -->
+                <a class="topbar-brand" href="@Url.Action("Landing", "Home")">
+                    <div class="brand-icon">
+                        <i class="bi bi-pc-display-horizontal"></i>
+                    </div>
+                    IT Helpdesk
+                </a>
+
+                <!-- AI Live badge -->
+                <span class="workspace-label d-none d-xl-inline">SERVICE DESK</span>
+            </div>
+
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <!-- Global search -->
+                <div class="topbar-search d-none d-lg-flex" style="position:relative;">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Tìm mã phiếu, thiết bị, khách hàng..." id="topbar-quick-search" autocomplete="off" />
+                    <div class="search-dropdown" id="searchDropdown"></div>
+                </div>
+            }
+
+            <div class="topbar-right">
+                <!-- Dark mode toggle (Classic Shadcn Style) -->
+                <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Chuyển đổi giao diện">
+                    <i class="bi bi-sun-fill classic-toggle-sun"></i>
+                    <i class="bi bi-moon-stars-fill classic-toggle-moon"></i>
+                </button>
+
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    var userRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+                    bool isAdminRole = userRole == "Admin KTV";
+
+                    <!-- Notification Bell -->
+                    <div class="notif-container" id="notifContainer">
+                        <div class="notif-btn @(totalNotif > 0 ? "ringing" : "")" title="Thông báo" onclick="toggleNotif(event)">
+                            <i class="bi bi-bell-fill"></i>
+                            @if (totalNotif > 0)
+                            {
+                                <span class="notif-badge" id="global-notif-badge">@totalNotif</span>
+                            }
+                            else
+                            {
+                                <span class="notif-badge" id="global-notif-badge" style="display:none;">0</span>
+                            }
+                        </div>
+                        <div class="notif-dropdown" onclick="event.stopPropagation()">
+                            <div class="notif-header">
+                                <span>Thông báo</span>
+                                @if (totalNotif > 0)
+                                {
+                                    <span class="badge" style="background:var(--c-warn);color:var(--surface);font-size:10px;padding:2px 8px;border-radius:99px;">@totalNotif mới</span>
+                                }
+                            </div>
+                            <div class="notif-list" id="notif-list-container">
+                                @await Html.PartialAsync("_NotificationListPartial", Tuple.Create<IEnumerable<QuanLySuCoMayTinh.Models.PhieuTiepNhan>, IEnumerable<QuanLySuCoMayTinh.Models.DanhGiaDichVu>>(recentPhieus, recentDanhGias))
+                            </div>
+                            <div class="notif-footer">
+                                <a href="@Url.Action("Index", "PhieuTiepNhan")">Xem danh sách phiếu</a>
+                                @if (User.IsInRole("Admin KTV"))
+                                {
+                                    <span style="margin:0 5px;color:var(--border)">|</span>
+                                    <a href="@Url.Action("DanhGia", "Admin")">Xem đánh giá</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Role chip -->
+                    <span class="@(isAdminRole ? "role-chip-admin" : "role-chip-ktv")">
+                        <i class="bi @(isAdminRole ? "bi-shield-fill-check" : "bi-tools") me-1"></i>@userRole
+                    </span>
+
+                    <!-- User chip + Profile dropdown -->
+                    <div class="user-chip-container" id="userProfileContainer">
+                        <div class="user-chip" onclick="toggleUserProfile(event)">
+                            <div class="user-avatar">@User.Identity.Name?.Substring(0, 1).ToUpper()</div>
+                            <span class="user-name d-none d-md-inline">@User.Identity.Name</span>
+                            <i class="bi bi-chevron-down" style="font-size:10px;color:rgba(255,255,255,0.6);margin-left:2px;"></i>
+                        </div>
+
+                        <div class="profile-dropdown" onclick="event.stopPropagation()">
+                            <div class="profile-header">
+                                <div class="profile-avatar-lg">@User.Identity.Name?.Substring(0, 1).ToUpper()</div>
+                                <div class="profile-info">
+                                    <div class="profile-name">@User.Identity.Name</div>
+                                    <div class="profile-role">@userRole</div>
+                                </div>
+                            </div>
+                            <div class="profile-menu">
+                                <div class="profile-item" style="cursor:default;">
+                                    <div style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);"></div>
+                                    <span style="color:var(--green-dark);font-weight:500;font-size:12.5px;">Đang trực tuyến</span>
+                                </div>
+                                <div style="height:1px;background:var(--border);margin:4px 10px;"></div>
+                                <a href="@Url.Action("Profile", "Auth")" class="profile-item" style="text-decoration:none;">
+                                    <i class="bi bi-person-badge"></i> Hồ sơ cá nhân
+                                </a>
+                                <a href="@Url.Action("Settings", "Admin")#change-password" class="profile-item" style="text-decoration:none;">
+                                    <i class="bi bi-shield-lock"></i> Đổi mật khẩu
+                                </a>
+                            </div>
+                            <div class="profile-footer" onclick="handleLogout()">
+                                <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <a href="@Url.Action("Login", "Auth")" class="btn-logout">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+                    </a>
+                }
+            </div>
+        </nav>
+    </header>
+
+    @* ===== BREADCRUMB STRIP ===== *@
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        var ctrl = ViewContext.RouteData.Values["Controller"]?.ToString();
+        var action = ViewContext.RouteData.Values["Action"]?.ToString();
+        string bcSection = ctrl switch {
+            "Home"          => "Tổng quan",
+            "PhieuTiepNhan" => "Quản lý",
+            "TroLyChanDoan" => "Quản lý",
+            "TrieuChung" or "MaLoi" or "GiaiPhap" => "Kho dữ liệu",
+            "Admin"         => "Quản trị Hệ thống",
+            _               => "Hệ thống"
+        };
+        string bcPage = ctrl switch {
+            "Home"          => "Dashboard",
+            "PhieuTiepNhan" => action == "Create" ? "Tạo phiếu mới" : action == "Details" ? "Chi tiết phiếu" : action == "Edit" ? "Chỉnh sửa phiếu" : "Tiếp nhận sự cố",
+            "TroLyChanDoan" => "Trợ lý chẩn đoán AI",
+            "TrieuChung"    => "Triệu chứng",
+            "MaLoi"         => "Mã lỗi",
+            "GiaiPhap"      => "Giải pháp",
+            "Admin"         => action switch { "Reports" => "Báo cáo & Thống kê", "DanhGia" => "Đánh giá khách hàng", "Settings" => "Cài đặt hệ thống", "MLModels" => "Mô hình AI", "ValidationSuite" => "Đánh giá chất lượng", "Dashboard" => "Dashboard AI", "Users" => "Quản lý nhân sự", _ => "Quản lý" },
+            _               => ViewData["Title"]?.ToString() ?? "Trang"
+        };
+        <div class="topbar-breadcrumb-strip" id="breadcrumb-strip">
+            <i class="bi bi-house-fill" style="font-size:11px;"></i>
+            <a href="@Url.Action("Index","Home")" class="bc-link">IT Helpdesk</a>
+            <span class="bc-sep"><i class="bi bi-chevron-right" style="font-size:9px;"></i></span>
+            <span class="bc-link">@bcSection</span>
+            <span class="bc-sep"><i class="bi bi-chevron-right" style="font-size:9px;"></i></span>
+            <span class="bc-current">@bcPage</span>
+        </div>
+    }
+
+    <!-- ===== SIDEBAR ===== -->
+    <nav class="helpdesk-sidebar" id="sidebar">
+
+        @{
+            var sbCtrl = ViewContext.RouteData.Values["Controller"]?.ToString();
+            var sbAction = ViewContext.RouteData.Values["Action"]?.ToString();
+            var sbRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "KTV";
+            bool sbIsAdmin = sbRole == "Admin KTV";
+        }
+
+        @* ── User header ── *@
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <a class="workspace-identity" href="@Url.Action("Index", "Home")">
+                <span class="workspace-crt" aria-hidden="true"></span>
+                <span><strong>Trạm kỹ thuật</strong><small>IT Helpdesk Workspace</small></span>
+            </a>
+        }
+
+        <div class="sb-section">
+            <span class="sb-section-label">Tổng quan</span>
+            <a href="@Url.Action("Index", "Home")" class="sb-item @(sbCtrl == "Home" ? "active" : "")" style="text-decoration:none">
+                <i class="bi bi-grid-1x2-fill sb-icon"></i>
+                Bàn điều phối
+            </a>
+        </div>
+
+        <div class="sb-divider"></div>
+
+        <div class="sb-section">
+            <span class="sb-section-label">Quản lý</span>
+            <a href="@Url.Action("Index", "PhieuTiepNhan")" class="sb-item @(sbCtrl == "PhieuTiepNhan" ? "active" : "")" style="text-decoration:none">
+                <i class="bi bi-ticket-detailed-fill sb-icon"></i>
+                Tiếp nhận sự cố
+                @if (countPhieu > 0)
+                {
+                    <span class="sb-item-pill danger">@countPhieu</span>
+                }
+            </a>
+            <a href="@Url.Action("Index", "TroLyChanDoan")" class="sb-item @(sbCtrl == "TroLyChanDoan" ? "active" : "")" style="text-decoration:none">
+                <i class="bi bi-robot sb-icon"></i>
+                Trợ lý chẩn đoán
+            </a>
+            <a href="@Url.Action("Index", "LinhKien")" class="sb-item @(sbCtrl == "LinhKien" ? "active" : "")" style="text-decoration:none">
+                <i class="bi bi-boxes sb-icon"></i>
+                Kho linh kiện
+            </a>
+        </div>
+
+        <div class="sb-divider"></div>
+
+        <div class="sb-section">
+            <span class="sb-section-label">Kho dữ liệu</span>
+            <button class="sb-group-header" id="grp-kb" onclick="toggleGroup('kb')">
+                <i class="bi bi-database-fill sb-icon"></i>
+                Từ điển tri thức
+                <i class="bi bi-chevron-down sb-chevron" id="chv-kb"></i>
+            </button>
+            <div class="sb-sub" id="sub-kb">
+                <a href="@Url.Action("Index", "TrieuChung")" class="sb-sub-item @(sbCtrl == "TrieuChung" ? "active" : "")" style="text-decoration:none">
+                    <span class="sb-sub-dot"></span>
+                    Triệu chứng
+                    <span class="sb-item-pill" style="margin-left:auto;">@countTrieuChung</span>
+                </a>
+                <a href="@Url.Action("Index", "MaLoi")" class="sb-sub-item @(sbCtrl == "MaLoi" ? "active" : "")" style="text-decoration:none">
+                    <span class="sb-sub-dot"></span>
+                    Mã lỗi
+                    <span class="sb-item-pill danger" style="margin-left:auto;">@countMaLoi</span>
+                </a>
+                <a href="@Url.Action("Index", "GiaiPhap")" class="sb-sub-item @(sbCtrl == "GiaiPhap" ? "active" : "")" style="text-decoration:none">
+                    <span class="sb-sub-dot"></span>
+                    Giải pháp
+                    <span class="sb-item-pill success" style="margin-left:auto;">@countGiaiPhap</span>
+                </a>
+            </div>
+        </div>
+
+        @if (User.IsInRole("Admin KTV"))
+        {
+            <div class="sb-divider"></div>
+            <div class="sb-section">
+                <span class="sb-section-label">Hệ thống</span>
+                <button class="sb-group-header" id="grp-admin" onclick="toggleGroup('admin')">
+                    <i class="bi bi-shield-fill sb-icon" style="color:var(--orange-dark);"></i>
+                    Quản trị
+                    <i class="bi bi-chevron-down sb-chevron" id="chv-admin"></i>
+                </button>
+                <div class="sb-sub" id="sub-admin">
+                    <a href="@Url.Action("Users", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "Users" ? "active" : "")" style="text-decoration:none">
+                        <span class="sb-sub-dot"></span>
+                        Quản lý nhân sự
+                    </a>
+                    <a href="@Url.Action("Reports", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "Reports" ? "active" : "")" style="text-decoration:none">
+                        <span class="sb-sub-dot"></span>
+                        Báo cáo & thống kê
+                    </a>
+                    <a href="@Url.Action("DanhGia", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "DanhGia" ? "active" : "")" style="text-decoration:none">
+                        <span class="sb-sub-dot"></span>
+                        Đánh giá khách hàng
+                        @if (countDanhGia > 0)
+                        {
+                            <span class="sb-item-pill warning" style="margin-left:auto;" title="@countDanhGia đánh giá">@countDanhGia</span>
+                        }
+                    </a>
+                    <a href="@Url.Action("MLModels", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "MLModels" ? "active" : "")" style="text-decoration:none">
+                        <span class="sb-sub-dot"></span>
+                        Mô hình AI
+                    </a>
+                    <a href="@Url.Action("Settings", "Admin")" class="sb-sub-item @(sbCtrl == "Admin" && sbAction == "Settings" ? "active" : "")" style="text-decoration:none">
+                        <span class="sb-sub-dot"></span>
+                        Cài đặt hệ thống
+                    </a>
+                </div>
+            </div>
+        }
+
+        <div class="sb-footer">
+            <div class="sb-footer-copy">© 2026 IT Helpdesk — Trương Tuấn Vĩnh</div>
+        </div>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="helpdesk-main" id="main-content">
+        <div class="p-4 main-content-area">
+            @RenderBody()
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="helpdesk-footer">
+            &copy; 2026 &mdash; Đồ án Quản lý chẩn đoán và giải pháp sự cố máy tính
+            &mdash; Thực hiện: <strong>Trương Tuấn Vĩnh</strong>
+        </footer>
+    </div><!-- /helpdesk-main -->
+
+    <!-- ===== MODAL: Tạo phiếu nhanh ===== -->
+    <div class="hd-modal-overlay" id="modal-create-ticket">
+        <div class="hd-modal">
+            <div class="hd-modal-title">
+                <i class="bi bi-plus-circle-fill" style="color:var(--orange);"></i>
+                Tạo phiếu tiếp nhận mới
+            </div>
+            <div class="hd-modal-field">
+                <label class="hd-modal-label">Thiết bị / Mã máy</label>
+                <input class="hd-modal-input" placeholder="Ví dụ: PC-KT01, LAP-KT05...">
+            </div>
+            <div class="hd-modal-field">
+                <label class="hd-modal-label">Triệu chứng</label>
+                <select class="hd-modal-select">
+                    <option>-- Chọn triệu chứng --</option>
+                    <option>Máy không khởi động</option>
+                    <option>Màn hình lỗi</option>
+                    <option>Mất kết nối mạng</option>
+                </select>
+            </div>
+            <div class="hd-modal-field">
+                <label class="hd-modal-label">Mô tả chi tiết</label>
+                <textarea class="hd-modal-textarea" placeholder="Mô tả cụ thể tình trạng sự cố..."></textarea>
+            </div>
+            <div class="hd-modal-field">
+                <label class="hd-modal-label">Mức độ ưu tiên</label>
+                <select class="hd-modal-select">
+                    <option>Trung bình</option>
+                    <option>Cao</option>
+                    <option>Thấp</option>
+                </select>
+            </div>
+            <div class="hd-modal-footer">
+                <button class="hd-btn hd-btn-outline" onclick="closeModal('modal-create-ticket')">Huỷ</button>
+                <button class="hd-btn hd-btn-primary" onclick="closeModal('modal-create-ticket');showToast('Đã tạo phiếu thành công!','success')">
+                    <i class="bi bi-check-lg"></i> Tạo phiếu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== GLOBAL CONFIRM MODAL ===== -->
+    <div class="hd-modal-overlay" id="hd-confirm-modal" style="z-index:9999;">
+        <div class="hd-modal-container" style="max-width:380px;text-align:center;padding:30px 24px;">
+            <div style="font-size:46px;color:var(--orange);margin-bottom:12px;animation:modalPop .3s ease-out;">
+                <i class="bi bi-question-circle"></i>
+            </div>
+            <h4 style="font-weight:700;font-size:18px;margin-bottom:10px;color:var(--text);">Xác nhận thao tác</h4>
+            <p id="hd-confirm-message" style="color:var(--text-muted);font-size:14px;margin-bottom:26px;line-height:1.5;">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <button class="hd-btn hd-btn-outline" id="hd-confirm-cancel" style="min-width:100px;">Hủy bỏ</button>
+                <button class="hd-btn hd-btn-danger" id="hd-confirm-ok" style="min-width:100px;">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== GLOBAL TOAST CONTAINER ===== -->
+    <div id="hd-toast-container" class="hd-toast-container"></div>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script>
+        /* ==========================================================
+           Global Helpers — IT Helpdesk Design System
+           ========================================================== */
+
+        /**
+         * Mở/đóng nhóm submenu
+         */
+        function toggleGroup(id) {
+            const sub = document.getElementById('sub-' + id);
+            const chv = document.getElementById('chv-' + id);
+            const hdr = document.getElementById('grp-' + id);
+            sub.classList.toggle('open');
+            chv.classList.toggle('open');
+            hdr.classList.toggle('open');
+        }
+
+        /**
+         * Toast thông báo toàn cục
+         * @@param {string} msg
+         * @@param {string} type - 'success'|'error'|'info'|'warning'
+         * @@param {number} duration
+         */
+        function showToast(msg, type, duration) {
+            duration = duration || 3200;
+            if (!type) {
+                if (msg.includes('thành công') || msg.includes('✅')) type = 'success';
+                else if (msg.includes('lỗi') || msg.includes('❌') || msg.includes('thất bại')) type = 'error';
+                else if (msg.includes('⚠') || msg.includes('cảnh báo')) type = 'warning';
+                else type = 'info';
+            }
+
+            const icons = {
+                success: '<i class="bi bi-check-circle-fill toast-icon" style="color:var(--green)"></i>',
+                error:   '<i class="bi bi-x-circle-fill toast-icon" style="color:var(--danger)"></i>',
+                info:    '<i class="bi bi-info-circle-fill toast-icon" style="color:var(--cyan)"></i>',
+                warning: '<i class="bi bi-exclamation-triangle-fill toast-icon" style="color:var(--orange)"></i>'
+            };
+
+            const container = document.getElementById('hd-toast-container');
+            if (!container) return;
+
+            while (container.children.length >= 4) {
+                container.removeChild(container.firstChild);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'hd-toast-item toast-' + type;
+            toast.innerHTML = (icons[type] || icons.info) + '<span>' + msg + '</span>';
+            toast.addEventListener('click', () => removeToast(toast));
+            container.appendChild(toast);
+
+            toast._timer = setTimeout(() => removeToast(toast), duration);
+
+            function removeToast(el) {
+                clearTimeout(el._timer);
+                el.classList.add('removing');
+                setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 280);
+            }
+        }
+
+        /** Mở modal overlay */
+        function openModal(modalId) {
+            const el = document.getElementById(modalId);
+            if (el) el.classList.add('open');
+        }
+
+        /** Đóng modal overlay */
+        function closeModal(modalId) {
+            const el = document.getElementById(modalId);
+            if (el) el.classList.remove('open');
+        }
+
+        /** Hộp thoại xác nhận tùy chỉnh */
+        function showConfirm(message, callback) {
+            const modal = document.getElementById('hd-confirm-modal');
+            const msgEl = document.getElementById('hd-confirm-message');
+            const btnOk = document.getElementById('hd-confirm-ok');
+            const btnCancel = document.getElementById('hd-confirm-cancel');
+
+            msgEl.innerHTML = message.replace(/\n/g, '<br>');
+            modal.classList.add('open');
+
+            btnOk.onclick = function () {
+                modal.classList.remove('open');
+                if (callback) callback();
+            };
+            btnCancel.onclick = function () {
+                modal.classList.remove('open');
+            };
+        }
+
+        // Đóng modal khi click ra ngoài
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('hd-modal-overlay') && e.target.id !== 'hd-confirm-modal') {
+                e.target.classList.remove('open');
+            }
+        });
+
+        /* ──────────────────────────────────────────
+           DARK MODE TOGGLE
+           ────────────────────────────────────────── */
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme') || 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('hd_theme', next);
+
+            // Sync với Settings checkbox
+            const cb = document.getElementById('darkModeToggle');
+            if (cb) cb.checked = (next === 'dark');
+        }
+
+        // Áp dụng icon đúng khi load
+        // Đã chuyển sang dùng CSS thuần cho Classic toggle
+
+        /* ──────────────────────────────────────────
+           ĐĂNG XUẤT với hiệu ứng
+           ────────────────────────────────────────── */
+        function handleLogout() {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position:fixed;inset:0;z-index:99999;
+                display:flex;flex-direction:column;align-items:center;justify-content:center;
+                background:var(--bg);opacity:0;transition:opacity .4s ease;
+                font-family:'Sora',sans-serif;
+            `;
+            overlay.innerHTML = `
+                <div style="text-align:center;">
+                    <div style="width:52px;height:52px;margin:0 auto 20px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spinOut 1s linear infinite;"></div>
+                    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Đang đăng xuất...</div>
+                    <div style="font-size:13px;color:var(--text-muted);">Hẹn gặp lại bạn!</div>
+                </div>
+            `;
+
+            const style = document.createElement('style');
+            style.textContent = '@@keyframes spinOut { to { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+            document.body.appendChild(overlay);
+            setTimeout(() => { overlay.style.opacity = '1'; }, 15);
+
+            fetch('@Url.Action("Logout", "Auth")')
+                .then(response => {
+                    setTimeout(() => {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => { window.location.href = response.url || '/Home/Landing'; }, 400);
+                    }, 1200);
+                })
+                .catch(() => {
+                    window.location.href = '@Url.Action("Logout", "Auth")';
+                });
+        }
+
+        /* ──────────────────────────────────────────
+           SIDEBAR TOGGLE
+           ────────────────────────────────────────── */
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function () {
+                const sidebar = document.getElementById('sidebar');
+                const main = document.querySelector('.helpdesk-main');
+                const bc = document.getElementById('breadcrumb-strip');
+
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.toggle('open-mobile');
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                    if (main) main.classList.toggle('expanded');
+                    if (bc) bc.classList.toggle('expanded');
+                }
+            });
+        }
+
+        /* ──────────────────────────────────────────
+           AUTO-OPEN SIDEBAR GROUP theo route
+           ────────────────────────────────────────── */
+        @if (ViewContext.RouteData.Values["Controller"]?.ToString() == "TrieuChung" ||
+             ViewContext.RouteData.Values["Controller"]?.ToString() == "MaLoi" ||
+             ViewContext.RouteData.Values["Controller"]?.ToString() == "GiaiPhap")
+        {
+            <text>toggleGroup('kb');</text>
+        }
+
+        @if (ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin")
+        {
+            <text>toggleGroup('admin');</text>
+        }
+
+        /* ──────────────────────────────────────────
+           GLOBAL SEARCH
+           ────────────────────────────────────────── */
+        (function () {
+            var qs = document.getElementById('topbar-quick-search');
+            var dropdown = document.getElementById('searchDropdown');
+            var searchTimeout;
+
+            if (qs && dropdown) {
+                qs.addEventListener('input', function (e) {
+                    var val = e.target.value.trim();
+                    if (!val) {
+                        dropdown.classList.remove('show');
+                        dropdown.innerHTML = '';
+                        return;
+                    }
+
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(function () {
+                        dropdown.innerHTML = '<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:12px;"><div class=\"spinner-border spinner-border-sm\" style=\"width:.9rem;height:.9rem;margin-bottom:6px;color:var(--orange);\" role=\"status\"></div><br>Đang tìm...</div>';
+                        dropdown.classList.add('show');
+
+                        fetch('@Url.Action("GlobalSearch", "Home")?q=' + encodeURIComponent(val))
+                            .then(res => res.json())
+                            .then(data => {
+                                dropdown.innerHTML = '';
+                                if (!data || data.length === 0) {
+                                    dropdown.innerHTML = '<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:12px;">Không tìm thấy kết quả.</div>';
+                                    return;
+                                }
+
+                                data.forEach(item => {
+                                    let iconStyle = 'background:var(--orange-light);color:var(--orange-dark);';
+                                    let iconClass = 'bi-search';
+                                    if (item.status === 'Chờ khám') { iconStyle = 'background:var(--orange-light);color:var(--orange-dark);'; iconClass = 'bi-clock-history'; }
+                                    else if (item.status === 'Hoàn thành') { iconStyle = 'background:var(--green-light);color:var(--green-dark);'; iconClass = 'bi-check-circle-fill'; }
+                                    else { iconStyle = 'background:var(--cyan-light);color:var(--cyan);'; iconClass = 'bi-tools'; }
+
+                                    const html = `
+                                        <a href="${item.url}" class="search-item">
+                                            <div class="search-item-icon" style="${iconStyle}"><i class="bi ${iconClass}"></i></div>
+                                            <div class="search-item-content">
+                                                <div class="search-item-title">${item.title}</div>
+                                                <div class="search-item-sub">${item.subtitle || ''}</div>
+                                            </div>
+                                            <div class="search-item-badge">${item.status}</div>
+                                        </a>
+                                    `;
+                                    dropdown.insertAdjacentHTML('beforeend', html);
+                                });
+                            })
+                            .catch(() => {
+                                dropdown.innerHTML = '<div style="padding:14px;text-align:center;color:var(--danger);font-size:12px;">Lỗi tìm kiếm.</div>';
+                            });
+                    }, 380);
+                });
+
+                document.addEventListener('click', function (e) {
+                    if (qs && dropdown && !qs.contains(e.target) && !dropdown.contains(e.target)) {
+                        dropdown.classList.remove('show');
+                    }
+                });
+
+                qs.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && qs.value.trim()) {
+                        window.location.href = '@Url.Action("Index","PhieuTiepNhan")?searchString=' + encodeURIComponent(qs.value.trim());
+                    }
+                });
+            }
+        })();
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ──────────────────────────────────────────
+           NOTIFICATION & PROFILE DROPDOWNS
+           ────────────────────────────────────────── */
+        function toggleNotif(e) {
+            e.stopPropagation();
+            var notif = document.getElementById('notifContainer');
+            if (notif) {
+                notif.classList.toggle('open');
+                if (notif.classList.contains('open')) {
+                    var badge = document.getElementById('global-notif-badge');
+                    if (badge) badge.style.display = 'none';
+                    var btn = notif.querySelector('.notif-btn');
+                    if (btn) btn.classList.remove('ringing');
+                    localStorage.setItem('hd_notif_unseen', 'false');
+                }
+            }
+            var profile = document.getElementById('userProfileContainer');
+            if (profile && profile.classList.contains('open')) profile.classList.remove('open');
+        }
+
+        function toggleUserProfile(e) {
+            e.stopPropagation();
+            var profile = document.getElementById('userProfileContainer');
+            if (profile) profile.classList.toggle('open');
+            var notif = document.getElementById('notifContainer');
+            if (notif && notif.classList.contains('open')) notif.classList.remove('open');
+        }
+
+        document.addEventListener('click', function (e) {
+            var notif = document.getElementById('notifContainer');
+            if (notif && notif.classList.contains('open') && !notif.contains(e.target)) {
+                notif.classList.remove('open');
+            }
+            var profile = document.getElementById('userProfileContainer');
+            if (profile && profile.classList.contains('open') && !profile.contains(e.target)) {
+                profile.classList.remove('open');
+            }
+        });
+
+        /* ──────────────────────────────────────────
+           AUDIO NOTIFICATIONS (Web Audio API)
+           ────────────────────────────────────────── */
+        let sharedAudioCtx = null;
+        function getAudioContext() {
+            if (!sharedAudioCtx) {
+                sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+            return sharedAudioCtx;
+        }
+
+        function playElegantNotification() {
+            try {
+                const nowMs = Date.now();
+                const lastMs = parseInt(localStorage.getItem('hd_last_sound_time') || '0');
+                if (nowMs - lastMs < 2000) return;
+                localStorage.setItem('hd_last_sound_time', nowMs.toString());
+
+                const audioCtx = getAudioContext();
+                const gainNode = audioCtx.createGain();
+                gainNode.connect(audioCtx.destination);
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.0);
+
+                const freqs = [880, 1108.73, 1318.51, 1760];
+                freqs.forEach(freq => {
+                    const osc = audioCtx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    osc.connect(gainNode);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 2.0);
+                });
+            } catch (e) { }
+        }
+
+        function playSuccessChime() {
+            try {
+                const nowMs = Date.now();
+                const lastMs = parseInt(localStorage.getItem('hd_last_sound_time') || '0');
+                if (nowMs - lastMs < 2000) return;
+                localStorage.setItem('hd_last_sound_time', nowMs.toString());
+
+                const audioCtx = getAudioContext();
+
+                function playBell(freq, time, vol, duration) {
+                    const osc1 = audioCtx.createOscillator();
+                    const osc2 = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(freq, time);
+                    osc2.type = 'triangle';
+                    osc2.frequency.setValueAtTime(freq * 2.01, time);
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(vol, time + 0.015);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+                    osc1.connect(gain); osc2.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc1.start(time); osc2.start(time);
+                    osc1.stop(time + duration); osc2.stop(time + duration);
+                }
+
+                const now = audioCtx.currentTime;
+                playBell(1318.51, now, 0.10, 0.35);
+                playBell(1760.00, now + 0.12, 0.15, 1.2);
+            } catch (e) { }
+        }
+
+        /* ──────────────────────────────────────────
+           DOMContentLoaded — Init
+           ────────────────────────────────────────── */
+        document.addEventListener('DOMContentLoaded', function () {
+            var currentTicketCount = parseInt('@countPhieu');
+            var currentReviewCount = parseInt('@countDanhGia');
+
+            // Phát âm sau reload
+            if (localStorage.getItem('hd_play_review_sound') === 'true') {
+                localStorage.removeItem('hd_play_review_sound');
+                playSuccessChime();
+            } else if (localStorage.getItem('hd_play_ticket_sound') === 'true') {
+                localStorage.removeItem('hd_play_ticket_sound');
+                playElegantNotification();
+            }
+
+            // Anchor highlight
+            function handleHashHighlight() {
+                if (window.location.hash) {
+                    setTimeout(function () {
+                        try {
+                            var target = document.querySelector(window.location.hash);
+                            if (target) {
+                                var headerOffset = 100;
+                                var offsetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+                                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+                                target.style.transition = 'all .4s ease';
+                                target.style.boxShadow = '0 0 0 3px rgba(255,165,62,0.35)';
+                                target.style.borderColor = 'var(--orange)';
+                                setTimeout(function () {
+                                    target.style.boxShadow = '';
+                                    target.style.borderColor = '';
+                                }, 2400);
+                            }
+                        } catch (e) { }
+                    }, 350);
+                }
+            }
+
+            handleHashHighlight();
+            window.addEventListener('hashchange', handleHashHighlight);
+
+            document.addEventListener('click', function () {
+                if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+                else if (!sharedAudioCtx) getAudioContext();
+            }, { once: true });
+
+            // Sync Settings dark mode checkbox on load
+            const darkCb = document.getElementById('darkModeToggle');
+            if (darkCb) {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                darkCb.checked = currentTheme === 'dark';
+                darkCb.addEventListener('change', function () {
+                    toggleTheme();
+                });
+            }
+
+            // Lưu count
+            localStorage.setItem('hd_last_ticket_count', currentTicketCount);
+            localStorage.setItem('hd_last_review_count', currentReviewCount);
+
+            // Polling 5s
+            window.addEventListener('beforeunload', function () { window.isNavigating = true; });
+
+            setInterval(function () {
+                if (window.isNavigating) return;
+
+                fetch('@Url.Action("GetNotificationsHtml", "Home")')
+                    .then(r => r.text())
+                    .then(htmlData => {
+                        if (window.isNavigating) return;
+                        fetch('@Url.Action("GetNotificationCounts", "Home")')
+                            .then(r2 => r2.json())
+                            .then(data => {
+                                let tCount = data.tickets;
+                                let rCount = data.reviews;
+                                let currentTk = parseInt(localStorage.getItem('hd_last_ticket_count') || '0');
+                                let currentRv = parseInt(localStorage.getItem('hd_last_review_count') || '0');
+
+                                if (tCount > currentTk || rCount > currentRv) {
+                                    var listContainer = document.querySelector('.notif-list');
+                                    if (listContainer) listContainer.innerHTML = htmlData;
+
+                                    localStorage.setItem('hd_notif_unseen', 'true');
+                                    localStorage.setItem('hd_last_ticket_count', tCount);
+                                    localStorage.setItem('hd_last_review_count', rCount);
+
+                                    if (rCount > currentRv) {
+                                        playSuccessChime();
+                                        showToast('⭐ Có đánh giá dịch vụ mới!', 'success', 4000);
+                                    } else {
+                                        playElegantNotification();
+                                        showToast('🔔 Có phiếu sự cố mới!', 'info', 4000);
+                                    }
+
+                                    var badge = document.getElementById('global-notif-badge');
+                                    if (badge) {
+                                        badge.style.display = 'flex';
+                                        badge.innerText = (tCount - currentTk) + (rCount - currentRv);
+                                    }
+                                    var notifBtn = document.querySelector('.notif-btn');
+                                    if (notifBtn) notifBtn.classList.add('ringing');
+                                }
+                            });
+                    })
+                    .catch(err => console.log('Polling error:', err));
+            }, 5000);
+        });
+    </script>
+
+    @if (TempData["PlayCompletedSound"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                playSuccessChime();
+                document.addEventListener('click', function () { playSuccessChime(); }, { once: true });
+            });
+        </script>
+    }
+
+    @if (TempData["PlayTicketSound"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                localStorage.setItem('hd_notif_unseen', 'true');
+                var badge = document.getElementById('global-notif-badge');
+                if (badge) { badge.style.display = 'flex'; badge.innerText = parseInt(badge.innerText || '0') + 1; }
+                var btn = document.querySelector('.notif-btn');
+                if (btn) btn.classList.add('ringing');
+                if (typeof showToast === 'function') showToast('🔔 Có phiếu sự cố mới!', 'info', 4000);
+                playElegantNotification();
+                document.addEventListener('click', function () { playElegantNotification(); }, { once: true });
+            });
+        </script>
+    }
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

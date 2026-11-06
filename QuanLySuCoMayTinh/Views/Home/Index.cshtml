@@ -1,0 +1,213 @@
+@using Microsoft.EntityFrameworkCore
+@using System.Globalization
+@inject QuanLySuCoMayTinh.Data.ApplicationDbContext _context
+@{
+    ViewData["Title"] = "Bảng điều khiển";
+    var vi = new CultureInfo("vi-VN");
+    var now = DateTime.Now;
+    var today = now.Date;
+
+    // ── Số liệu tổng quan ──
+    int phieuChoKham     = await _context.PhieuTiepNhans.CountAsync(p => p.TrangThai == "Chờ khám");
+    int phieuDangSua     = await _context.PhieuTiepNhans.CountAsync(p => p.TrangThai == "Đang kiểm tra" || p.TrangThai == "Đang sửa chữa");
+    int phieuDaGiaiQuyet = await _context.PhieuTiepNhans.CountAsync(p => p.TrangThai == "Hoàn thành");
+    int tongPhieu        = await _context.PhieuTiepNhans.CountAsync();
+    int soMaLoi          = await _context.MaLois.CountAsync();
+    int soGiaiPhap       = await _context.GiaiPhaps.CountAsync();
+    double tyLeHoanThanh = tongPhieu > 0 ? Math.Round(100.0 * phieuDaGiaiQuyet / tongPhieu) : 0;
+    int phieu30 = await _context.PhieuTiepNhans.CountAsync(p => p.NgayNhan >= today.AddDays(-30));
+
+    // ── Phiếu tiếp nhận theo tháng (6 tháng gần nhất) ──
+    var firstMonth = new DateTime(now.Year, now.Month, 1).AddMonths(-5);
+    var monthRows = await _context.PhieuTiepNhans.Where(p => p.NgayNhan >= firstMonth)
+        .GroupBy(p => new { p.NgayNhan.Year, p.NgayNhan.Month })
+        .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() }).ToListAsync();
+    var months = Enumerable.Range(0, 6).Select(i => firstMonth.AddMonths(i))
+        .Select(m => new { Date = m, Count = monthRows.FirstOrDefault(r => r.Year == m.Year && r.Month == m.Month)?.Count ?? 0 }).ToList();
+    int maxMonth = Math.Max(4, months.Max(x => x.Count));
+    int axisMax = (int)(Math.Ceiling(maxMonth / 4.0) * 4);
+    var peak = months.OrderByDescending(x => x.Count).ThenByDescending(x => x.Date).First();
+
+    // ── Phiếu hoàn thành theo tuần tiếp nhận (8 tuần) ──
+    var doneDates = await _context.PhieuTiepNhans.Where(p => p.TrangThai == "Hoàn thành" && p.NgayNhan >= today.AddDays(-56))
+        .Select(p => p.NgayNhan).ToListAsync();
+    var weekly = Enumerable.Range(0, 8).Select(i => 7 - i)
+        .Select(w => doneDates.Count(d => (today - d.Date).Days / 7 == w)).ToList();   // từ cũ đến mới
+    int weekMax = Math.Max(1, weekly.Max());
+    var pts = weekly.Select((v, i) => (X: 8 + i * (284.0 / 7), Y: 100 - v * 80.0 / weekMax)).ToList();
+    string F(double v) => v.ToString("0.#", CultureInfo.InvariantCulture);
+    var linePath = "M" + F(pts[0].X) + "," + F(pts[0].Y);
+    for (int i = 1; i < pts.Count; i++)
+    {
+        var mx = (pts[i - 1].X + pts[i].X) / 2;
+        linePath += " C" + F(mx) + "," + F(pts[i - 1].Y) + " " + F(mx) + "," + F(pts[i].Y) + " " + F(pts[i].X) + "," + F(pts[i].Y);
+    }
+    var areaPath = linePath + " L" + F(pts[^1].X) + ",112 L" + F(pts[0].X) + ",112 Z";
+    int weekThis = weekly[^1], weekPrev = weekly[^2];
+
+    // ── Doanh thu 30 ngày (chi phí sửa chữa của phiếu đã hoàn thành) ──
+    decimal rev30 = await _context.ChiTietSuaChuas.Where(c => c.PhieuTiepNhan!.TrangThai == "Hoàn thành" && c.PhieuTiepNhan.NgayNhan >= today.AddDays(-30)).SumAsync(c => (decimal?)c.ChiPhi) ?? 0;
+    decimal revPrev = await _context.ChiTietSuaChuas.Where(c => c.PhieuTiepNhan!.TrangThai == "Hoàn thành" && c.PhieuTiepNhan.NgayNhan >= today.AddDays(-60) && c.PhieuTiepNhan.NgayNhan < today.AddDays(-30)).SumAsync(c => (decimal?)c.ChiPhi) ?? 0;
+    double? revDelta = revPrev > 0 ? (double)((rev30 - revPrev) / revPrev * 100) : (double?)null;
+
+    // ── Đánh giá khách hàng ──
+    int soDanhGia = await _context.DanhGiaDichVus.CountAsync();
+    double sao = soDanhGia > 0 ? await _context.DanhGiaDichVus.AverageAsync(d => (double)d.SoSao) : 0;
+
+    // ── Đội ngũ, mô hình AI, phiếu mới nhất ──
+    var ktvs = await _context.Users.Where(u => u.Status).OrderBy(u => u.FullName).Take(5).Select(u => u.FullName).ToListAsync();
+    int ktvTong = await _context.Users.CountAsync(u => u.Status);
+    var activeModel = await _context.MLModelInfos.AsNoTracking().FirstOrDefaultAsync(m => m.DangSuDung);
+    bool modelFile = System.IO.File.Exists(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "Data", "MLModels", "ActiveModel.zip"));
+    bool aiChay = activeModel != null && modelFile;
+    bool aiKhoiTao = aiChay && activeModel!.PhienBanBoDuLieu != null && activeModel.PhienBanBoDuLieu.StartsWith("KHOI_TAO_TONG_HOP");
+
+    var phieuMoiNhat = await _context.PhieuTiepNhans.Include(p => p.ThietBi).ThenInclude(t => t.KhachHang)
+        .OrderByDescending(p => p.NgayNhan).Take(8).ToListAsync();
+
+    string userName = User.Identity?.Name ?? "Kỹ thuật viên";
+    int hour = now.Hour;
+    string greeting = hour < 12 ? "Chào buổi sáng" : (hour < 18 ? "Chào buổi chiều" : "Chào buổi tối");
+    string Initials(string? n) { var p = (n ?? "?").Split(' ', StringSplitOptions.RemoveEmptyEntries); return p.Length == 0 ? "?" : (p.Length == 1 ? p[0][..1] : p[0][..1] + p[^1][..1]).ToUpperInvariant(); }
+    string Delta(double d) => (d >= 0 ? "+" : "−") + Math.Abs(Math.Round(d)).ToString("0") + "%";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard-home.css" asp-append-version="true" />
+}
+
+<div class="dh">
+    <header class="dh-head">
+        <div class="dh-head-text">
+            <p class="dh-eyebrow">IT Helpdesk · Điều phối kỹ thuật</p>
+            <h1>@greeting, <span>@userName</span></h1>
+        </div>
+        <div class="dh-head-actions">
+            <span class="dh-pill" title="Khoảng thời gian thống kê"><i class="bi bi-calendar3"></i> @months[0].Date.ToString("MM/yyyy") – @months[^1].Date.ToString("MM/yyyy")</span>
+            <a class="dh-btn" asp-controller="TroLyChanDoan" asp-action="Index"><i class="bi bi-robot"></i> Trợ lý chẩn đoán</a>
+            <a class="dh-btn dh-btn-primary" asp-controller="PhieuTiepNhan" asp-action="Create"><i class="bi bi-plus-lg"></i> Tạo phiếu mới</a>
+        </div>
+    </header>
+
+    <div class="dh-grid">
+        @* ── Thẻ nổi bật: tổng phiếu ── *@
+        <section class="dh-card dh-hero" aria-labelledby="hero-title">
+            <div class="dh-card-top"><div><h2 id="hero-title">Tổng phiếu</h2><p>Toàn bộ hệ thống</p></div><a class="dh-icon-btn" asp-controller="PhieuTiepNhan" asp-action="Index" aria-label="Xem tất cả phiếu"><i class="bi bi-arrow-up-right"></i></a></div>
+            <div class="dh-hero-num">@tongPhieu.ToString("N0", vi)</div>
+            <div class="dh-hero-meta"><span>@phieu30 phiếu mới trong 30 ngày</span><span class="dh-chip dh-chip-light">Hoàn thành @tyLeHoanThanh%</span></div>
+            <div class="dh-status-row">
+                <a asp-controller="PhieuTiepNhan" asp-action="Index" asp-route-trangThai="Chờ khám"><strong>@phieuChoKham</strong><span>Chờ khám</span></a>
+                <a asp-controller="PhieuTiepNhan" asp-action="Index"><strong>@phieuDangSua</strong><span>Đang xử lý</span></a>
+                <a asp-controller="PhieuTiepNhan" asp-action="Index" asp-route-trangThai="Hoàn thành"><strong>@phieuDaGiaiQuyet</strong><span>Hoàn thành</span></a>
+            </div>
+        </section>
+
+        @* ── Doanh thu 30 ngày ── *@
+        <section class="dh-card dh-stat" aria-label="Doanh thu 30 ngày">
+            <p class="dh-stat-label">Doanh thu 30 ngày</p>
+            <div class="dh-stat-row"><strong>@rev30.ToString("N0", vi) ₫</strong>
+                @if (revDelta.HasValue) { <span class="dh-chip @(revDelta >= 0 ? "dh-chip-up" : "dh-chip-down")" title="So với 30 ngày trước đó">@Delta(revDelta.Value)</span> }
+                else { <span class="dh-chip dh-chip-muted" title="Chưa có dữ liệu 30 ngày trước đó để so sánh">Chưa có kỳ trước</span> }
+            </div>
+            <p class="dh-stat-sub">Chi phí sửa chữa của phiếu đã hoàn thành</p>
+        </section>
+
+        @* ── Biểu đồ cột: phiếu theo tháng ── *@
+        <section class="dh-card dh-bars" aria-labelledby="bars-title">
+            <div class="dh-card-top"><div class="dh-title-wrap"><span class="dh-badge-icon"><i class="bi bi-bar-chart-line"></i></span><div><h2 id="bars-title">Phiếu tiếp nhận theo tháng</h2><p>6 tháng gần nhất</p></div></div>
+                <a class="dh-icon-btn" asp-controller="Admin" asp-action="Reports" aria-label="Mở báo cáo chi tiết"><i class="bi bi-arrow-up-right"></i></a></div>
+            <div class="dh-chart" role="img" aria-label="Số phiếu tiếp nhận mỗi tháng trong 6 tháng gần nhất. Cao nhất: tháng @peak.Date.Month với @peak.Count phiếu.">
+                <ul class="dh-axis" aria-hidden="true">
+                    @for (int a = 4; a >= 0; a--) { <li>@(axisMax / 4 * a)</li> }
+                </ul>
+                <div class="dh-plot">
+                    @foreach (var m in months)
+                    {
+                        bool isPeak = m.Date == peak.Date && m.Count > 0;
+                        <div class="dh-col @(isPeak ? "is-peak" : "")" tabindex="0" aria-label="Tháng @m.Date.Month: @m.Count phiếu">
+                            <div class="dh-bar-wrap" style="--h:@(Math.Max(m.Count == 0 ? 2 : 6, Math.Round(100.0 * m.Count / axisMax)).ToString("0", CultureInfo.InvariantCulture))%"><div class="dh-bar"></div>
+                                <span class="dh-tip">@m.Count phiếu</span></div>
+                            <span class="dh-col-label">T@(m.Date.Month)</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+
+        @* ── Biểu đồ vùng: hoàn thành theo tuần ── *@
+        <section class="dh-card dh-line" aria-labelledby="line-title">
+            <div class="dh-card-top"><div><h2 id="line-title">Phiếu hoàn thành</h2><p>Theo tuần tiếp nhận · 8 tuần</p></div><a class="dh-icon-btn" asp-controller="PhieuTiepNhan" asp-action="Index" asp-route-trangThai="Hoàn thành" aria-label="Xem phiếu hoàn thành"><i class="bi bi-arrow-up-right"></i></a></div>
+            <div class="dh-line-num">@phieuDaGiaiQuyet <small>phiếu</small> <span class="dh-chip @(weekThis >= weekPrev ? "dh-chip-up" : "dh-chip-down")" title="Tuần này so với tuần trước">@(weekThis >= weekPrev ? "+" : "−")@Math.Abs(weekThis - weekPrev) tuần này</span></div>
+            <svg class="dh-spark" viewBox="0 0 300 120" preserveAspectRatio="none" role="img" aria-label="Số phiếu hoàn thành theo 8 tuần gần nhất">
+                <defs><linearGradient id="dhFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".28" /><stop offset="1" stop-color="currentColor" stop-opacity="0" /></linearGradient></defs>
+                <path d="@areaPath" fill="url(#dhFill)" /><path d="@linePath" fill="none" stroke="currentColor" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linecap="round" />
+            </svg>
+        </section>
+
+        @* ── Đánh giá khách hàng ── *@
+        <section class="dh-card dh-stat dh-rating" aria-label="Đánh giá khách hàng">
+            <p class="dh-stat-label">Đánh giá khách hàng</p>
+            <div class="dh-stat-row">
+                @if (soDanhGia > 0) { <strong>@sao.ToString("0.0", vi) <small>/ 5 ★</small></strong><span class="dh-chip dh-chip-muted">@soDanhGia lượt</span> }
+                else { <strong>—</strong><span class="dh-chip dh-chip-muted">Chưa có đánh giá</span> }
+            </div>
+            <p class="dh-stat-sub">Khách đánh giá qua liên kết công khai của phiếu đã hoàn thành</p>
+        </section>
+
+        @* ── Bảng phiếu mới nhất ── *@
+        <section class="dh-card dh-table" aria-labelledby="tickets-title">
+            <div class="dh-card-top"><div><h2 id="tickets-title">Phiếu mới nhất</h2><p>Sắp xếp theo ngày tiếp nhận</p></div><a class="dh-icon-btn" asp-controller="PhieuTiepNhan" asp-action="Index" aria-label="Xem tất cả phiếu"><i class="bi bi-arrow-up-right"></i></a></div>
+            <div class="dh-table-scroll" tabindex="0" role="region" aria-label="Danh sách phiếu mới nhất">
+                <table>
+                    <thead><tr><th>Phiếu</th><th>Thiết bị</th><th>Khách hàng</th><th>Ngày nhận</th><th>Trạng thái</th><th class="dh-th-end"><span class="visually-hidden">Thao tác</span></th></tr></thead>
+                    <tbody>
+                        @foreach (var p in phieuMoiNhat)
+                        {
+                            string st = p.TrangThai switch { "Chờ khám" => "wait", "Đang kiểm tra" or "Đang sửa chữa" => "work", "Hoàn thành" => "done", _ => "none" };
+                            <tr>
+                                <td><a class="dh-ticket" asp-controller="PhieuTiepNhan" asp-action="Details" asp-route-id="@p.MaPhieu">PTN-@p.MaPhieu.ToString("D4")</a></td>
+                                <td class="dh-strong">@(p.ThietBi?.TenTB ?? "—")</td>
+                                <td>@(p.ThietBi?.KhachHang?.HoTen ?? "—")</td>
+                                <td class="dh-mono">@p.NgayNhan.ToString("dd/MM/yyyy")</td>
+                                <td><span class="dh-status dh-status-@st"><i></i>@p.TrangThai</span></td>
+                                <td class="dh-td-end"><a class="dh-icon-btn dh-icon-sm" asp-controller="PhieuTiepNhan" asp-action="Details" asp-route-id="@p.MaPhieu" aria-label="Xem phiếu @p.MaPhieu"><i class="bi bi-eye"></i></a></td>
+                            </tr>
+                        }
+                        @if (!phieuMoiNhat.Any())
+                        {
+                            <tr><td colspan="6" class="dh-empty"><i class="bi bi-inbox"></i>Chưa có phiếu tiếp nhận nào</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        @* ── Cột phải: trợ lý, đội ngũ, tác vụ ── *@
+        <aside class="dh-side" aria-label="Công cụ nhanh">
+            <section class="dh-card dh-ai" aria-label="Trạng thái trợ lý chẩn đoán">
+                <div class="dh-card-top"><div><h2>Trợ lý chẩn đoán</h2><p>Gợi ý nguyên nhân & giải pháp</p></div>
+                    <span class="dh-chip @(aiChay ? (aiKhoiTao ? "dh-chip-warn" : "dh-chip-up") : "dh-chip-muted")">@(aiChay ? (aiKhoiTao ? "AI khởi tạo" : "AI hoạt động") : "Rule Engine")</span></div>
+                <p class="dh-ai-text">@(aiChay ? (aiKhoiTao ? "Mô hình AI khởi tạo (dữ liệu tổng hợp, chưa kiểm chứng bằng ca thật) chỉ để tham khảo." : "Mô hình AI đang bổ sung gợi ý cho Rule Engine.") : "Gợi ý hiện dựa trên bộ luật triệu chứng – mã lỗi. Chưa kích hoạt mô hình AI.")</p>
+                <a class="dh-link" asp-controller="TroLyChanDoan" asp-action="Index">Mở trợ lý <i class="bi bi-arrow-right"></i></a>
+            </section>
+
+            <section class="dh-card dh-team" aria-label="Đội ngũ kỹ thuật viên">
+                <div class="dh-card-top"><div><h2>Đội ngũ</h2><p>@ktvTong tài khoản đang hoạt động</p></div></div>
+                <div class="dh-avatars">
+                    @foreach (var n in ktvs.Take(4)) { <span class="dh-avatar" title="@n">@Initials(n)</span> }
+                    @if (ktvTong > 4) { <span class="dh-avatar dh-avatar-more" title="@(ktvTong - 4) người khác">+@(ktvTong - 4)</span> }
+                </div>
+            </section>
+
+            <section class="dh-card dh-actions" aria-label="Tác vụ nhanh">
+                <div class="dh-card-top"><div><h2>Tác vụ nhanh</h2><p>Kho tri thức: @soMaLoi mã lỗi · @soGiaiPhap giải pháp</p></div></div>
+                <a asp-controller="PhieuTiepNhan" asp-action="Create"><i class="bi bi-plus-circle"></i><span>Tiếp nhận sự cố</span><i class="bi bi-chevron-right"></i></a>
+                <a asp-controller="LinhKien" asp-action="Index"><i class="bi bi-boxes"></i><span>Kho linh kiện</span><i class="bi bi-chevron-right"></i></a>
+                <a asp-controller="TrieuChung" asp-action="Index"><i class="bi bi-activity"></i><span>Quản lý triệu chứng</span><i class="bi bi-chevron-right"></i></a>
+                @if (User.IsInRole("Admin KTV")) {
+                    <a asp-controller="Admin" asp-action="Reports"><i class="bi bi-graph-up"></i><span>Báo cáo thống kê</span><i class="bi bi-chevron-right"></i></a>
+                }
+            </section>
+        </aside>
+    </div>
+</div>

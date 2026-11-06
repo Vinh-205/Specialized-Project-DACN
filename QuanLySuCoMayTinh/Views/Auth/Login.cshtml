@@ -1,0 +1,72 @@
+@{
+    ViewData["Title"] = "Đăng nhập | IT Helpdesk";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Đăng nhập vào không gian làm việc IT Helpdesk">
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <partial name="_SystemIcons" />
+    <link href="~/css/auth-login.css" rel="stylesheet" asp-append-version="true">
+    <script src="~/js/auth-login.js" defer asp-append-version="true"></script>
+</head>
+<body>
+    <header class="auth-header">
+        <a class="auth-brand" href="@Url.Action("Welcome", "Home")"><i class="bi bi-pc-display" aria-hidden="true"></i> IT HELPDESK</a>
+        <a href="@Url.Action("Landing", "Home")">Khám phá hệ thống <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+    </header>
+    <main class="auth-main">
+        <section class="auth-form" aria-labelledby="loginTitle">
+            <div class="auth-intro">
+                <div class="auth-mascot" role="img" aria-label="CRT chào mừng bạn"></div>
+                <p class="auth-eyebrow">KHÔNG GIAN LÀM VIỆC</p>
+                <h1 id="loginTitle">Chào mừng trở lại.</h1>
+                <p>Đăng nhập để tiếp tục công việc của bạn.</p>
+            </div>
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="auth-alert error" role="alert">
+                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                    @Html.ValidationSummary(false, "")
+                </div>
+            }
+            @if (TempData["Success"] != null)
+            {
+                <div class="auth-alert success" role="status">
+                    <i class="bi bi-check-circle" aria-hidden="true"></i>
+                    <span>@TempData["Success"]</span>
+                </div>
+            }
+            <form asp-action="Login" asp-controller="Auth" method="post" id="loginForm">
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]">
+                <div class="field-group">
+                    <label for="username">Tên đăng nhập</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-person field-icon" aria-hidden="true"></i>
+                        <input id="username" name="username" type="text" autocomplete="username" required placeholder="Tên tài khoản của bạn" autocapitalize="none" spellcheck="false">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label for="password">Mật khẩu</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-lock-fill field-icon" aria-hidden="true"></i>
+                        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Nhập mật khẩu">
+                        <button type="button" id="pwdToggle" class="pwd-toggle" aria-label="Hiện mật khẩu" title="Hiện mật khẩu" aria-pressed="false" aria-controls="password"><i class="bi bi-eye" id="pwdIcon" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+                <button type="submit" id="submitBtn" class="auth-submit"><span class="login-loader" aria-hidden="true"></span><span id="submitText">Đăng nhập</span><i class="bi bi-arrow-right" id="submitIcon" aria-hidden="true"></i></button>
+                <p id="loginStatus" class="auth-status" role="status" aria-live="polite"></p>
+            </form>
+            <p class="auth-help">Tài khoản được cấp bởi quản trị viên.<br>Cần hỗ trợ truy cập? Liên hệ quản trị viên hệ thống.</p>
+            <a class="auth-back" href="@Url.Action("Welcome", "Home")"><i class="bi bi-arrow-left" aria-hidden="true"></i> Về trang chào mừng</a>
+        </section>
+    </main>
+    <footer class="auth-footer"><span>IT Helpdesk · DeskAI</span><span><i class="bi bi-shield-check" aria-hidden="true"></i> Không gian hỗ trợ của bạn</span></footer>
+</body>
+</html>

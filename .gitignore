@@ -1,0 +1,27 @@
+bin/
+obj/
+node_modules/
+
+# Mô hình, dữ liệu, môi trường Python và bản sao lưu (quá lớn / không thuộc mã nguồn)
+AI-Models/
+Datasets*/
+Backup_truoc_dong_bo_*/
+MoHinh-*/
+KiemThu-HTTP/models/
+Xuat-CSV/
+venv/
+hf_cache/
+__pycache__/
+QuanLySuCoMayTinh/Data/MLModels/
+QuanLySuCoMayTinh/HoSo_AI_TrinhBay/
+QuanLySuCoMayTinh/publish/
+*.onnx
+*.zip
+*.pt
+*.bin
+
+# Cấu hình chứa mật khẩu (mỗi máy tự tạo)
+QuanLySuCoMayTinh/appsettings.json
+QuanLySuCoMayTinh/appsettings.Development.json
+appsettings.Local.json
+.env

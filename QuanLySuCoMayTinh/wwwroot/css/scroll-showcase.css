@@ -1,0 +1,103 @@
+/* Approved scroll study, scoped to keep the existing book and app layouts intact. */
+.scroll-showcase { position:relative; color:#123448; }
+.scroll-showcase .stage { position:relative; min-height:800px; background:#f8fcff; overflow:hidden; }
+.scroll-showcase.scrub-enabled { height:440svh; }
+.scroll-showcase.scrub-enabled .stage { position:sticky; top:100px; height:calc(100svh - 100px); min-height:660px; }
+.scroll-showcase .stage-title { position:absolute; top:32px; left:5%; right:5%; display:flex; align-items:flex-end; justify-content:space-between; gap:20px; }
+.scroll-showcase .stage-title h2 { font-size:34px; line-height:1.2; font-weight:600; margin:0; }
+.scroll-showcase .stage-title p { font-size:12px; line-height:1.7; color:#365769; max-width:250px; margin:0; }
+.scroll-showcase .stage-title .eyebrow { font-size:10px; font-weight:700; color:#3b5d70; margin-bottom:15px; }
+.scroll-showcase .scene { position:absolute; left:50%; top:51%; width:680px; height:360px; transform:translate(-50%,-50%) scale(var(--scene-scale,1)); }
+.scroll-showcase .layer { position:absolute; inset:0; border:1px solid #bdd9e8; border-radius:8px; background:#fff; box-shadow:0 12px 25px #325a7112; transform-origin:center; }
+.scroll-showcase.scrub-enabled .layer { will-change:transform,opacity; }
+.scroll-showcase .base { overflow:hidden; background:#dff2fc; transform:translateY(85px) rotate(-5deg); }
+.scroll-showcase .base img { width:100%; height:100%; object-fit:contain; }
+.scroll-showcase .base::after { content:''; position:absolute; inset:0; border:10px solid #ffffff70; border-radius:8px; }
+.scroll-showcase .screen { inset:18px; background:#fff; overflow:hidden; }
+.scroll-showcase .window-bar { height:36px; display:flex; align-items:center; gap:5px; border-bottom:1px solid #e1ecf0; padding:0 14px; background:#f6fafc; font-size:10px; }
+.scroll-showcase .window-bar i { width:5px; height:5px; border-radius:50%; background:#76bddb; }
+.scroll-showcase .window-bar span { margin-left:auto; color:#3b5d70; }
+.scroll-showcase .screen-body { display:grid; grid-template-columns:92px 1fr; height:calc(100% - 36px); }
+.scroll-showcase .sidebar { border-right:1px solid #e1ecf0; padding:20px 12px; font-size:9px; color:#3b5d70; line-height:3; }
+.scroll-showcase .screen-content { padding:20px; }
+.scroll-showcase .screen-content h3 { font-size:16px; margin:0 0 18px; color:#16394e; font-weight:600; }
+.scroll-showcase .metrics { display:flex; gap:35px; font-size:10px; color:#3b5d70; }
+.scroll-showcase .metrics b { display:block; font-size:26px; color:#16394e; margin-bottom:6px; }
+.scroll-showcase .chart { height:105px; margin-top:24px; display:flex; align-items:end; gap:12px; border-bottom:1px solid #cfe3ec; }
+.scroll-showcase .chart i { flex:1; background:#a6dfff; border-radius:3px 3px 0 0; }
+.scroll-showcase .chart i:nth-child(3n) { background:#b9e4ca; }
+.scroll-showcase .intake { inset:50px 32px auto auto; width:235px; min-height:190px; padding:18px; background:#edf8ff; border-color:#9ec7df; transform:translate(210px,-125px) rotate(6deg); }
+.scroll-showcase .layer-label { font-size:10px; color:#28536c; font-weight:700; margin-bottom:17px; }
+.scroll-showcase .layer h3 { font-size:17px; font-weight:600; margin:0 0 12px; }
+.scroll-showcase .line { display:flex; justify-content:space-between; border-top:1px solid #bdd5e5; padding:10px 0; font-size:10px; gap:10px; }
+.scroll-showcase .line span { color:#3b5d70; }
+.scroll-showcase .ai { inset:auto auto 38px 28px; width:235px; min-height:185px; padding:18px; background:#f1f9eb; border-color:#aecb9f; transform:translate(-240px,-45px) rotate(-6deg); }
+.scroll-showcase .ai .layer-label,.scroll-showcase .ai p { color:#365a2e; }
+.scroll-showcase .ai p { font-size:11px; line-height:1.6; margin:0; }
+.scroll-showcase .confidence { display:flex; gap:4px; margin-top:18px; }
+.scroll-showcase .confidence i { height:6px; flex:1; background:#a4ce83; border-radius:1px; }
+.scroll-showcase .confidence i:last-child { background:#dfebd6; }
+.scroll-showcase .knowledge { inset:auto 55px 22px auto; width:222px; min-height:135px; padding:18px; background:#fff1f5; border-color:#d9adbc; transform:translate(190px,140px) rotate(5deg); }
+.scroll-showcase .knowledge .layer-label,.scroll-showcase .knowledge p { color:#784055; }
+.scroll-showcase .knowledge p { font-size:11px; line-height:1.6; margin:0; }
+.scroll-showcase .caption { position:absolute; left:5%; bottom:64px; max-width:340px; }
+.scroll-showcase .caption .count { font-size:10px; color:#006a9f; font-weight:700; margin-bottom:9px; }
+.scroll-showcase .caption h3 { font-size:23px; font-weight:600; margin:0 0 8px; }
+.scroll-showcase .caption p { font-size:12px; line-height:1.7; color:#365769; margin:0; }
+.scroll-showcase .progress { position:absolute; bottom:30px; left:5%; right:5%; height:2px; background:#dbeaf2; }
+.scroll-showcase .progress span { display:block; width:100%; height:100%; background:#0b91d1; transform-origin:left; transform:scaleX(0); }
+.scroll-showcase .phase-nav { position:absolute; right:5%; bottom:58px; display:none; gap:2px; }
+.scroll-showcase.scrub-enabled .phase-nav { display:flex; }
+.scroll-showcase .phase-nav button { border:0; background:transparent; width:32px; height:32px; padding:10px; cursor:pointer; }
+.scroll-showcase .phase-nav button::before { content:''; display:block; width:10px; height:10px; background:#b8d3e2; border-radius:50%; }
+.scroll-showcase .phase-nav button[aria-current=true]::before { background:#0985c9; }
+.welcome-scroll-track.scrub-enabled { height:200svh; }
+.welcome-scroll-track.scrub-enabled .welcome-hero { position:sticky; top:0; height:100svh; }
+.sk-top nav { flex-wrap:wrap; justify-content:center; }
+@media(max-width:1100px) and (min-width:761px) { .scroll-showcase .scene { --scene-scale:.72; } }
+@media(max-width:760px) {
+    .scroll-showcase .stage { min-height:740px; }
+    .scroll-showcase .stage-title { top:20px; display:block; }
+    .scroll-showcase .stage-title h2 { font-size:27px; }
+    .scroll-showcase .stage-title p { margin-top:10px; font-size:11px; max-width:300px; }
+    .scroll-showcase .scene { width:340px; height:280px; top:49%; --scene-scale:.78; }
+    .scroll-showcase .screen { inset:10px; }
+    .scroll-showcase .sidebar { display:none; }
+    .scroll-showcase .screen-body { grid-template-columns:1fr; }
+    .scroll-showcase .screen-content { padding:15px; }
+    .scroll-showcase .metrics { gap:28px; }
+    .scroll-showcase .metrics b { font-size:21px; }
+    .scroll-showcase .chart { height:80px; margin-top:15px; }
+    .scroll-showcase .intake { width:170px; min-height:162px; padding:13px; top:20px; right:15px; transform:translate(65px,-90px) rotate(5deg); }
+    .scroll-showcase .ai { width:175px; min-height:165px; left:15px; bottom:18px; padding:13px; transform:translate(-55px,-5px) rotate(-5deg); }
+    .scroll-showcase .knowledge { width:165px; min-height:118px; right:10px; bottom:10px; padding:13px; transform:translate(55px,95px) rotate(5deg); }
+    .scroll-showcase .layer h3 { font-size:15px; }
+    .scroll-showcase .layer-label { margin-bottom:12px; }
+    .scroll-showcase .ai p,.scroll-showcase .knowledge p { font-size:12px; }
+    .scroll-showcase .line { font-size:9px; }
+    .scroll-showcase .caption { bottom:61px; max-width:275px; }
+    .scroll-showcase .caption h3 { font-size:21px; }
+    .scroll-showcase .caption p { font-size:11px; }
+    .scroll-showcase .phase-nav { bottom:24px; }
+    .scroll-showcase .progress { right:160px; bottom:40px; }
+}
+/* Reduced motion keeps every layer visible without pinning the page. */
+@media(prefers-reduced-motion:reduce) {
+    .scroll-showcase .stage { min-height:840px; }
+    .scroll-showcase .scene { top:48%; }
+}
+@media(max-width:350px) { .scroll-showcase .scene { --scene-scale:.66; } }
+.scroll-showcase.scrub-enabled .stage { min-height:0; }
+.landing-illustration { margin:0; padding:48px 5%; background:#fff; border-top:1px solid #d7e8f1; }
+.landing-illustration h2 { font-size:28px; color:#123448; margin:0 0 24px; }
+.landing-illustration a { display:block; max-width:1448px; margin:auto; }
+.landing-illustration img { display:block; width:100%; height:auto; }
+@media(max-height:740px) {
+    .scroll-showcase.scrub-enabled .stage-title { top:16px; }
+    .scroll-showcase.scrub-enabled .stage-title h2 { font-size:24px; }
+    .scroll-showcase.scrub-enabled .stage-title .eyebrow { margin-bottom:6px; }
+    .scroll-showcase.scrub-enabled .stage-title > p { display:none; }
+    .scroll-showcase.scrub-enabled .caption { bottom:48px; }
+    .scroll-showcase.scrub-enabled .caption h3 { font-size:18px; }
+    .scroll-showcase.scrub-enabled .caption p { font-size:10px; line-height:1.5; }
+}

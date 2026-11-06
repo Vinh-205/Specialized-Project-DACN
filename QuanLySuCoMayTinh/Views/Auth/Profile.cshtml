@@ -1,0 +1,80 @@
+@model QuanLySuCoMayTinh.Models.User
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<div class="helpdesk-page-header mb-4">
+    <div>
+        <h2 class="page-title">Hồ sơ cá nhân</h2>
+        <div class="page-subtitle">Thông tin chi tiết về tài khoản của bạn trên hệ thống IT Helpdesk</div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Cột trái: Avatar và thông tin tổng quan -->
+    <div class="col-md-4 mb-4">
+        <div class="hd-card text-center p-4 h-100 d-flex flex-column align-items-center justify-content-center">
+            <div class="profile-avatar-lg mx-auto mb-3" style="width: 110px; height: 110px; font-size: 45px; border-radius: 24px; background: linear-gradient(135deg, var(--accent), var(--purple)); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 28px rgba(124,58,237,0.35);">
+                @Model.Username?.Substring(0, 1).ToUpper()
+            </div>
+            <h4 class="mb-1" style="color:var(--text); font-weight: 700; letter-spacing: -0.5px;">@Model.FullName</h4>
+            <div class="mb-4" style="font-size: 14.5px; color:var(--text-muted);">@@@Model.Username</div>
+            
+            <div class="d-flex justify-content-center gap-2 mb-3">
+                <span class="hd-badge hd-badge-success py-2 px-3" style="font-size: 12.5px;">
+                    <span class="status-dot dot-success"></span> Đang trực tuyến
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cột phải: Thông tin chi tiết -->
+    <div class="col-md-8 mb-4">
+        <div class="hd-card h-100">
+            <div class="hd-card-header">
+                <h5 class="hd-card-title mb-0"><i class="bi bi-person-vcard me-2 text-primary"></i>Thông tin định danh</h5>
+            </div>
+            <div class="hd-card-body p-4">
+                <div class="row align-items-center mb-3">
+                    <div class="col-sm-4 fw-medium" style="color:var(--text-muted);">Tên đăng nhập</div>
+                    <div class="col-sm-8" style="color:var(--text); font-family: var(--mono); font-size: 14.5px;">@Model.Username</div>
+                </div>
+                <hr style="border-color:var(--border); margin: 16px 0;">
+                
+                <div class="row align-items-center mb-3">
+                    <div class="col-sm-4 fw-medium" style="color:var(--text-muted);">Họ và tên</div>
+                    <div class="col-sm-8 fw-bold" style="color:var(--text); font-size: 15.5px;">@Model.FullName</div>
+                </div>
+                <hr style="border-color:var(--border); margin: 16px 0;">
+                
+                <div class="row align-items-center mb-3">
+                    <div class="col-sm-4 fw-medium" style="color:var(--text-muted);">Vai trò / Phân quyền</div>
+                    <div class="col-sm-8" style="color:var(--text);">
+                        @if (Model.Role == "Admin KTV" || Model.Role == "Admin")
+                        {
+                            <span class="role-chip-admin px-3 py-1" style="font-size: 12px;"><i class="bi bi-shield-fill-check me-1"></i>@Model.Role</span>
+                        }
+                        else
+                        {
+                            <span class="role-chip-ktv px-3 py-1" style="font-size: 12px;"><i class="bi bi-tools me-1"></i>@Model.Role</span>
+                        }
+                    </div>
+                </div>
+                <hr style="border-color:var(--border); margin: 16px 0;">
+                
+                <div class="row align-items-center mb-4">
+                    <div class="col-sm-4 fw-medium" style="color:var(--text-muted);">Trạng thái tài khoản</div>
+                    <div class="col-sm-8 text-success fw-medium">
+                        <i class="bi bi-check-circle-fill me-1"></i> Đang hoạt động
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-3" style="border-top: 1px dashed rgba(255,255,255,0.1);">
+                    <a href="@Url.Action("Settings", "Admin")#change-password" class="hd-btn hd-btn-outline px-4 py-2">
+                        <i class="bi bi-shield-lock me-1 text-primary"></i> Đổi mật khẩu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

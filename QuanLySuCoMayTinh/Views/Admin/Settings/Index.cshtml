@@ -1,0 +1,414 @@
+@{
+    ViewData["Title"] = "Cài đặt hệ thống";
+    int dbUserCount     = (int)(ViewData["DbUserCount"]     ?? 0);
+    int dbPhieuCount    = (int)(ViewData["DbPhieuCount"]    ?? 0);
+    int dbMaLoiCount    = (int)(ViewData["DbMaLoiCount"]    ?? 0);
+    int dbGiaiPhapCount = (int)(ViewData["DbGiaiPhapCount"] ?? 0);
+
+    string currentUser = User.Identity?.Name ?? "Admin";
+}
+
+<style>
+.settings-page { color: var(--text); max-width: 860px; }
+
+.settings-hero {
+    background: linear-gradient(135deg, rgba(91,91,214,0.12) 0%, var(--surface) 70%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-bottom: 22px;
+    position: relative; overflow: hidden;
+    box-shadow: var(--card-shadow);
+}
+
+.settings-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(91,91,214,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91,91,214,0.05) 1px, transparent 1px);
+    background-size: 38px 38px;
+    pointer-events: none;
+}
+
+.settings-hero-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--lav-deeper), var(--lav-deep));
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #fff;
+    box-shadow: 0 6px 20px rgba(91,91,214,0.35);
+}
+
+.settings-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 14px;
+}
+
+.settings-section-head {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13.5px; font-weight: 700; color: var(--text);
+}
+
+.settings-section-head .sh-icon {
+    width: 30px; height: 30px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+}
+
+.settings-section-body { padding: 18px 20px; }
+
+/* Info rows */
+.info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--text-muted); }
+.info-value { color: var(--text); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+
+.info-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: var(--radius-pill);
+    font-size: 11.5px; font-weight: 600;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+.info-badge.online { background: var(--green-light); color: var(--green-dark); border: 1px solid rgba(72,199,142,0.3); }
+.info-badge.version { background: rgba(91,91,214,0.15); color: var(--lav); border: 1px solid rgba(91,91,214,0.3); }
+
+/* DB stat mini grid */
+.db-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 14px; }
+.db-mini {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    text-align: center;
+    transition: transform .2s, box-shadow .2s;
+    cursor: default;
+}
+.db-mini:hover { transform: translateY(-2px); box-shadow: var(--card-shadow-hover); }
+.db-mini-val { font-size: 22px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.db-mini-lbl { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+/* Password form */
+.pwd-field { margin-bottom: 13px; }
+.pwd-label {
+    font-size: 11px; color: var(--text-muted); font-weight: 700;
+    display: block; margin-bottom: 5px;
+    text-transform: uppercase; letter-spacing: .5px;
+}
+.pwd-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--text);
+    outline: none; transition: border .15s, box-shadow .15s;
+    max-width: 420px;
+}
+.pwd-input:focus {
+    border-color: var(--lav-mid);
+    box-shadow: 0 0 0 3px rgba(91,91,214,0.18);
+    background: var(--surface);
+}
+.pwd-input::placeholder { color: var(--text-light); }
+
+.btn-settings-save {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: linear-gradient(135deg, var(--lav-deeper), var(--lav-deep));
+    color: #fff; padding: 9px 20px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer; font-family: 'Inter', system-ui, sans-serif;
+    transition: all .2s;
+    box-shadow: 0 4px 14px rgba(91,91,214,0.3);
+}
+.btn-settings-save:hover { box-shadow: 0 6px 20px rgba(91,91,214,0.45); transform: translateY(-1px); }
+
+/* Dark mode toggle row */
+.dark-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.form-switch .form-check-input {
+    width: 2.4em; height: 1.3em; cursor: pointer;
+    background-color: var(--border);
+    border-color: var(--border);
+}
+.form-switch .form-check-input:checked {
+    background-color: var(--lav-deep);
+    border-color: var(--lav-deep);
+}
+.form-switch .form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(91,91,214,0.2);
+    border-color: var(--lav-mid);
+}
+
+/* Quick link buttons */
+.quick-link-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 15px; border-radius: var(--radius-sm);
+    font-size: 12.5px; font-weight: 500;
+    text-decoration: none; transition: all .15s;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+}
+.quick-link-btn:hover { background: rgba(91,91,214,0.12); color: var(--lav); border-color: rgba(91,91,214,0.3); }
+
+@@media (max-width:576px) { .db-grid { grid-template-columns: repeat(2,1fr); } }
+</style>
+
+<div class="settings-page">
+    @Html.AntiForgeryToken()
+
+    <!-- Hero -->
+    <div class="settings-hero">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <div class="settings-hero-icon"><i class="bi bi-gear-fill"></i></div>
+            <div>
+                <div style="font-size:20px;font-weight:700;color:var(--text);">Cài đặt hệ thống</div>
+                <div style="color:var(--text-muted);font-size:12.5px;margin-top:2px;">
+                    Quản lý thông tin hệ thống, đổi mật khẩu và kiểm tra trạng thái Database
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Thông tin hệ thống -->
+    <div class="settings-section">
+        <div class="settings-section-head">
+            <div class="sh-icon" style="background:var(--cyan-light);">
+                <i class="bi bi-info-circle-fill" style="color:var(--cyan);"></i>
+            </div>
+            Thông tin hệ thống
+        </div>
+        <div class="settings-section-body">
+            <div class="info-row">
+                <span class="info-label">Tên hệ thống</span>
+                <span class="info-value" style="font-family:'Sora',sans-serif;font-size:13px;">IT Helpdesk — Quản lý sự cố máy tính</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phiên bản</span>
+                <span class="info-badge version"><i class="bi bi-tag-fill"></i> v1.0.0 — 2026</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Framework</span>
+                <span class="info-value">ASP.NET Core 10 MVC</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Database</span>
+                <span class="info-badge online">
+                    <span style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);display:inline-block;"></span>
+                    SQL Server — Đang kết nối
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Đăng nhập hiện tại</span>
+                <span class="info-value" style="font-family:'Sora',sans-serif;">@currentUser (Admin KTV)</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Thời gian máy chủ</span>
+                <span class="info-value" id="server-time">@DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Giao diện & Dark Mode -->
+    <div class="settings-section" id="dark-mode-section">
+        <div class="settings-section-head">
+            <div class="sh-icon" style="background:var(--orange-light);">
+                <i class="bi bi-palette-fill" style="color:var(--orange-dark);"></i>
+            </div>
+            Giao diện
+        </div>
+        <div class="settings-section-body">
+            <div class="dark-toggle-row">
+                <div>
+                    <div style="font-weight:600;font-size:13px;color:var(--text);">Chế độ tối (Dark Mode)</div>
+                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Chuyển đổi giữa giao diện sáng và tối</div>
+                </div>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="darkModeToggle">
+                </div>
+            </div>
+            <div class="info-row" style="border-bottom:none;padding-bottom:0;">
+                <span class="info-label">Màu nhấn hiện tại</span>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <div style="width:16px;height:16px;border-radius:50%;background:#5B5BD6;box-shadow:0 2px 6px rgba(91,91,214,0.4);"></div>
+                    <div style="width:16px;height:16px;border-radius:50%;background:#8585E8;"></div>
+                    <div style="width:16px;height:16px;border-radius:50%;background:#B3B3F6;"></div>
+                    <span style="font-size:11.5px;color:var(--text-muted);margin-left:4px;">Candy Blue</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Database Status -->
+    <div class="settings-section">
+        <div class="settings-section-head">
+            <div class="sh-icon" style="background:var(--orange-light);">
+                <i class="bi bi-database-fill" style="color:var(--orange-dark);"></i>
+            </div>
+            Trạng thái cơ sở dữ liệu
+        </div>
+        <div class="settings-section-body">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">
+                Số bản ghi hiện tại trong từng bảng dữ liệu:
+            </div>
+            <div class="db-grid">
+                <div class="db-mini">
+                    <div class="db-mini-val" style="color:var(--cyan);">@dbUserCount</div>
+                    <div class="db-mini-lbl">Tài khoản</div>
+                </div>
+                <div class="db-mini">
+                    <div class="db-mini-val" style="color:var(--orange-dark);">@dbPhieuCount</div>
+                    <div class="db-mini-lbl">Phiếu tiếp nhận</div>
+                </div>
+                <div class="db-mini">
+                    <div class="db-mini-val" style="color:var(--danger);">@dbMaLoiCount</div>
+                    <div class="db-mini-lbl">Mã lỗi</div>
+                </div>
+                <div class="db-mini">
+                    <div class="db-mini-val" style="color:var(--green-dark);">@dbGiaiPhapCount</div>
+                    <div class="db-mini-lbl">Giải pháp</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Đổi mật khẩu -->
+    <div class="settings-section" id="change-password">
+        <div class="settings-section-head">
+            <div class="sh-icon" style="background:var(--green-light);">
+                <i class="bi bi-lock-fill" style="color:var(--green-dark);"></i>
+            </div>
+            Đổi mật khẩu
+        </div>
+        <div class="settings-section-body">
+            <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px;">
+                Cập nhật mật khẩu đăng nhập của tài khoản <strong style="color:var(--text);">@currentUser</strong>
+            </div>
+            <div class="pwd-field">
+                <label class="pwd-label">Mật khẩu hiện tại *</label>
+                <input id="pwd-current" type="password" class="pwd-input" placeholder="Nhập mật khẩu hiện tại" />
+            </div>
+            <div class="pwd-field">
+                <label class="pwd-label">Mật khẩu mới * (tối thiểu 6 ký tự)</label>
+                <input id="pwd-new" type="password" class="pwd-input" placeholder="Nhập mật khẩu mới" />
+            </div>
+            <div class="pwd-field">
+                <label class="pwd-label">Xác nhận mật khẩu mới *</label>
+                <input id="pwd-confirm" type="password" class="pwd-input" placeholder="Nhập lại mật khẩu mới" />
+            </div>
+            <button class="btn-settings-save" onclick="changePassword()">
+                <i class="bi bi-shield-lock-fill"></i> Cập nhật mật khẩu
+            </button>
+        </div>
+    </div>
+
+    <!-- Section 4: Quick Links -->
+    <div class="settings-section">
+        <div class="settings-section-head">
+            <div class="sh-icon" style="background:var(--orange-light);">
+                <i class="bi bi-lightning-fill" style="color:var(--orange-dark);"></i>
+            </div>
+            Truy cập nhanh
+        </div>
+        <div class="settings-section-body">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <a href="@Url.Action("Users","Admin")" class="quick-link-btn">
+                    <i class="bi bi-people-fill"></i> Quản lý nhân sự
+                </a>
+                <a href="@Url.Action("Reports","Admin")" class="quick-link-btn">
+                    <i class="bi bi-bar-chart-fill"></i> Báo cáo &amp; Thống kê
+                </a>
+                <a href="@Url.Action("Index","PhieuTiepNhan")" class="quick-link-btn">
+                    <i class="bi bi-ticket-detailed-fill"></i> Quản lý phiếu
+                </a>
+                <a href="@Url.Action("Index","Home")" class="quick-link-btn">
+                    <i class="bi bi-grid-fill"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// Đồng hồ thời gian thực
+setInterval(() => {
+    const el = document.getElementById('server-time');
+    if (el) el.textContent = new Date().toLocaleString('vi-VN', {
+        day:'2-digit', month:'2-digit', year:'numeric',
+        hour:'2-digit', minute:'2-digit', second:'2-digit'
+    });
+}, 1000);
+
+// Sync dark mode checkbox khi tải trang
+document.addEventListener('DOMContentLoaded', function() {
+    const darkCb = document.getElementById('darkModeToggle');
+    if (darkCb) {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        darkCb.checked = currentTheme === 'dark';
+        darkCb.addEventListener('change', function() {
+            if (typeof toggleTheme === 'function') toggleTheme();
+        });
+    }
+});
+
+async function changePassword() {
+    const current = document.getElementById('pwd-current').value;
+    const newPwd  = document.getElementById('pwd-new').value;
+    const confirm = document.getElementById('pwd-confirm').value;
+
+    if (!current || !newPwd || !confirm) {
+        showToast('Vui lòng nhập đầy đủ các trường mật khẩu.', 'warning'); return;
+    }
+    if (newPwd !== confirm) {
+        showToast('Xác nhận mật khẩu mới không khớp.', 'error'); return;
+    }
+    if (newPwd.length < 6) {
+        showToast('Mật khẩu mới phải có ít nhất 6 ký tự.', 'warning'); return;
+    }
+
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+    const body  = new URLSearchParams({ currentPassword: current, newPassword: newPwd, confirmPassword: confirm });
+    if (token) body.append('__RequestVerificationToken', token);
+
+    const res = await fetch('@Url.Action("ChangePassword","Admin")', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body
+    });
+    const data = await res.json();
+    if (data.success) {
+        showToast(data.message, 'success');
+        document.getElementById('pwd-current').value = '';
+        document.getElementById('pwd-new').value     = '';
+        document.getElementById('pwd-confirm').value = '';
+    } else {
+        showToast(data.message, 'error');
+    }
+}
+</script>
+}

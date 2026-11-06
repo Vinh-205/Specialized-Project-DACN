@@ -1,0 +1,244 @@
+@{
+    ViewData["Title"] = "Validation Suite - Đánh giá AI";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var trieuChungs = ViewBag.TrieuChungs as List<QuanLySuCoMayTinh.Models.TrieuChung>;
+    var maLois = ViewBag.MaLois as List<QuanLySuCoMayTinh.Models.MaLoi>;
+    var activeModel = ViewBag.ActiveModel as QuanLySuCoMayTinh.Models.MLModelInfo;
+    var rulePred = Context.Request.Method == "POST" ? ViewBag.RulePrediction as string : "Chưa có dữ liệu";
+    var aiTop1 = Context.Request.Method == "POST" ? ViewBag.AITop1 as string : "Chưa có dữ liệu";
+    var aiTop3 = Context.Request.Method == "POST" ? ViewBag.AITop3 as List<Tuple<string, float>> : null;
+    var isCorrect = Context.Request.Method == "POST" ? ViewBag.IsCorrect as bool? : null;
+}
+
+<style>
+    /* ── Validation Suite — Candy Blue tokens ── */
+    .ai-page { font-family: 'Inter', system-ui, sans-serif; color: var(--text); padding: 0 0 24px; }
+
+    /* Header */
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin: 0 0 4px; display: flex; align-items: center; gap: 10px; }
+    .icon-wrap { width: 38px; height: 38px; background: linear-gradient(135deg, var(--lav-deeper), var(--lav-deep)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--lav); flex-shrink: 0; }
+    .page-subtitle { font-size: 13px; color: var(--text-muted); margin: 0; }
+    .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    .btn-ghost { display: inline-flex; align-items: center; gap: 7px; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--border); color: var(--text-muted); background: transparent; cursor: pointer; text-decoration: none; transition: all .2s; }
+    .btn-ghost:hover { border-color: var(--lav-mid); color: var(--lav); background: rgba(91,91,214,.12); }
+    
+    .btn-primary-ai { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 700; background: linear-gradient(135deg, var(--lav-deeper), var(--lav-deep)); border: 1.5px solid var(--lav-deep); color: #fff; cursor: pointer; text-decoration: none; transition: all .2s; box-shadow: 0 4px 16px rgba(91,91,214,.3); width: 100%; justify-content: center; }
+    .btn-primary-ai:hover { background: linear-gradient(135deg, var(--lav-deep), var(--lav-mid)); color: #fff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(91,91,214,.45); }
+
+    /* Alert */
+    .ai-alert { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: 13.5px; font-weight: 500; border: 1.5px solid; }
+    .ai-alert-success { background: rgba(46,168,76,.1); border-color: rgba(46,168,76,.35); color: #56c96e; }
+    .btn-close-ai { margin-left: auto; background: none; border: none; font-size: 16px; cursor: pointer; color: inherit; opacity: .7; }
+    .btn-close-ai:hover { opacity: 1; }
+
+    /* Badges */
+    .version-badge { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 8px; background: rgba(179,179,246,.08); border: 1px solid var(--border); color: var(--lav); display: flex; align-items: center; gap: 8px; }
+
+    /* Cards */
+    .ai-card { background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
+    .ai-card-header { padding: 14px 20px; border-bottom: 1.5px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; color: var(--text); }
+    .header-icon { color: var(--lav-mid); font-size: 16px; margin-right: 8px; }
+    .header-icon.green { color: var(--green); }
+    .ai-card-body { padding: 20px; }
+
+    /* Forms */
+    .form-label-ai { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; display: block; }
+    .tc-list { border: 1.5px solid var(--border); border-radius: 10px; padding: 16px; max-height: 380px; overflow-y: auto; background: var(--bg-card-alt); }
+    .tc-list::-webkit-scrollbar { width: 6px; }
+    .tc-list::-webkit-scrollbar-track { background: transparent; }
+    .tc-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; }
+    
+    .form-check-ai { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .form-check-ai:last-child { margin-bottom: 0; }
+    .form-check-input-ai { width: 18px; height: 18px; background-color: transparent; border: 1.5px solid var(--border-hi); border-radius: 4px; cursor: pointer; transition: all .2s; accent-color: var(--accent); }
+    .form-check-label { font-size: 13.5px; color: var(--text-primary); cursor: pointer; }
+
+    .form-select-ai { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-card-alt); color: var(--text-primary); font-size: 13.5px; outline: none; transition: border-color .2s; }
+    .form-select-ai:focus { border-color: var(--accent); }
+
+    /* Result Blocks */
+    .result-block { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg-card-alt); }
+    .result-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .icon-robot { background: rgba(255,255,255,.05); color: var(--text-muted); }
+    .icon-brain { background: rgba(61,142,240,.1); color: var(--accent); }
+    .result-content { flex: 1; }
+    .result-title { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); font-weight: 700; margin-bottom: 4px; }
+    .result-value { font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0; }
+
+    .badge-status { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+    .bg-match { background: rgba(46,168,76,.15); color: #3dc97a; border: 1px solid rgba(46,168,76,.3); }
+    .bg-nomatch { background: rgba(232,64,64,.15); color: #f07070; border: 1px solid rgba(232,64,64,.3); }
+
+    /* Top 3 List */
+    .top3-list { list-style: none; padding: 0; margin: 0; }
+    .top3-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .top3-item:last-child { border-bottom: none; }
+    .top3-rank { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--text-dim); width: 28px; }
+    .top3-name { font-size: 13.5px; color: var(--text-primary); flex: 1; }
+    .top3-conf { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: var(--accent-glow); color: #7cb9f5; }
+</style>
+
+<div class="ai-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <span class="icon-wrap"><i class="bi bi-shield-check"></i></span>
+                Real-World Validation Suite
+            </h1>
+            <p class="page-subtitle">Công cụ kiểm thử độc lập - So sánh Rule Engine vs AI Prediction</p>
+        </div>
+        <div class="header-actions">
+            <a href="@Url.Action("MLModels", "Admin")" class="btn-ghost">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+            <div class="version-badge">
+                <i class="bi bi-cpu" style="color:var(--accent);"></i>
+                Active Model: @(activeModel?.PhienBan ?? "None")
+            </div>
+            <div class="version-badge">
+                <i class="bi bi-pie-chart" style="color:var(--accent-green);"></i>
+                Dataset: @(activeModel?.PhienBanBoDuLieu ?? "N/A")
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["TestCaseSaved"] != null)
+    {
+        <div class="ai-alert ai-alert-success" role="alert">
+            <i class="bi bi-check-circle-fill"></i> Đã lưu kết quả kiểm thử vào <strong>AI Test Case Repository</strong> thành công!
+            <button type="button" class="btn-close-ai" data-bs-dismiss="alert" aria-label="Close">×</button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Input Column -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="ai-card">
+                <div class="ai-card-header">
+                    <div><i class="bi bi-keyboard header-icon"></i> 1. Nhập liệu Triệu chứng</div>
+                </div>
+                <div class="ai-card-body">
+                    <form method="post" action="@Url.Action("ValidationSuite", "Admin")">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-4">
+                            <label class="form-label-ai">Chọn các triệu chứng:</label>
+                            <div class="tc-list">
+                                @if (trieuChungs != null)
+                                {
+                                    foreach (var tc in trieuChungs)
+                                    {
+                                        <div class="form-check-ai">
+                                            <input class="form-check-input-ai" type="checkbox" name="selectedTrieuChungs" value="@tc.MaTC" id="tc_@tc.MaTC">
+                                            <label class="form-check-label" for="tc_@tc.MaTC">@tc.TenTC</label>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-ai">Lỗi mong đợi (Expected Fault):</label>
+                            <select class="form-select-ai mb-2" name="expectedFault" required>
+                                <option value="">-- Chọn lỗi thực tế mong muốn --</option>
+                                @if (maLois != null)
+                                {
+                                    foreach (var loi in maLois)
+                                    {
+                                        <option value="@loi.MaLoiID">@loi.TenLoi</option>
+                                    }
+                                }
+                            </select>
+                            <div style="font-size:12px; color:var(--text-dim);">Lỗi này sẽ làm Ground Truth để đánh giá AI đúng/sai.</div>
+                        </div>
+
+                        <button type="submit" class="btn-primary-ai">
+                            <i class="bi bi-lightning-charge-fill"></i> Chạy kiểm thử & Lưu (Run)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Column -->
+        <div class="col-xl-8 col-lg-7">
+            <!-- RULE ENGINE -->
+            <div class="ai-card" style="border-left: 3px solid var(--text-dim);">
+                <div class="ai-card-header">
+                    <div><i class="bi bi-gear header-icon" style="color:var(--text-dim);"></i> 2. Kết quả từ Legacy Rule Engine</div>
+                </div>
+                <div class="ai-card-body">
+                    <div class="result-block">
+                        <div class="result-icon icon-robot"><i class="bi bi-robot"></i></div>
+                        <div class="result-content">
+                            <div class="result-title">Dự đoán tĩnh (Hardcoded Rules)</div>
+                            <h4 class="result-value">@(rulePred ?? "N/A")</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HYBRID AI -->
+            <div class="ai-card" style="border-left: 3px solid var(--accent);">
+                <div class="ai-card-header">
+                    <div><i class="bi bi-cpu header-icon"></i> 3. Kết quả từ Hybrid AI Model</div>
+                    <span class="version-badge" style="padding: 4px 10px; font-size: 11px; background: var(--accent-glow); color: #7cb9f5; border: none;">ML.NET Multi-Hot</span>
+                </div>
+                <div class="ai-card-body">
+                    <div class="row g-4">
+                        <!-- TOP 1 -->
+                        <div class="col-md-12">
+                            <div class="result-block" style="border-color: var(--border-hi);">
+                                <div class="result-icon icon-brain"><i class="bi bi-stars"></i></div>
+                                <div class="result-content">
+                                    <div class="result-title" style="color: var(--accent);">Top 1 Prediction</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                        <h4 class="result-value">@(aiTop1 ?? "N/A")</h4>
+                                        @if (isCorrect == true)
+                                        {
+                                            <span class="badge-status bg-match"><i class="bi bi-check-circle-fill"></i> Match Expected</span>
+                                        }
+                                        else if (isCorrect == false)
+                                        {
+                                            <span class="badge-status bg-nomatch"><i class="bi bi-x-circle-fill"></i> Not Match</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOP 3 -->
+                        <div class="col-md-12">
+                            <div class="result-title" style="margin-bottom: 12px;">Top 3 Predictions & Confidence</div>
+                            <div class="tc-list" style="padding: 0; max-height: unset;">
+                                <ul class="top3-list">
+                                    @if (aiTop3 != null && aiTop3.Any())
+                                    {
+                                        int rank = 1;
+                                        foreach (var item in aiTop3)
+                                        {
+                                            <li class="top3-item">
+                                                <span class="top3-rank">#@rank</span>
+                                                <span class="top3-name">@item.Item1</span>
+                                                <span class="top3-conf">@Math.Round(item.Item2, 2)%</span>
+                                            </li>
+                                            rank++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="top3-item" style="color: var(--text-muted); justify-content: center; font-size: 13px; padding: 20px;">
+                                            Chưa chạy kiểm thử...
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

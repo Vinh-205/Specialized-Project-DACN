@@ -1,0 +1,435 @@
+@model QuanLySuCoMayTinh.Models.PhieuTiepNhan
+
+@{
+    ViewData["Title"] = "Lập phiếu tiếp nhận";
+}
+
+<style>
+    /* Premium glass suggestion panel with smooth transition */
+    .suggestion-panel {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(-5px);
+        transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                    opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                    padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    margin 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        border:1px solid var(--border);
+        border-radius: 12px;
+        background:var(--surface);
+        backdrop-filter: blur(10px);
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 10px 25px rgba(0, 0, 0, 0.3);
+        padding: 0 10px;
+        margin-top: 0;
+    }
+
+    .suggestion-panel.show {
+        max-height: 400px;
+        opacity: 1;
+        transform: translateY(0);
+        padding: 12px 14px;
+        margin-top: 8px;
+    }
+
+    /* Premium styled pills */
+    .suggestion-pill {
+        background:var(--surface);
+        border:1px solid var(--border);
+        color: var(--text2) !important;
+        font-size: 11.5px;
+        padding: 3px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        outline: none;
+        user-select: none;
+        margin-bottom: 2px;
+    }
+
+    .suggestion-pill:hover {
+        transform: translateY(-1.5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        background:var(--surface2);
+    }
+
+    /* CPU accent colors */
+    .suggestion-pill.cpu {
+        border-color: rgba(56, 189, 248, 0.2);
+    }
+    .suggestion-pill.cpu:hover {
+        background: rgba(56, 189, 248, 0.12);
+        border-color: #38bdf8;
+        color:var(--c-info) !important;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+    }
+
+    /* RAM accent colors */
+    .suggestion-pill.ram {
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+    .suggestion-pill.ram:hover {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: #22c55e;
+        color:var(--c-ok) !important;
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
+    }
+
+    /* GPU accent colors */
+    .suggestion-pill.gpu {
+        border-color: rgba(234, 179, 8, 0.2);
+    }
+    .suggestion-pill.gpu:hover {
+        background: rgba(234, 179, 8, 0.12);
+        border-color: #eab308;
+        color:var(--c-warn) !important;
+        box-shadow: 0 0 10px rgba(234, 179, 8, 0.25);
+    }
+
+    /* Card accent colors */
+    .suggestion-pill.card-gpu {
+        border-color: rgba(168, 85, 247, 0.2);
+    }
+    .suggestion-pill.card-gpu:hover {
+        background: rgba(168, 85, 247, 0.12);
+        border-color: #a855f7;
+        color: #a855f7 !important;
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+    }
+
+    /* Appearance categories styling */
+    .suggestion-pill.ap-screen {
+        border-color: rgba(6, 182, 212, 0.2);
+    }
+    .suggestion-pill.ap-screen:hover {
+        background: rgba(6, 182, 212, 0.12);
+        border-color: #06b6d4;
+        color: #06b6d4 !important;
+        box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+    }
+
+    .suggestion-pill.ap-body {
+        border-color: rgba(16, 185, 129, 0.2);
+    }
+    .suggestion-pill.ap-body:hover {
+        background: rgba(16, 185, 129, 0.12);
+        border-color: #10b981;
+        color:var(--c-ok) !important;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .suggestion-pill.ap-keyboard {
+        border-color: rgba(245, 158, 11, 0.2);
+    }
+    .suggestion-pill.ap-keyboard:hover {
+        background: rgba(245, 158, 11, 0.12);
+        border-color: #f59e0b;
+        color:var(--c-warn) !important;
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+    }
+
+    .suggestion-pill.ap-other {
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+    .suggestion-pill.ap-other:hover {
+        background: rgba(59, 130, 246, 0.12);
+        border-color: #3b82f6;
+        color: #3b82f6 !important;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+    }
+    
+    /* Active pill styles */
+    .suggestion-pill.active-pill.cpu { background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color:var(--c-info) !important; box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+    .suggestion-pill.active-pill.ram { background: rgba(34, 197, 94, 0.15); border-color: #22c55e; color:var(--c-ok) !important; box-shadow: 0 0 10px rgba(34, 197, 94, 0.3); }
+    .suggestion-pill.active-pill.gpu { background: rgba(234, 179, 8, 0.15); border-color: #eab308; color:var(--c-warn) !important; box-shadow: 0 0 10px rgba(234, 179, 8, 0.3); }
+    .suggestion-pill.active-pill.card-gpu { background: rgba(168, 85, 247, 0.15); border-color: #a855f7; color: #a855f7 !important; box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
+    
+    .suggestion-pill.active-pill.ap-screen { background: rgba(6, 182, 212, 0.15); border-color: #06b6d4; color: #06b6d4 !important; box-shadow: 0 0 10px rgba(6, 182, 212, 0.3); }
+    .suggestion-pill.active-pill.ap-body { background: rgba(16, 185, 129, 0.15); border-color: #10b981; color:var(--c-ok) !important; box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+    .suggestion-pill.active-pill.ap-keyboard { background: rgba(245, 158, 11, 0.15); border-color: #f59e0b; color:var(--c-warn) !important; box-shadow: 0 0 10px rgba(245, 158, 11, 0.3); }
+    .suggestion-pill.active-pill.ap-other { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #3b82f6 !important; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+</style>
+
+<div class="helpdesk-breadcrumb">
+    <span>Quản lý</span><span class="sep">›</span>
+    <a href="@Url.Action("Index", "PhieuTiepNhan")" style="color:var(--text3);text-decoration:none">Tiếp nhận sự cố</a>
+    <span class="sep">›</span><span class="cur">Lập phiếu mới</span>
+</div>
+
+<div class="helpdesk-page-header">
+    <div>
+        <div class="page-title">Lập phiếu tiếp nhận mới</div>
+        <div class="page-subtitle">Nhập thông tin khách hàng và thiết bị để bắt đầu chẩn đoán</div>
+    </div>
+    <a asp-action="Index" asp-controller="PhieuTiepNhan" class="hd-btn hd-btn-outline hd-btn-sm" style="text-decoration:none">
+        Quay lại
+    </a>
+</div>
+
+<div class="hd-card" style="max-width: 800px;">
+    <div class="card-body p-4">
+        <form asp-action="Create" method="post">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger" style="border-radius: 8px; font-size: 13px;">
+                    @Html.ValidationSummary(true, "")
+                </div>
+            }
+
+            <h6 class="fw-bold mb-3 border-bottom pb-2" style="color:var(--text);border-color:var(--border)!important;">Thông tin khách hàng</h6>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold" style="font-size: 13.5px; color: var(--text2);">Số điện thoại <span class="text-danger">*</span></label>
+                    <input type="text" name="soDienThoai" class="form-control shadow-sm" style="font-size: 14px; border-radius: 8px; padding: 10px 15px;" placeholder="Ví dụ: 0901234567" required />
+                </div>
+                <div class="col-md-6 mt-3 mt-md-0">
+                    <label class="form-label fw-bold" style="font-size: 13.5px; color: var(--text2);">Họ và tên <span class="text-danger">*</span></label>
+                    <input type="text" name="tenKhachHang" class="form-control shadow-sm" style="font-size: 14px; border-radius: 8px; padding: 10px 15px;" placeholder="Ví dụ: Nguyễn Văn A" required />
+                </div>
+            </div>
+
+            <h6 class="fw-bold mb-3 border-bottom pb-2" style="color:var(--text);border-color:var(--border)!important;">Thông tin thiết bị</h6>
+            <div class="mb-4">
+                <label class="form-label fw-bold" style="font-size: 13.5px; color: var(--text2);">Tên / Dòng máy <span class="text-danger">*</span></label>
+                <input type="text" name="tenThietBi" list="deviceSuggestions" class="form-control shadow-sm" style="font-size: 14px; border-radius: 8px; padding: 10px 15px;" placeholder="Nhập tên hoặc chọn từ gợi ý (VD: Dell Inspiron 15, PC Gaming...)" required autocomplete="off" />
+                <datalist id="deviceSuggestions">
+                    <option value="Dell Inspiron 15"></option>
+                    <option value="Asus TUF Gaming F15"></option>
+                    <option value="HP Pavilion / Envy"></option>
+                    <option value="Lenovo IdeaPad / Legion"></option>
+                    <option value="Acer Nitro 5"></option>
+                    <option value="MacBook Pro M2"></option>
+                    <option value="PC Văn Phòng B560"></option>
+                    <option value="PC Gaming Z690"></option>
+                </datalist>
+                <div class="mt-2" style="font-size:12.5px; color:var(--c-info); font-weight:500;">
+                    <i class="bi bi-info-circle me-1"></i> Bạn có thể tự gõ tên thiết bị mới hoặc click 2 lần vào ô để xem danh sách gợi ý.
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label fw-bold mb-0" style="font-size: 13.5px; color: var(--text2);">Cấu hình thiết bị</label>
+                        <button type="button" class="btn btn-xs btn-link p-0 text-decoration-none" style="font-size: 12px; color: var(--c-info);" onclick="togglePanel(event, 'configPanel')">
+                            <i class="bi bi-chevron-up" id="configPanelIcon"></i> <span id="configPanelText">Ẩn gợi ý</span>
+                        </button>
+                    </div>
+                    <textarea name="cauHinh" class="form-control shadow-sm" style="font-size: 14px; border-radius: 8px; padding: 10px 15px;" rows="4" placeholder="VD: CPU i5-12400, RAM 16GB, SSD 512GB, GPU RTX 3060..."></textarea>
+                    
+                    <div id="configPanel" class="suggestion-panel show">
+                        <div style="font-size: 12px; color: var(--text3); font-weight: 600; margin-bottom: 8px;">
+                            <i class="bi bi-tag-fill text-info me-1"></i> Gợi ý cấu hình nhanh (click để thêm)
+                        </div>
+                        
+                        <div class="mb-2 d-flex align-items-start">
+                            <span class="text-secondary pt-1" style="font-size: 11px; min-width: 50px; font-weight: 500; flex-shrink: 0;">CPU:</span>
+                            <div class="d-flex flex-wrap gap-2" style="flex-grow: 1;">
+                                <button type="button" class="suggestion-pill cpu" onclick="addSpec(event, 'Intel Core i3')">Core i3</button>
+                                <button type="button" class="suggestion-pill cpu" onclick="addSpec(event, 'Intel Core i5')">Core i5</button>
+                                <button type="button" class="suggestion-pill cpu" onclick="addSpec(event, 'Intel Core i7')">Core i7</button>
+                                <button type="button" class="suggestion-pill cpu" onclick="addSpec(event, 'AMD Ryzen 5')">Ryzen 5</button>
+                                <button type="button" class="suggestion-pill cpu" onclick="addSpec(event, 'AMD Ryzen 7')">Ryzen 7</button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2 d-flex align-items-start">
+                            <span class="text-secondary pt-1" style="font-size: 11px; min-width: 50px; font-weight: 500; flex-shrink: 0;">RAM:</span>
+                            <div class="d-flex flex-wrap gap-2" style="flex-grow: 1;">
+                                <button type="button" class="suggestion-pill ram" onclick="addSpec(event, 'RAM 8GB')">8GB</button>
+                                <button type="button" class="suggestion-pill ram" onclick="addSpec(event, 'RAM 16GB')">16GB</button>
+                                <button type="button" class="suggestion-pill ram" onclick="addSpec(event, 'RAM 32GB')">32GB</button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2 d-flex align-items-start">
+                            <span class="text-secondary pt-1" style="font-size: 11px; min-width: 50px; font-weight: 500; flex-shrink: 0;">GPU:</span>
+                            <div class="d-flex flex-wrap gap-2" style="flex-grow: 1;">
+                                <button type="button" class="suggestion-pill gpu" onclick="addSpec(event, 'RTX 3060')">RTX 3060</button>
+                                <button type="button" class="suggestion-pill gpu" onclick="addSpec(event, 'RTX 4060')">RTX 4060</button>
+                                <button type="button" class="suggestion-pill gpu" onclick="addSpec(event, 'GTX 1650')">GTX 1650</button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start">
+                            <span class="text-secondary pt-1" style="font-size: 11px; min-width: 50px; font-weight: 500; flex-shrink: 0;">Card:</span>
+                            <div class="d-flex flex-wrap gap-2" style="flex-grow: 1;">
+                                <button type="button" class="suggestion-pill card-gpu" onclick="addSpec(event, 'Card Onboard')">Onboard</button>
+                                <button type="button" class="suggestion-pill card-gpu" onclick="addSpec(event, 'Card Nvidia Geforce')">Nvidia</button>
+                                <button type="button" class="suggestion-pill card-gpu" onclick="addSpec(event, 'Card AMD Radeon')">AMD Radeon</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mt-3 mt-md-0">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label fw-bold mb-0" style="font-size: 13.5px; color: var(--text2);">Tình trạng ngoại quan</label>
+                        <button type="button" class="btn btn-xs btn-link p-0 text-decoration-none" style="font-size: 12px; color: var(--c-info);" onclick="togglePanel(event, 'appearancePanel')">
+                            <i class="bi bi-chevron-up" id="appearancePanelIcon"></i> <span id="appearancePanelText">Ẩn gợi ý</span>
+                        </button>
+                    </div>
+                    <textarea name="ngoaiQuan" class="form-control shadow-sm" style="font-size: 14px; border-radius: 8px; padding: 10px 15px;" rows="4" placeholder="VD: Vỏ máy nguyên vẹn, không trầy xước. Màn hình sáng đều. Bàn phím có 2 phím liệt..."></textarea>
+                    
+                    <div id="appearancePanel" class="suggestion-panel show">
+                        <div style="font-size: 12px; color: var(--text3); font-weight: 600; margin-bottom: 8px;">
+                            <i class="bi bi-tag-fill text-info me-1"></i> Gợi ý ngoại quan nhanh (click để thêm)
+                        </div>
+                        
+                        <div class="mb-2 d-flex align-items-start">
+                            <span class="text-secondary pt-1" style="font-size: 11px; min-width: 65px; font-weight: 500; flex-shrink: 0;">Màn hình:</span>
+                            <div class="d-flex flex-wrap gap-2" style="flex-grow: 1;">
+                                <button type="button" class="suggestion-pill ap-screen" onclick="addAppearance(event, 'Màn hình sáng đều')">Sáng đều</button>
+                                <button type="button" class="suggestion-pill ap-screen" onclick="addAppearance(event, 'Màn hình trầy xước')">Trầy xước</button>
+                                <button type="button" class="suggestion-pill ap-screen" onclick="addAppearance(event, 'Màn hình kẻ sọc')">Kẻ sọc</button>
+                                <button type="button" class="suggestion-pill ap-screen" onclick="addAppearance(event, 'Màn hình ám ố')">Ám ố</button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2 d-flex align-items-start">
+                            <span class="text-secondary pt-1" style="font-size: 11px; min-width: 65px; font-weight: 500; flex-shrink: 0;">Vỏ máy:</span>
+                            <div class="d-flex flex-wrap gap-2" style="flex-grow: 1;">
+                                <button type="button" class="suggestion-pill ap-body" onclick="addAppearance(event, 'Vỏ đẹp nguyên vẹn')">Đẹp nguyên vẹn</button>
+                                <button type="button" class="suggestion-pill ap-body" onclick="addAppearance(event, 'Vỏ trầy xước nhẹ')">Trầy xước nhẹ</button>
+                                <button type="button" class="suggestion-pill ap-body" onclick="addAppearance(event, 'Vỏ móp méo góc')">Móp méo góc</button>
+                                <button type="button" class="suggestion-pill ap-body" onclick="addAppearance(event, 'Vỏ nứt bể nhựa')">Nứt bể</button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2 d-flex align-items-start">
+                            <span class="text-secondary pt-1" style="font-size: 11px; min-width: 65px; font-weight: 500; flex-shrink: 0;">Phím/Pad:</span>
+                            <div class="d-flex flex-wrap gap-2" style="flex-grow: 1;">
+                                <button type="button" class="suggestion-pill ap-keyboard" onclick="addAppearance(event, 'Bàn phím bình thường')">Bình thường</button>
+                                <button type="button" class="suggestion-pill ap-keyboard" onclick="addAppearance(event, 'Bàn phím liệt phím')">Liệt phím</button>
+                                <button type="button" class="suggestion-pill ap-keyboard" onclick="addAppearance(event, 'Bàn phím mất phím')">Mất nút</button>
+                                <button type="button" class="suggestion-pill ap-keyboard" onclick="addAppearance(event, 'Touchpad hỏng')">Hỏng touchpad</button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start">
+                            <span class="text-secondary pt-1" style="font-size: 11px; min-width: 65px; font-weight: 500; flex-shrink: 0;">Linh kiện:</span>
+                            <div class="d-flex flex-wrap gap-2" style="flex-grow: 1;">
+                                <button type="button" class="suggestion-pill ap-other" onclick="addAppearance(event, 'Có kèm sạc')">Kèm sạc</button>
+                                <button type="button" class="suggestion-pill ap-other" onclick="addAppearance(event, 'Có kèm túi chống sốc')">Kèm túi</button>
+                                <button type="button" class="suggestion-pill ap-other" onclick="addAppearance(event, 'Có kèm chuột')">Kèm chuột</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert mt-4" style="font-size: 13px; border-radius: 8px; border: 1px solid rgba(56,189,248,0.3); background-color: rgba(56,189,248,0.1); color:var(--c-info);">
+                <i class="bi bi-info-circle me-1"></i> Trạng thái, Người tiếp nhận và Thời gian nhận sẽ được hệ thống ghi nhận tự động.
+            </div>
+
+            <div class="mt-4 d-flex justify-content-end gap-2">
+                <button type="submit" name="submitAction" value="save" class="hd-btn hd-btn-outline px-4 py-2" style="font-size: 14px;">Lưu phiếu</button>
+                <button type="submit" name="submitAction" value="diagnose" class="hd-btn hd-btn-primary px-4 py-2" style="font-size: 14px;">
+                    <i class="bi bi-robot me-1"></i> Chẩn đoán
+                </button>
+            </div>
+        <div class="mb-3"><label>Mô tả sự cố ban đầu</label><textarea name="moTaSuCo" class="form-control" maxlength="4000"></textarea></div>
+<div id="goiYYeuCau" class="mb-3 small" style="display:none; color: var(--text-muted);"></div>
+<div class="mb-3"><label>Phân loại yêu cầu</label><input name="phanLoaiYeuCau" class="form-control" maxlength="100" /></div>
+<div class="mb-3"><label>Mức độ ưu tiên do KTV chọn</label><input name="mucDoUuTien" class="form-control" maxlength="30" /></div>
+</form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const ta = document.querySelector('textarea[name="moTaSuCo"]');
+            const box = document.getElementById('goiYYeuCau');
+            if (!ta || !box) return;
+            let t;
+            ta.addEventListener('input', function () {
+                clearTimeout(t);
+                t = setTimeout(async function () {
+                    if (ta.value.trim().length < 5) { box.style.display = 'none'; return; }
+                    try {
+                        const r = await fetch('@Url.Action("GoiYYeuCau", "PhieuTiepNhan")?moTa=' + encodeURIComponent(ta.value));
+                        if (!r.ok) return;
+                        const g = await r.json();
+                        box.textContent = 'Gợi ý (quy tắc từ khóa, chỉ tham khảo): phân loại ' + g.phanLoai + ', ưu tiên ' + g.mucDo + (g.lyDo && g.lyDo.length ? ' — ' + g.lyDo.join('; ') : '');
+                        box.style.display = 'block';
+                    } catch (e) { box.style.display = 'none'; }
+                }, 400);
+            });
+        })();
+    </script>
+    <script>
+        function togglePanel(e, panelId) {
+            if (e) e.preventDefault();
+            const panel = document.getElementById(panelId);
+            const icon = document.getElementById(panelId + 'Icon');
+            const textSpan = document.getElementById(panelId + 'Text');
+            if (!panel) return;
+            
+            panel.classList.toggle('show');
+            
+            if (panel.classList.contains('show')) {
+                if (icon) {
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-up');
+                }
+                if (textSpan) textSpan.textContent = 'Ẩn gợi ý';
+            } else {
+                if (icon) {
+                    icon.classList.remove('bi-chevron-up');
+                    icon.classList.add('bi-chevron-down');
+                }
+                if (textSpan) textSpan.textContent = 'Hiện gợi ý';
+            }
+        }
+
+        function addSpec(e, spec) {
+            if (e) e.preventDefault();
+            const btn = e.target;
+            const txtArea = document.querySelector('textarea[name="cauHinh"]');
+            if (!txtArea) return;
+            
+            let currentVal = txtArea.value;
+            
+            if (btn.classList.contains('active-pill')) {
+                btn.classList.remove('active-pill');
+                let regex = new RegExp('(?:^|,\\s*)' + spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=$|,)', 'g');
+                txtArea.value = currentVal.replace(regex, '').replace(/^,\s*/, '').trim();
+            } else {
+                btn.classList.add('active-pill');
+                if (currentVal.trim() === '') {
+                    txtArea.value = spec;
+                } else {
+                    txtArea.value = currentVal.trim().endsWith(',') ? currentVal.trim() + ' ' + spec : currentVal.trim() + ', ' + spec;
+                }
+            }
+            txtArea.focus();
+        }
+
+        function addAppearance(e, val) {
+            if (e) e.preventDefault();
+            const btn = e.target;
+            const txtArea = document.querySelector('textarea[name="ngoaiQuan"]');
+            if (!txtArea) return;
+            
+            let currentVal = txtArea.value;
+            
+            if (btn.classList.contains('active-pill')) {
+                btn.classList.remove('active-pill');
+                let regex = new RegExp('(?:^|\\.\\s*|,\\s*)' + val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=$|\\.|,)', 'g');
+                txtArea.value = currentVal.replace(regex, '').replace(/^[.,]\s*/, '').trim();
+            } else {
+                btn.classList.add('active-pill');
+                if (currentVal.trim() === '') {
+                    txtArea.value = val;
+                } else {
+                    txtArea.value = currentVal.trim().endsWith('.') || currentVal.trim().endsWith(',') ? currentVal.trim() + ' ' + val : currentVal.trim() + '. ' + val;
+                }
+            }
+            txtArea.focus();
+        }
+    </script>
+}

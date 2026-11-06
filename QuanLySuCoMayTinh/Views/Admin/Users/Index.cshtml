@@ -1,0 +1,661 @@
+@model IEnumerable<QuanLySuCoMayTinh.Models.User>
+@{
+    ViewData["Title"] = "Quản lý nhân sự";
+    int totalUsers  = (int)(ViewData["TotalUsers"]  ?? 0);
+    int activeUsers = (int)(ViewData["ActiveUsers"] ?? 0);
+    int lockedUsers = (int)(ViewData["LockedUsers"] ?? 0);
+    int adminCount  = (int)(ViewData["AdminCount"]  ?? 0);
+    string search   = ViewData["Search"]?.ToString() ?? "";
+}
+
+<style>
+/* ═══ ADMIN USERS PAGE ═══ */
+.admin-page { color:var(--text); }
+
+.admin-hero {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+}
+
+.admin-hero-title {
+    font-size: 22px; font-weight: 700; color:var(--text);
+    display: flex; align-items: center; gap: 12px;
+}
+
+.admin-hero-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--lav-deeper), var(--lav-deep));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 6px 20px rgba(91,91,214,0.4);
+}
+
+.admin-stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.admin-stat {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-stat-accent { position: absolute; top: 0; left: 0; width: 3px; height: 100%; border-radius: 2px 0 0 2px; }
+.admin-stat-label  { font-size: 11px; color:var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.admin-stat-value  { font-size: 28px; font-weight: 700; color:var(--text); font-family: 'JetBrains Mono', monospace; margin: 4px 0 2px; }
+.admin-stat-sub    { font-size: 11.5px; color:var(--text-muted); }
+.admin-stat-bg-icon { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:36px; opacity:0.25; }
+
+/* Table Card */
+.admin-table-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+}
+
+.admin-table-toolbar {
+    padding: 14px 20px;
+    border-bottom:1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.admin-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    min-width: 260px;
+}
+
+.admin-search-wrap i { color:var(--text-muted); }
+
+.admin-search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color:var(--text);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px;
+    flex: 1;
+}
+
+.admin-search-input::placeholder { color:var(--text-light); }
+
+.btn-admin-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(135deg, var(--lav-deeper), var(--lav-deep));
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif;
+    transition: all .2s;
+    box-shadow: 0 4px 14px rgba(91,91,214,0.35);
+    text-decoration: none;
+}
+
+.btn-admin-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(91,91,214,0.5); color:var(--text); }
+
+/* User table */
+.user-table { width: 100%; border-collapse: collapse; }
+
+.user-table th {
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color:var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface);
+    text-align: left;
+}
+
+.user-table td {
+    padding: 14px 16px;
+    border-bottom:1px solid var(--border);
+    vertical-align: middle;
+    color:var(--text-muted);
+    font-size: 13.5px;
+}
+
+.user-table tr:last-child td { border-bottom: none; }
+.user-table tbody tr { transition: background .15s; }
+.user-table tbody tr:hover td { background:var(--surface); }
+
+/* Avatar */
+.u-avatar {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color:var(--text);
+    flex-shrink: 0;
+}
+
+.u-name { font-weight: 600; color:var(--text); margin-bottom: 2px; }
+.u-username { font-size: 12px; color:var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+/* Role badges */
+.role-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11.5px; font-weight: 600;
+}
+
+.role-admin { background: linear-gradient(135deg, rgba(91,91,214,0.25), rgba(133,133,232,0.15)); color: var(--lav); border: 1px solid rgba(91,91,214,0.35); }
+.role-ktv   { background: rgba(58, 184, 201, 0.12); color: var(--cyan); border: 1px solid rgba(58,184,201,0.25); }
+
+/* Status toggle */
+.status-toggle {
+    position: relative;
+    width: 42px; height: 23px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.status-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+.toggle-track {
+    position: absolute; inset: 0;
+    border-radius: 23px;
+    background:var(--surface2);
+    border:1px solid var(--border);
+    transition: all .25s;
+}
+
+.status-toggle input:checked + .toggle-track { background: rgba(34,197,94,0.3); border-color: rgba(34,197,94,0.5); }
+
+.toggle-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background:var(--surface2);
+    transition: all .25s;
+}
+
+.status-toggle input:checked ~ .toggle-thumb { left: 22px; background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+
+/* Action buttons */
+.u-action-btn {
+    width: 30px; height: 30px;
+    border-radius: 7px;
+    border:1px solid var(--border);
+    background: transparent;
+    color:var(--text-muted);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    transition: all .15s;
+}
+
+.u-action-btn:hover.edit { background: rgba(56,189,248,0.15); color:var(--c-info); border-color: rgba(56,189,248,0.3); }
+.u-action-btn:hover.del  { background: rgba(239,68,68,0.15); color:var(--c-err); border-color: rgba(239,68,68,0.3); }
+
+/* Modal */
+.admin-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 3000;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+}
+.admin-modal-overlay.open { display: flex; }
+
+.admin-modal {
+    background: rgba(10, 18, 40, 0.97);
+    border:1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 460px;
+    max-width: 96vw;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    backdrop-filter: blur(20px);
+    animation: modalIn .25s ease;
+}
+
+@@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.94) translateY(-10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.admin-modal-title {
+    font-size: 16px; font-weight: 700; color:var(--text);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+}
+
+.admin-form-group { margin-bottom: 14px; }
+.admin-form-label { font-size: 12px; color:var(--text-muted); font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
+
+.admin-form-input, .admin-form-select {
+    width: 100%;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13.5px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    color:var(--text);
+    outline: none;
+    transition: border .15s;
+}
+
+.admin-form-input:focus, .admin-form-select:focus { border-color: rgba(124,58,237,0.6); background: rgba(124,58,237,0.06); }
+.admin-form-input::placeholder { color:var(--text-light); }
+
+select.admin-form-select option { background: #0a1224; color: #fff; }
+
+.admin-modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+.btn-modal-cancel {
+    padding: 8px 20px; border-radius: 8px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text-muted); font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px;
+    cursor: pointer; transition: all .15s;
+}
+
+.btn-modal-cancel:hover { background:var(--surface2); color:var(--text); }
+
+.btn-modal-submit {
+    padding: 8px 22px; border-radius: 8px;
+    background: linear-gradient(135deg, #7c3aed, #0284c7);
+    border: none; color: #fff;
+    font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+    box-shadow: 0 4px 14px rgba(124,58,237,0.4);
+}
+
+.btn-modal-submit:hover { box-shadow: 0 6px 20px rgba(124,58,237,0.6); transform: translateY(-1px); }
+
+/* Toast */
+.admin-toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: rgba(10,18,40,0.95);
+    border:1px solid var(--border);
+    border-radius: 10px; padding: 12px 20px;
+    font-size: 13.5px; color: #fff;
+    z-index: 9999; opacity: 0; transform: translateY(12px);
+    transition: all .25s; pointer-events: none;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    backdrop-filter: blur(16px);
+}
+
+.admin-toast.show { opacity: 1; transform: translateY(0); }
+.admin-toast.success { border-color: rgba(34,197,94,0.4); }
+.admin-toast.error   { border-color: rgba(239,68,68,0.4); }
+
+@@media (max-width: 768px) {
+    .admin-stat-row { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+
+<div class="admin-page">
+    @Html.AntiForgeryToken()
+    <!-- Hero Header -->
+    <div class="admin-hero">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <div class="admin-hero-title">
+                    <div class="admin-hero-icon"><i class="bi bi-people-fill"></i></div>
+                    Quản lý nhân sự
+                </div>
+                <div style="color:var(--text-muted);font-size:13px;margin-top:6px;">
+                    Quản lý toàn bộ tài khoản kỹ thuật viên và quản trị viên trong hệ thống
+                </div>
+            </div>
+            <button class="btn-admin-primary" onclick="openAdminModal('modal-create-user')">
+                <i class="bi bi-person-plus-fill"></i> Thêm tài khoản
+            </button>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="admin-stat-row">
+        <div class="admin-stat">
+            <div class="admin-stat-accent" style="background: linear-gradient(180deg,#7c3aed,#0284c7)"></div>
+            <div class="admin-stat-label">Tổng tài khoản</div>
+            <div class="admin-stat-value">@totalUsers</div>
+            <div class="admin-stat-sub">Toàn bộ hệ thống</div>
+            <i class="bi bi-people-fill admin-stat-bg-icon" style="color:#0284c7; filter:drop-shadow(0 0 10px rgba(2,132,199,0.5));"></i>
+        </div>
+        <div class="admin-stat">
+            <div class="admin-stat-accent" style="background:#22c55e"></div>
+            <div class="admin-stat-label">Đang hoạt động</div>
+            <div class="admin-stat-value" style="color:var(--c-ok)">@activeUsers</div>
+            <div class="admin-stat-sub">Tài khoản kích hoạt</div>
+            <i class="bi bi-person-check-fill admin-stat-bg-icon" style="color:var(--c-ok); filter:drop-shadow(0 0 10px rgba(34,197,94,0.5));"></i>
+        </div>
+        <div class="admin-stat">
+            <div class="admin-stat-accent" style="background:#ef4444"></div>
+            <div class="admin-stat-label">Bị khóa</div>
+            <div class="admin-stat-value" style="color:var(--c-err)">@lockedUsers</div>
+            <div class="admin-stat-sub">Tài khoản vô hiệu hóa</div>
+            <i class="bi bi-person-x-fill admin-stat-bg-icon" style="color:var(--c-err); filter:drop-shadow(0 0 10px rgba(239,68,68,0.5));"></i>
+        </div>
+        <div class="admin-stat">
+            <div class="admin-stat-accent" style="background:#a78bfa"></div>
+            <div class="admin-stat-label">Admin KTV</div>
+            <div class="admin-stat-value" style="color:var(--c-purple)">@adminCount</div>
+            <div class="admin-stat-sub">Quản trị viên</div>
+            <i class="bi bi-shield-lock-fill admin-stat-bg-icon" style="color:var(--c-purple); filter:drop-shadow(0 0 10px rgba(167,139,250,0.5));"></i>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="admin-table-card">
+        <div class="admin-table-toolbar">
+            <form method="get" action="@Url.Action("Users", "Admin")" style="display:flex;gap:8px;align-items:center;">
+                <div class="admin-search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input name="search" type="text" class="admin-search-input" placeholder="Tìm theo tên, username..." value="@search">
+                </div>
+                <button type="submit" class="btn-admin-primary" style="padding: 8px 14px;">
+                    <i class="bi bi-search"></i> Tìm
+                </button>
+                @if (!string.IsNullOrEmpty(search))
+                {
+                    <a href="@Url.Action("Users", "Admin")" class="btn-modal-cancel" style="text-decoration:none;padding:8px 14px;">
+                        <i class="bi bi-x"></i> Xóa lọc
+                    </a>
+                }
+            </form>
+            <div style="font-size:12.5px;color:var(--text-muted);">
+                <i class="bi bi-person-lines-fill"></i> @Model.Count() tài khoản
+            </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Nhân sự</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th>Phiếu xử lý</th>
+                        <th style="text-align:center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        var isAdmin = user.Role == "Admin KTV";
+                        var avatarColor = isAdmin ? "linear-gradient(135deg,#7c3aed,#0284c7)" : "linear-gradient(135deg,#0284c7,#22d3ee)";
+                        var phieuCounts = ViewData["PhieuCounts"] as System.Collections.Generic.Dictionary<int, Tuple<int, int>>;
+                        var userPhieu = phieuCounts != null && phieuCounts.ContainsKey(user.USERID) ? phieuCounts[user.USERID] : null;
+                        
+                        var totalPhieu = userPhieu != null ? userPhieu.Item1 : 0;
+                        var completedPhieu = userPhieu != null ? userPhieu.Item2 : 0;
+
+                        <tr id="user-row-@user.USERID">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="u-avatar" style="background:@avatarColor">
+                                        @user.FullName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <div>
+                                        <div class="u-name">@user.FullName</div>
+                                        <div class="u-username">ID: @user.USERID.ToString("D3")</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text-muted);">
+                                    @@user.@user.Username
+                                </span>
+                            </td>
+                            <td>
+                                <span class="role-badge @(isAdmin ? "role-admin" : "role-ktv")">
+                                    <i class="bi @(isAdmin ? "bi-shield-fill-check" : "bi-tools")"></i>
+                                    @user.Role
+                                </span>
+                            </td>
+                            <td>
+                                <label class="status-toggle" title="@(user.Status ? "Đang hoạt động — Click để khóa" : "Đang bị khóa — Click để mở")">
+                                    <input type="checkbox" @(user.Status ? "checked" : "")
+                                           onchange="toggleUserStatus(@user.USERID, this)" />
+                                    <div class="toggle-track"></div>
+                                    <div class="toggle-thumb"></div>
+                                </label>
+                            </td>
+                            <td>
+                                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text-muted);">
+                                    <strong style="color:var(--c-ok);">@completedPhieu</strong> đã xử lý / @totalPhieu
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="u-action-btn edit" title="Chỉnh sửa"
+                                            onclick="openEditModal(@user.USERID, '@user.FullName', '@user.Role')">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+                                    <button class="u-action-btn del" title="Xóa tài khoản"
+                                            onclick="confirmDeleteUser(@user.USERID, '@user.FullName')">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" style="text-align:center;padding:40px;color:var(--text-light);">
+                                <i class="bi bi-search" style="font-size:32px;display:block;margin-bottom:12px;"></i>
+                                Không tìm thấy tài khoản nào
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal Tạo tài khoản ── -->
+<div class="admin-modal-overlay" id="modal-create-user">
+    <div class="admin-modal">
+        <div class="admin-modal-title">
+            <div class="admin-hero-icon" style="width:36px;height:36px;font-size:16px;"><i class="bi bi-person-plus-fill"></i></div>
+            Tạo tài khoản mới
+        </div>
+        <div class="admin-form-group">
+            <label class="admin-form-label">Họ và tên *</label>
+            <input id="create-fullname" class="admin-form-input" placeholder="VD: Nguyễn Văn A" />
+        </div>
+        <div class="admin-form-group">
+            <label class="admin-form-label">Tên đăng nhập *</label>
+            <input id="create-username" class="admin-form-input" placeholder="VD: nguyenvana (viết thường, không dấu)" />
+        </div>
+        <div class="admin-form-group">
+            <label class="admin-form-label">Mật khẩu *</label>
+            <input id="create-password" class="admin-form-input" type="password" placeholder="Tối thiểu 6 ký tự" />
+        </div>
+        <div class="admin-form-group">
+            <label class="admin-form-label">Vai trò</label>
+            <select id="create-role" class="admin-form-select" disabled style="appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none;">
+                <option value="KTV" selected>KTV — Kỹ thuật viên</option>
+            </select>
+        </div>
+        <div class="admin-modal-footer">
+            <button class="btn-modal-cancel" onclick="closeAdminModal('modal-create-user')">Huỷ</button>
+            <button class="btn-modal-submit" onclick="submitCreateUser()">
+                <i class="bi bi-check-lg"></i> Tạo tài khoản
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal Chỉnh sửa tài khoản ── -->
+<div class="admin-modal-overlay" id="modal-edit-user">
+    <div class="admin-modal">
+        <div class="admin-modal-title">
+            <div class="admin-hero-icon" style="width:36px;height:36px;font-size:16px;background:linear-gradient(135deg,#0284c7,#22d3ee);"><i class="bi bi-pencil-fill"></i></div>
+            Chỉnh sửa tài khoản
+        </div>
+        <input type="hidden" id="edit-userid" />
+        <div class="admin-form-group">
+            <label class="admin-form-label">Họ và tên *</label>
+            <input id="edit-fullname" class="admin-form-input" placeholder="Họ và tên đầy đủ" />
+        </div>
+        <div class="admin-form-group">
+            <label class="admin-form-label">Mật khẩu mới <span style="color:var(--text-light)">(để trống = không thay đổi)</span></label>
+            <input id="edit-password" class="admin-form-input" type="password" placeholder="Nhập mật khẩu mới nếu cần đổi" />
+        </div>
+        <div class="admin-form-group">
+            <label class="admin-form-label">Vai trò</label>
+            <select id="edit-role" class="admin-form-select">
+                <option value="KTV">KTV — Kỹ thuật viên</option>
+                <option value="Admin KTV">Admin KTV — Quản trị viên</option>
+            </select>
+        </div>
+        <div class="admin-modal-footer">
+            <button class="btn-modal-cancel" onclick="closeAdminModal('modal-edit-user')">Huỷ</button>
+            <button class="btn-modal-submit" onclick="submitEditUser()" style="background:linear-gradient(135deg,#0284c7,#22d3ee);">
+                <i class="bi bi-check-lg"></i> Lưu thay đổi
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Global Toast -->
+<div class="admin-toast" id="admin-toast"></div>
+
+@section Scripts {
+<script>
+function openAdminModal(id) {
+    document.getElementById(id).classList.add('open');
+}
+function closeAdminModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.admin-modal-overlay').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+function showAdminToast(msg, isSuccess = true) {
+    const t = document.getElementById('admin-toast');
+    t.innerHTML = `<i class="bi ${isSuccess ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}" style="color:${isSuccess ? '#4ade80' : '#f87171'}"></i> ${msg}`;
+    t.className = 'admin-toast show ' + (isSuccess ? 'success' : 'error');
+    clearTimeout(t._t);
+    t._t = setTimeout(() => t.className = 'admin-toast', 3500);
+}
+
+async function postJson(url, data) {
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+    const body = new URLSearchParams(data);
+    if (token) body.append('__RequestVerificationToken', token);
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+    return res.json();
+}
+
+async function submitCreateUser() {
+    const fullName = document.getElementById('create-fullname').value.trim();
+    const username = document.getElementById('create-username').value.trim();
+    const password = document.getElementById('create-password').value;
+    const role     = document.getElementById('create-role').value;
+
+    if (!fullName || !username || !password) {
+        showAdminToast('Vui lòng nhập đầy đủ thông tin bắt buộc.', false);
+        return;
+    }
+
+    const res = await postJson('@Url.Action("CreateUser", "Admin")', { fullName, username, password, role });
+    if (res.success) {
+        closeAdminModal('modal-create-user');
+        showAdminToast(res.message, true);
+        setTimeout(() => location.reload(), 1200);
+    } else {
+        showAdminToast(res.message, false);
+    }
+}
+
+function openEditModal(id, fullName, role) {
+    document.getElementById('edit-userid').value   = id;
+    document.getElementById('edit-fullname').value = fullName;
+    document.getElementById('edit-password').value = '';
+    document.getElementById('edit-role').value     = role;
+    openAdminModal('modal-edit-user');
+}
+
+async function submitEditUser() {
+    const id       = document.getElementById('edit-userid').value;
+    const fullName = document.getElementById('edit-fullname').value.trim();
+    const password = document.getElementById('edit-password').value;
+    const role     = document.getElementById('edit-role').value;
+
+    const res = await postJson('@Url.Action("EditUser", "Admin")', { id, fullName, password, role });
+    if (res.success) {
+        closeAdminModal('modal-edit-user');
+        showAdminToast(res.message, true);
+        setTimeout(() => location.reload(), 1200);
+    } else {
+        showAdminToast(res.message, false);
+    }
+}
+
+async function toggleUserStatus(userId, checkbox) {
+    const res = await postJson('@Url.Action("ToggleStatus", "Admin")'.replace('0', userId).replace('/0', '/' + userId), { id: userId });
+    if (res.success) {
+        showAdminToast(res.message, true);
+    } else {
+        showAdminToast(res.message, false);
+        checkbox.checked = !checkbox.checked; // revert
+    }
+}
+
+async function confirmDeleteUser(userId, fullName) {
+    showConfirm(`Xác nhận xóa tài khoản "${fullName}"?\nThao tác này không thể hoàn tác.`, async function() {
+        const res = await postJson('@Url.Action("DeleteUser", "Admin")', { id: userId });
+        if (res.success) {
+            showAdminToast(res.message, true);
+            const row = document.getElementById('user-row-' + userId);
+            if (row) { row.style.opacity = '0'; row.style.transition = 'opacity .3s'; setTimeout(() => row.remove(), 350); }
+        } else {
+            showAdminToast(res.message, false);
+        }
+    });
+}
+</script>
+}

@@ -1,0 +1,126 @@
+@model IEnumerable<QuanLySuCoMayTinh.Models.PhieuTiepNhan>
+
+@{
+    ViewData["Title"] = "Tiếp nhận sự cố";
+}
+
+<div class="helpdesk-breadcrumb">
+    <span>Quản lý</span><span class="sep">›</span><span class="cur">Tiếp nhận sự cố</span>
+</div>
+
+<div class="helpdesk-page-header">
+    <div>
+        <div class="page-title">Phiếu tiếp nhận sự cố</div>
+        <div class="page-subtitle">Quản lý toàn bộ phiếu kỹ thuật trong hệ thống</div>
+    </div>
+    <div class="header-actions">
+        <a href="@Url.Action("ExportExcel", "PhieuTiepNhan", new { searchString = ViewData["CurrentSearch"], trangThai = ViewData["CurrentFilter"] })" target="_blank" class="hd-btn hd-btn-outline hd-btn-sm" style="text-decoration:none">
+            Xuất Excel
+        </a>
+        <a href="@Url.Action("Create", "PhieuTiepNhan")" class="hd-btn hd-btn-primary hd-btn-sm" style="text-decoration:none">
+            Tạo phiếu mới
+        </a>
+    </div>
+</div>
+
+<!-- Hiển thị thông báo (Toast/Alert) sau khi tạo phiếu thành công -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 8px; font-size: 13.5px;">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="hd-card">
+    <form asp-action="Index" method="get" class="hd-search-bar" style="margin-bottom:0">
+        <i class="bi bi-search" style="color:var(--text3)"></i>
+        <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="hd-search-input" placeholder="Tìm theo mã phiếu, thiết bị, khách hàng (Nhấn Enter để tìm)...">
+        <select name="trangThai" class="hd-filter-select" onchange="this.form.submit()">
+            <option value="Tất cả trạng thái" selected="@(ViewData["CurrentFilter"]?.ToString() == "Tất cả trạng thái" ? "selected" : null)">Tất cả trạng thái</option>
+            <option value="Chờ khám" selected="@(ViewData["CurrentFilter"]?.ToString() == "Chờ khám" ? "selected" : null)">Chờ khám</option>
+            <option value="Đang kiểm tra" selected="@(ViewData["CurrentFilter"]?.ToString() == "Đang kiểm tra" ? "selected" : null)">Đang kiểm tra</option>
+            <option value="Đang sửa chữa" selected="@(ViewData["CurrentFilter"]?.ToString() == "Đang sửa chữa" ? "selected" : null)">Đang sửa chữa</option>
+            <option value="Hoàn thành" selected="@(ViewData["CurrentFilter"]?.ToString() == "Hoàn thành" ? "selected" : null)">Hoàn thành</option>
+        </select>
+    </form>
+    <table class="hd-table">
+        <thead>
+            <tr>
+                <th>Mã phiếu</th>
+                <th>Khách hàng</th>
+                <th>Thiết bị</th>
+                <th>KTV Tiếp nhận</th>
+                <th>Ngày nhận</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="ticket-id">#HD-@(item.MaPhieu.ToString("D4"))</td>
+                    <td class="fw-medium text-dark">@(item.ThietBi?.KhachHang?.HoTen ?? "Khách lẻ")</td>
+                    <td>@(item.ThietBi?.TenTB)</td>
+                    <td>@(item.User_KTV?.FullName ?? "N/A")</td>
+                    <td style="color:var(--text3)">@item.NgayNhan.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        @if (item.TrangThai == "Chờ khám")
+                        {
+                            var hoursPending = (DateTime.Now - item.NgayNhan).TotalHours;
+                            <span class="hd-badge hd-badge-danger" style="background:rgba(239,68,68,0.1); color:var(--c-err); border:1px solid rgba(239,68,68,0.3);"><span class="status-dot dot-danger" style="background:#ef4444;"></span>Chờ khám</span>
+                            @if (hoursPending > 48) {
+                                <div style="margin-top:4px;"><span class="hd-badge" style="background:rgba(220,38,38,0.15); color:var(--c-err); border:1px solid rgba(220,38,38,0.3); font-size:10px;"><i class="bi bi-exclamation-octagon"></i> Vi phạm SLA (>48h)</span></div>
+                            } else if (hoursPending > 24) {
+                                <div style="margin-top:4px;"><span class="hd-badge" style="background:rgba(245,158,11,0.15); color:var(--c-warn); border:1px solid rgba(245,158,11,0.3); font-size:10px;"><i class="bi bi-exclamation-triangle"></i> Trễ SLA (>24h)</span></div>
+                            }
+                        }
+                        else if (item.TrangThai == "Đang kiểm tra")
+                        {
+                            <span class="hd-badge" style="background:rgba(168,85,247,0.1); color:var(--c-purple); border:1px solid rgba(168,85,247,0.3);"><span class="status-dot" style="background:#a855f7;"></span>Đang kiểm tra</span>
+                        }
+                        else if (item.TrangThai == "Đang sửa chữa")
+                        {
+                            <span class="hd-badge hd-badge-warning" style="background:rgba(234,179,8,0.1); color:var(--c-warn); border:1px solid rgba(234,179,8,0.3);"><span class="status-dot dot-warning" style="background:#eab308;"></span>Đang sửa chữa</span>
+                        }
+                        else
+                        {
+                            <span class="hd-badge hd-badge-success" style="background:rgba(34,197,94,0.1); color:var(--c-ok); border:1px solid rgba(34,197,94,0.3);"><span class="status-dot dot-success" style="background:#22c55e;"></span>Hoàn thành</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="action-group">
+                            <a href="@Url.Action("Details", "PhieuTiepNhan", new { id = item.MaPhieu })" class="icon-btn view" title="Xem chi tiết" style="text-decoration:none"><i class="bi bi-eye"></i></a>
+                            @if (item.TrangThai == "Chờ khám" || item.TrangThai == "Đang kiểm tra" || item.TrangThai == "Đang sửa chữa")
+                            {
+                                <a asp-controller="TroLyChanDoan" asp-action="Index" asp-route-maPhieu="@item.MaPhieu" class="icon-btn" style="color:var(--c-info); text-decoration:none" title="Chẩn đoán & Hỗ trợ"><i class="bi bi-robot"></i></a>
+                            }
+                            @if (item.TrangThai == "Đang sửa chữa")
+                            {
+                                <a asp-action="ChotPhi" asp-route-id="@item.MaPhieu" class="icon-btn done" title="Chốt phí & Hoàn thành" style="text-decoration:none"><i class="bi bi-check-lg"></i></a>
+                            }
+                            @if (item.TrangThai != "Hoàn thành")
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.MaPhieu" class="icon-btn edit" title="Chỉnh sửa" style="text-decoration:none"><i class="bi bi-pencil"></i></a>
+                                <form asp-action="Delete" asp-route-id="@item.MaPhieu" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phiếu tiếp nhận này?');">
+                                    <button type="submit" class="icon-btn del" title="Xóa"><i class="bi bi-trash"></i></button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="7" style="text-align:center; padding: 30px; color: var(--text3);">
+                        <i class="bi bi-inbox fs-2 d-block mb-2 text-muted"></i>
+                        Chưa có phiếu tiếp nhận nào.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

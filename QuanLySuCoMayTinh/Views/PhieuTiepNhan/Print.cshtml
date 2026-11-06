@@ -1,0 +1,514 @@
+@model QuanLySuCoMayTinh.Models.PhieuTiepNhan
+@{
+    Layout = null; // Không dùng _Layout để in ấn nguyên bản
+
+    // Tính toán dữ liệu linh kiện & dịch vụ
+    var listLinhKien = new List<QuanLySuCoMayTinh.Models.SuDungLinhKien>();
+    decimal tongTienLk = 0;
+    int tongSlLk = 0;
+
+    // Chỉ cộng các hạng mục KHÔNG phải linh kiện (= tiền công, phí dịch vụ...)
+    // vì tiền linh kiện đã được tính riêng qua listLinhKien bên dưới
+    decimal tongTienDichVu = 0;
+
+    if (Model.ChiTietSuaChuas != null)
+    {
+        foreach (var ct in Model.ChiTietSuaChuas)
+        {
+            bool coLinhKien = ct.SuDungLinhKiens != null && ct.SuDungLinhKiens.Any();
+
+            if (coLinhKien)
+            {
+                // Hàng này là linh kiện → chỉ thu thập vào listLinhKien, không cộng ChiPhi
+                listLinhKien.AddRange(ct.SuDungLinhKiens!);
+            }
+            else
+            {
+                // Hàng này là tiền công / phí dịch vụ → tính vào phần B
+                tongTienDichVu += ct.ChiPhi;
+            }
+        }
+    }
+
+    foreach (var lk in listLinhKien)
+    {
+        tongSlLk += lk.SoLuong;
+        tongTienLk += (lk.DonGiaXuat * lk.SoLuong);
+    }
+
+    // Tổng = tiền linh kiện + tiền công/dịch vụ (không bị tính 2 lần)
+    decimal tongThanhToan = tongTienLk + tongTienDichVu;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <partial name="_SystemIcons" />
+    <meta charset="UTF-8">
+    <title>In Phiếu #HD-@Model.MaPhieu.ToString("D4")</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            padding: 40px 20px;
+            margin: 0;
+            line-height: 1.5;
+        }
+        /* Nút điều khiển in */
+        .print-controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .btn-print {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-print:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        }
+
+        .page {
+            background-color: white;
+            width: 210mm; /* A4 width */
+            min-height: 297mm; /* A4 height */
+            margin: 0 auto 40px auto;
+            padding: 20mm;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .company-info h1 {
+            margin: 0;
+            color: #111827;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .company-info p {
+            margin: 4px 0 0 0;
+            color: #4b5563;
+            font-size: 13px;
+        }
+        .doc-title-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            margin: 0 0 10px 0;
+            color: #111827;
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .doc-meta {
+            color: #6b7280;
+            font-size: 13px;
+            font-style: normal;
+            display: inline-block;
+            background: #f9fafb;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #d1d5db;
+            padding: 10px 14px;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f9fafb;
+            color: #374151;
+            font-weight: 600;
+            text-align: left;
+        }
+        .section-title {
+            background-color: #f3f4f6 !important;
+            color: #111827 !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+        
+        .signature {
+            width: 100%;
+            margin-top: 50px;
+            text-align: center;
+            border: none;
+        }
+        .signature td {
+            border: none;
+            width: 50%;
+            padding: 10px;
+        }
+        .sig-title {
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+        .sig-sub {
+            font-style: italic;
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 80px; /* Không gian ký tên */
+        }
+
+        /* Ẩn nút khi in và định dạng trang PDF */
+        @@media print {
+            body { 
+                background-color: white; 
+                padding: 0; 
+                margin: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .print-controls { display: none; }
+            .page { 
+                box-shadow: none; 
+                border: none; 
+                margin: 0; 
+                padding: 15mm; 
+                width: 100%; 
+                min-height: auto;
+                page-break-after: always;
+                border-radius: 0;
+            }
+            .page:last-child { page-break-after: auto; }
+            
+            /* Đảm bảo nền được in */
+            th, .section-title, .doc-meta {
+                background-color: #f9fafb !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-controls">
+        <button class="btn-print" onclick="window.print()">🖨️ IN BIỂU MẪU (PRINT)</button>
+    </div>
+
+    <!-- ==================== BM-01 ==================== -->
+    @if(ViewBag.PrintType == "bm01" || ViewBag.PrintType == "all") {
+    <div class="page">
+        <div class="doc-title-container">
+            <h2>PHIẾU TIẾP NHẬN SỰ CỐ THIẾT BỊ (BM-01)</h2>
+            <div class="doc-meta">
+                <b>Mã phiếu:</b> #HD-@Model.MaPhieu.ToString("D4") &nbsp;|&nbsp; 
+                <b>Ngày nhận:</b> @Model.NgayNhan.ToString("dd/MM/yyyy HH:mm") &nbsp;|&nbsp; 
+                <b>KTV:</b> @(Model.User_KTV?.FullName ?? "N/A")
+            </div>
+        </div>
+        
+        <table>
+            <tr><td colspan="2" class="section-title">1. Thông tin Khách hàng</td></tr>
+            <tr>
+                <td style="width: 50%;"><b>Họ và tên:</b> @(Model.ThietBi?.KhachHang?.HoTen ?? "Khách lẻ")</td>
+                <td style="width: 50%;"><b>Số điện thoại:</b> @(Model.ThietBi?.KhachHang?.SDT ?? "")</td>
+            </tr>
+            <tr><td colspan="2"><b>Địa chỉ:</b> @(Model.ThietBi?.KhachHang?.DiaChi ?? "......................................................................")</td></tr>
+            
+            <tr><td colspan="2" class="section-title">2. Thông tin Thiết bị</td></tr>
+            <tr>
+                <td><b>Tên máy / Model:</b> @Model.ThietBi?.TenTB</td>
+                <td><b>Số Serial (S/N):</b> ....................................</td>
+            </tr>
+            <tr>
+                <td colspan="2"><b>Cấu hình sơ bộ:</b> <span style="color: #374151;">@(Model.ThietBi?.CauHinh ?? "......................................................................")</span></td>
+            </tr>
+            <tr>
+                <td colspan="2"><b>Tình trạng ngoại quan:</b> <span style="color: #374151;">@(Model.ThietBi?.NgoaiQuan ?? ".........................................................................................................")</span></td>
+            </tr>
+            <tr>
+                <td colspan="2"><b>Phụ kiện kèm theo:</b> [ ] Sạc (Adapter) &nbsp;&nbsp; [ ] Chuột &nbsp;&nbsp; [ ] Túi &nbsp;&nbsp; [ ] Khác: ............</td>
+            </tr>
+
+            <tr><td colspan="2" class="section-title">3. Lời khai & Triệu chứng ban đầu</td></tr>
+            <tr>
+                <td colspan="2" style="height: 50px;">
+                    <b>Ghi nhận lỗi từ hệ thống / Khách báo:</b><br/>
+                    @(Model.MaLoiNavigation?.TenLoi ?? "Thiết bị gặp sự cố, cần kiểm tra chẩn đoán thêm.")
+                </td>
+            </tr>
+            <tr><td colspan="2" style="height: 50px;"><b>Ghi chú thêm của KTV:</b> ....................................................................................................................</td></tr>
+
+            <tr><td colspan="2" class="section-title">4. Thời gian dự kiến bàn giao: <span style="font-weight: normal; text-transform:none;">@((Model.NgayTra_DK.HasValue) ? Model.NgayTra_DK.Value.ToString("HH:mm, 'Ngày' dd / MM / yyyy") : "....... giờ, Ngày ...... / ...... / 2026")</span></td></tr>
+            
+            @if (Model.HinhAnhSuCos != null && Model.HinhAnhSuCos.Any())
+            {
+                <tr><td colspan="2" class="section-title">5. Hình ảnh sự cố tiếp nhận</td></tr>
+                <tr>
+                    <td colspan="2">
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px; padding: 5px 0;">
+                            @foreach (var ha in Model.HinhAnhSuCos.OrderByDescending(h => h.NgayChup))
+                            {
+                                <div style="display: inline-block; border: 1px solid #e5e7eb; padding: 5px; background: #fff; width: 165px; text-align: center; border-radius: 4px; page-break-inside: avoid;">
+                                    <img src="/@ha.DuongDanAnh" style="width: 100%; height: 110px; object-fit: cover; display: block; border-radius: 2px;" />
+                                    <div style="font-size: 10px; margin-top: 6px; font-weight: 600; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@ha.MoTa">
+                                        @(string.IsNullOrWhiteSpace(ha.MoTa) ? "Ảnh sự cố" : ha.MoTa)
+                                    </div>
+                                    <div style="font-size: 9px; color: #9ca3af; margin-top: 2px;">@ha.NgayChup.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </table>
+        
+        <table class="signature">
+            <tr>
+                <td>
+                    <div class="sig-title">XÁC NHẬN CỦA KHÁCH HÀNG</div>
+                    <div class="sig-sub">(Ký & ghi rõ họ tên)</div>
+                </td>
+                <td>
+                    <div class="sig-title">KỸ THUẬT VIÊN TIẾP NHẬN</div>
+                    <div class="sig-sub">(Ký & ghi rõ họ tên)</div>
+                    <div style="font-weight: 600; color: #111827;">@(Model.User_KTV?.FullName ?? "")</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    }
+
+    <!-- ==================== BM-02 ==================== -->
+    @if(ViewBag.PrintType == "bm02" || ViewBag.PrintType == "all") {
+    <div class="page">
+        <div class="doc-title-container">
+            <h2>PHIẾU YÊU CẦU XUẤT KHO VẬT TƯ (BM-02)</h2>
+            <div class="doc-meta">
+                <b>Mã phiếu sửa chữa:</b> #HD-@Model.MaPhieu.ToString("D4") &nbsp;|&nbsp; 
+                <b>KTV Yêu cầu:</b> @(Model.User_KTV?.FullName ?? "N/A") &nbsp;|&nbsp; 
+                <b>Ngày lập:</b> @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+            </div>
+        </div>
+        
+        <table>
+            <tr>
+                <th style="width: 5%; text-align: center;">STT</th>
+                <th style="width: 15%">Mã vật tư</th>
+                <th style="width: 35%">Tên vật tư / Linh kiện thay thế</th>
+                <th style="width: 10%; text-align: center;">ĐVT</th>
+                <th style="width: 5%; text-align: center;">SL</th>
+                <th style="width: 15%; text-align: right;">Đơn giá (VNĐ)</th>
+                <th style="width: 15%; text-align: right;">Thành tiền (VNĐ)</th>
+            </tr>
+            @if(listLinhKien.Any()) {
+                int sttLk = 1;
+                foreach(var sd in listLinhKien) {
+                    <tr>
+                        <td style="text-align: center;">@sttLk</td>
+                        <td><span style="font-family: monospace; color: #4b5563;">LK-@sd.MaLK.ToString("D3")</span></td>
+                        <td>@sd.LinhKien?.TenLK</td>
+                        <td style="text-align: center;">Cái</td>
+                        <td style="text-align: center; font-weight: 600;">@sd.SoLuong</td>
+                        <td style="text-align: right;">@string.Format("{0:N0}", sd.DonGiaXuat)</td>
+                        <td style="text-align: right; font-weight: 600;">@string.Format("{0:N0}", sd.DonGiaXuat * sd.SoLuong)</td>
+                    </tr>
+                    sttLk++;
+                }
+            } else {
+                <tr>
+                    <td colspan="7" style="text-align:center; font-style:italic; padding: 30px; color: #6b7280;">
+                        Không phát sinh yêu cầu xuất kho vật tư linh kiện cho phiếu sửa chữa này.
+                    </td>
+                </tr>
+            }
+            <tr>
+                <td colspan="4" style="text-align: right; font-weight: 700; background-color: #f9fafb;">Tổng cộng:</td>
+                <td style="text-align: center; font-weight: 700; background-color: #f9fafb;">@tongSlLk</td>
+                <td style="background-color: #f9fafb;"></td>
+                <td style="text-align: right; font-weight: 700; background-color: #f9fafb;">@string.Format("{0:N0}", tongTienLk)</td>
+            </tr>
+        </table>
+        
+        <table class="signature">
+            <tr>
+                <td>
+                    <div class="sig-title">THỦ KHO DUYỆT XUẤT</div>
+                    <div class="sig-sub">(Ký & ghi rõ họ tên)</div>
+                </td>
+                <td>
+                    <div class="sig-title">KTV NHẬN VẬT TƯ</div>
+                    <div class="sig-sub">(Ký & ghi rõ họ tên)</div>
+                    <div style="font-weight: 600; color: #111827;">@(Model.User_KTV?.FullName ?? "")</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    }
+
+    <!-- ==================== BM-03 ==================== -->
+    @if(ViewBag.PrintType == "bm03" || ViewBag.PrintType == "all") {
+    <div class="page">
+        <div class="doc-title-container">
+            <h2>HÓA ĐƠN THANH TOÁN (BM-03)</h2>
+            <div class="doc-meta">
+                <b>Số Hóa Đơn:</b> INV-@DateTime.Now.ToString("yyMMdd")@Model.MaPhieu.ToString("D2") &nbsp;|&nbsp; 
+                <b>Ngày xuất:</b> @DateTime.Now.ToString("dd/MM/yyyy HH:mm") &nbsp;|&nbsp; 
+                <b>Mã phiếu:</b> #HD-@Model.MaPhieu.ToString("D4")
+            </div>
+        </div>
+        
+        <table style="margin-bottom: 20px;">
+            <tr><td colspan="2" class="section-title">THÔNG TIN KHÁCH HÀNG & THIẾT BỊ</td></tr>
+            <tr>
+                <td style="width: 50%;"><b>Khách hàng:</b> @(Model.ThietBi?.KhachHang?.HoTen ?? "Khách lẻ")</td>
+                <td style="width: 50%;"><b>Số điện thoại:</b> @(Model.ThietBi?.KhachHang?.SDT ?? "")</td>
+            </tr>
+            <tr>
+                <td><b>Thiết bị:</b> @Model.ThietBi?.TenTB</td>
+                <td><b>Kết luận chẩn đoán:</b> @(Model.MaLoiNavigation?.TenLoi ?? "Hoàn thành xử lý sự cố")</td>
+            </tr>
+        </table>
+
+        <table>
+            <tr>
+                <th style="width: 5%; text-align: center;">STT</th>
+                <th style="width: 50%;">CHI TIẾT HẠNG MỤC THANH TOÁN</th>
+                <th style="width: 10%; text-align: center;">SL</th>
+                <th style="width: 15%; text-align: right;">Đơn giá</th>
+                <th style="width: 20%; text-align: right;">Thành tiền</th>
+            </tr>
+            
+            <!-- Phần Dịch vụ -->
+            <tr><td colspan="5" class="section-title">A. Phí dịch vụ sửa chữa</td></tr>
+            @if(Model.ChiTietSuaChuas != null && Model.ChiTietSuaChuas.Any()) {
+                int sttB = 1;
+                foreach(var ct in Model.ChiTietSuaChuas) {
+                    <tr>
+                        <td style="text-align: center;">@sttB</td>
+                        <td>@ct.TenHangMuc</td>
+                        <td style="text-align: center;">1</td>
+                        <td style="text-align: right;">@string.Format("{0:N0}", ct.ChiPhi)</td>
+                        <td style="text-align: right; font-weight: 600;">@string.Format("{0:N0}", ct.ChiPhi)</td>
+                    </tr>
+                    sttB++;
+                }
+            } else {
+                <tr><td colspan="5" style="text-align:center; font-style:italic; color:#6b7280;">Không phát sinh phí dịch vụ</td></tr>
+            }
+
+            <!-- Phần Vật tư -->
+            <tr><td colspan="5" class="section-title">B. Vật tư & Linh kiện thay thế</td></tr>
+            @if(listLinhKien.Any()) {
+                int sttA = 1;
+                foreach(var sd in listLinhKien) {
+                    <tr>
+                        <td style="text-align: center;">@sttA</td>
+                        <td>@sd.LinhKien?.TenLK</td>
+                        <td style="text-align: center;">@sd.SoLuong</td>
+                        <td style="text-align: right;">@string.Format("{0:N0}", sd.DonGiaXuat)</td>
+                        <td style="text-align: right; font-weight: 600;">@string.Format("{0:N0}", sd.DonGiaXuat * sd.SoLuong)</td>
+                    </tr>
+                    sttA++;
+                }
+            } else {
+                <tr><td colspan="5" style="text-align:center; font-style:italic; color:#6b7280;">Không phát sinh phí linh kiện</td></tr>
+            }
+
+            <tr>
+                <td colspan="4" style="text-align: right; font-size: 16px; font-weight: 700; text-transform: uppercase; padding: 15px;">Tổng cộng thanh toán (VNĐ):</td>
+                <td style="text-align: right; font-size: 18px; font-weight: 800; color: #b91c1c; padding: 15px;">@string.Format("{0:N0}", tongThanhToan)</td>
+            </tr>
+        </table>
+
+        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px; margin-bottom: 25px; background: #f9fafb;">
+            <div style="font-weight: 700; margin-bottom: 8px; color: #111827; text-transform: uppercase; font-size: 13px;">Chính sách & Điều khoản bảo hành:</div>
+            <div style="font-size: 13px; color: #4b5563;">
+                • Bảo hành linh kiện mới từ 03 - 36 tháng theo đúng quy định của nhà sản xuất.<br>
+                • Trách nhiệm bảo hành phần cứng và phần mềm có hiệu lực khi tem niêm phong còn nguyên vẹn.<br>
+                • Trung tâm từ chối bảo hành đối với các trường hợp rơi vỡ, vô nước, hoặc chập cháy nổ do nguồn điện không ổn định.
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content: space-between; align-items: flex-end;">
+            <!-- QR Code Đánh giá dịch vụ -->
+            <div style="display:flex; align-items:center; gap:15px; border: 2px dashed #d1d5db; border-radius: 8px; padding: 12px; width: 350px;">
+                <div id="qrReview" style="flex-shrink:0;"></div>
+                <div style="text-align:left;">
+                    <div style="font-size:14px; font-weight:700; color:#111827; margin-bottom:4px;">Góp ý & Đánh giá</div>
+                    <div style="font-size:12px; color:#6b7280; line-height:1.4;">
+                        Mời bạn quét mã QR để đánh giá dịch vụ. Phản hồi của bạn giúp chúng tôi cải thiện tốt hơn.
+                    </div>
+                </div>
+            </div>
+
+            <table class="signature" style="width: 400px; margin-top: 0;">
+                <tr>
+                    <td>
+                        <div class="sig-title">KHÁCH HÀNG KÝ NHẬN</div>
+                        <div class="sig-sub">(Ký & ghi rõ họ tên)</div>
+                    </td>
+                    <td>
+                        <div class="sig-title">ĐẠI DIỆN TRUNG TÂM</div>
+                        <div class="sig-sub">(Thu ngân/KTV - Ký & ghi rõ họ tên)</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    }
+
+    <!-- QR Code Generator -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var qrEl = document.getElementById('qrReview');
+            if (qrEl) {
+                // Sử dụng IP LAN để điện thoại quét QR có thể truy cập được (thay vì localhost)
+                var host = '@(ViewBag.LocalIp != "localhost" ? ViewBag.LocalIp : "")';
+                var port = '@(ViewBag.Port)';
+                var scheme = '@(ViewBag.Scheme)';
+                
+                var reviewUrl = window.location.origin;
+                if (host && host !== '') {
+                    reviewUrl = scheme + '://' + host + (port ? ':' + port : '');
+                }
+                reviewUrl += '/PhieuTiepNhan/DanhGiaPublic/@Model.MaPhieu';
+                
+                new QRCode(qrEl, {
+                    text: reviewUrl,
+                    width: 100,
+                    height: 100,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

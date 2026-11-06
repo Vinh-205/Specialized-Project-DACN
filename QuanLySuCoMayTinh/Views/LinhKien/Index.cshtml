@@ -1,0 +1,360 @@
+@model IEnumerable<QuanLySuCoMayTinh.Models.LinhKien>
+
+@{
+    ViewData["Title"] = "Quản lý Kho Linh Kiện";
+}
+
+<style>
+/* ══ LINH KIEN INDEX — Dark Cyberpunk ══ */
+.lk-page { color:var(--text); }
+
+.lk-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.lk-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(168,85,247,0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.lk-hero-left { display: flex; align-items: center; gap: 16px; }
+.lk-hero-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    box-shadow: 0 6px 20px rgba(168,85,247,0.35);
+}
+.lk-hero-title { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+.lk-hero-sub { font-size: 12.5px; color:var(--text-muted); }
+
+.lk-stats { display: flex; gap: 16px; }
+.lk-stat {
+    text-align: center;
+    padding: 10px 20px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 10px;
+    min-width: 90px;
+}
+.lk-stat-val { font-size: 22px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.lk-stat-label { font-size: 10px; color:var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Toolbar */
+.lk-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; flex-wrap: wrap;
+}
+.lk-search-wrap {
+    flex: 1; position: relative; min-width: 220px;
+}
+.lk-search-wrap i {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color:var(--text-light); font-size: 14px;
+    pointer-events: none;
+}
+.lk-search {
+    width: 100%; padding: 9px 14px 9px 36px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 8px; color:var(--text); font-size: 13.5px;
+    outline: none; transition: border-color 0.2s;
+}
+.lk-search::placeholder { color:var(--text-light); }
+.lk-search:focus { border-color: rgba(168,85,247,0.5); background:var(--surface2); }
+
+.lk-filter-select {
+    padding: 9px 14px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: 8px; color:var(--text); font-size: 13px;
+    outline: none; cursor: pointer;
+}
+.lk-filter-select option { background: #1e1e2e; }
+
+/* Table */
+.lk-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.lk-table { width: 100%; border-collapse: collapse; }
+.lk-table thead th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-muted);
+    font-weight: 600; text-align: left;
+    border-bottom:1px solid var(--border);
+    white-space: nowrap;
+}
+.lk-table tbody tr {
+    border-bottom:1px solid var(--border);
+    transition: background 0.15s;
+}
+.lk-table tbody tr:last-child { border-bottom: none; }
+.lk-table tbody tr:hover { background:var(--surface); }
+.lk-table tbody td {
+    padding: 13px 16px; font-size: 13px;
+    color:var(--text-muted); vertical-align: middle;
+}
+
+/* Cells */
+.lk-id { font-family: 'JetBrains Mono', monospace; color:var(--text-muted); font-size: 12px; }
+.lk-name { font-weight: 600; color:var(--text); }
+.lk-name small { color:var(--text-muted); font-weight: 400; font-size: 11.5px; display: block; margin-top: 2px; }
+.lk-price { font-family: 'JetBrains Mono', monospace; color:var(--c-info); font-weight: 600; }
+
+.lk-qty {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    font-size: 16px;
+}
+.lk-qty.low { color:var(--c-err); }
+.lk-qty.ok  { color:var(--c-ok); }
+.lk-qty.mid { color:var(--c-warn); }
+
+.lk-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.lk-badge-active   { background: rgba(34,197,94,0.12); color:var(--c-ok); border: 1px solid rgba(34,197,94,0.25); }
+.lk-badge-inactive { background: rgba(239,68,68,0.12); color:var(--c-err); border: 1px solid rgba(239,68,68,0.25); }
+.lk-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+.lk-loai-tag {
+    background: rgba(168,85,247,0.12);
+    border: 1px solid rgba(168,85,247,0.25);
+    color:var(--c-purple); font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 6px;
+}
+
+/* Buttons */
+.lk-btn-add {
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    color: #fff; border: none;
+    padding: 9px 18px; border-radius: 8px;
+    font-size: 13.5px; font-weight: 600;
+    text-decoration: none; white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(168,85,247,0.3);
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+}
+.lk-btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(168,85,247,0.45); color:var(--text); }
+
+.lk-btn-icon {
+    width: 30px; height: 30px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; border: none; cursor: pointer; transition: all 0.2s;
+}
+.lk-btn-edit   { background: rgba(56,189,248,0.12); color:var(--c-info); }
+.lk-btn-delete { background: rgba(239,68,68,0.12); color:var(--c-err); }
+.lk-btn-icon:hover { transform: scale(1.1); filter: brightness(1.2); }
+
+/* Empty state */
+.lk-empty {
+    text-align: center; padding: 60px 24px;
+    color:var(--text-light);
+}
+.lk-empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+</style>
+
+<div class="lk-page">
+    <!-- HERO HEADER -->
+    <div class="lk-hero">
+        <div class="lk-hero-left">
+            <div class="lk-hero-icon"><i class="bi bi-boxes"></i></div>
+            <div>
+                <div class="lk-hero-title">Kho Linh Kiện</div>
+                <div class="lk-hero-sub">Quản lý tồn kho và xuất linh kiện cho phiếu sửa chữa</div>
+            </div>
+        </div>
+        <div class="lk-stats">
+            <div class="lk-stat">
+                <div class="lk-stat-val" style="color:#a855f7">@Model.Count()</div>
+                <div class="lk-stat-label">Tổng mặt hàng</div>
+            </div>
+            <div class="lk-stat">
+                <div class="lk-stat-val" style="color:var(--c-ok)">@Model.Count(lk => lk.CoTrangThai)</div>
+                <div class="lk-stat-label">Đang kinh doanh</div>
+            </div>
+            <div class="lk-stat">
+                <div class="lk-stat-val" style="color:var(--c-err)">@Model.Count(lk => lk.SoLuongTon <= 5)</div>
+                <div class="lk-stat-label">Sắp hết hàng</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="lk-toolbar">
+        <div class="lk-search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" class="lk-search" id="lkSearch" placeholder="Tìm linh kiện theo tên..." />
+        </div>
+        <select class="lk-filter-select" id="lkFilterLoai">
+            <option value="">Tất cả loại</option>
+            @foreach (var loai in Model.Select(lk => lk.LoaiLK).Distinct().OrderBy(x => x))
+            {
+                <option value="@loai">@loai</option>
+            }
+        </select>
+        <select class="lk-filter-select" id="lkFilterStatus">
+            <option value="">Tất cả trạng thái</option>
+            <option value="active">Đang kinh doanh</option>
+            <option value="inactive">Ngừng kinh doanh</option>
+        </select>
+        <a asp-action="Create" class="lk-btn-add">
+            <i class="bi bi-plus-lg"></i> Thêm linh kiện
+        </a>
+    </div>
+
+    <!-- TABLE -->
+    <div class="lk-table-wrap">
+        @if (!Model.Any())
+        {
+            <div class="lk-empty">
+                <div class="lk-empty-icon"><i class="bi bi-box-seam"></i></div>
+                <div style="font-size:15px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Kho đang trống</div>
+                <div style="font-size:13px;">Nhấn <strong>"Thêm linh kiện"</strong> để bắt đầu quản lý tồn kho</div>
+            </div>
+        }
+        else
+        {
+            <table class="lk-table" id="lkTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Tên linh kiện</th>
+                        <th>Loại</th>
+                        <th>Tồn kho</th>
+                        <th>Đơn giá</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align:right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="lkTbody">
+                    @foreach (var lk in Model.OrderBy(l => l.TenLK))
+                    {
+                        var qtyClass = lk.SoLuongTon <= 0 ? "low" : (lk.SoLuongTon <= 5 ? "mid" : "ok");
+                        <tr data-name="@lk.TenLK.ToLower()" data-loai="@lk.LoaiLK" data-status="@(lk.CoTrangThai ? "active" : "inactive")">
+                            <td><span class="lk-id">LK-@lk.MaLK.ToString("D3")</span></td>
+                            <td>
+                                <div class="lk-name">@lk.TenLK</div>
+                            </td>
+                            <td><span class="lk-loai-tag">@lk.LoaiLK</span></td>
+                            <td>
+                                <span class="lk-qty @qtyClass">@lk.SoLuongTon</span>
+                                <small style="color:var(--text-muted); font-size:11px;"> cái</small>
+                                @if (lk.SoLuongTon <= 5 && lk.SoLuongTon > 0)
+                                {
+                                    <span title="Sắp hết hàng" style="color:var(--c-warn); margin-left:4px; font-size:11px;">⚠</span>
+                                }
+                                @if (lk.SoLuongTon == 0)
+                                {
+                                    <span title="Hết hàng" style="color:var(--c-err); margin-left:4px; font-size:11px;">✗</span>
+                                }
+                            </td>
+                            <td><span class="lk-price">@string.Format("{0:N0} đ", lk.DonGia)</span></td>
+                            <td>
+                                @if (lk.CoTrangThai)
+                                {
+                                    <span class="lk-badge lk-badge-active">
+                                        <span class="lk-badge-dot"></span> Kinh doanh
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="lk-badge lk-badge-inactive">
+                                        <span class="lk-badge-dot"></span> Ngừng
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div style="display:flex; gap:6px; justify-content:flex-end;">
+                                    <a asp-action="Edit" asp-route-id="@lk.MaLK" class="lk-btn-icon lk-btn-edit" title="Chỉnh sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button class="lk-btn-icon lk-btn-delete" title="Xóa"
+                                            onclick="confirmDelete(@lk.MaLK, '@lk.TenLK')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+    <div style="background:#1a1a2e; border:1px solid rgba(239,68,68,0.3); border-radius:16px; padding:28px; max-width:400px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <div style="text-align:center; margin-bottom:20px;">
+            <div style="width:52px; height:52px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:22px; color:var(--c-err);">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div style="font-size:17px; font-weight:700; color:var(--text); margin-bottom:6px;">Xác nhận xóa</div>
+            <div id="deleteModalText" style="font-size:13px; color:var(--text-muted);"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeDeleteModal()" style="flex:1; padding:10px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13.5px; cursor:pointer;">Hủy bỏ</button>
+            <form id="deleteForm" method="post" style="flex:1;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="_method" value="DELETE" />
+                <button type="submit" style="width:100%; padding:10px; background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); border-radius:8px; color:var(--c-err); font-size:13.5px; font-weight:600; cursor:pointer;">Xóa linh kiện</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Live search + filter
+    const searchInput  = document.getElementById('lkSearch');
+    const filterLoai   = document.getElementById('lkFilterLoai');
+    const filterStatus = document.getElementById('lkFilterStatus');
+    const rows         = document.querySelectorAll('#lkTbody tr');
+
+    function applyFilters() {
+        const q      = searchInput.value.toLowerCase().trim();
+        const loai   = filterLoai.value;
+        const status = filterStatus.value;
+
+        rows.forEach(row => {
+            const name   = row.dataset.name || '';
+            const rowLoai   = row.dataset.loai || '';
+            const rowStatus = row.dataset.status || '';
+            const show = name.includes(q)
+                && (loai   === '' || rowLoai   === loai)
+                && (status === '' || rowStatus === status);
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    filterLoai.addEventListener('change', applyFilters);
+    filterStatus.addEventListener('change', applyFilters);
+
+    // Delete modal
+    function confirmDelete(id, name) {
+        document.getElementById('deleteModalText').textContent =
+            `Bạn có chắc muốn xóa linh kiện "${name}"? Hành động này không thể hoàn tác.`;
+        document.getElementById('deleteForm').action = `/LinhKien/Delete/${id}`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+</script>
+}

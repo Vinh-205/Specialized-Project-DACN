@@ -1,0 +1,9 @@
+@media(prefers-reduced-motion:no-preference) {
+    .welcome-primary,.sk-login,.plate,.sb-tools button,.scene-actions button {
+        transition:background-color .2s,color .2s,box-shadow .2s,translate .2s;
+    }
+    .welcome-primary:hover,.sk-login:hover,.scene-actions button:hover { translate:0 -3px; }
+    .welcome-primary:active,.scene-actions button:active { translate:0 0; }
+    .plate:hover { background-color:#e8f6ff; }
+    .sb-tools button:hover:not(:disabled) { translate:0 -2px; }
+}

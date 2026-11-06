@@ -1,0 +1,477 @@
+@{
+    Layout = null; // Trang độc lập — không dùng _Layout
+    int maPhieu = ViewBag.MaPhieu;
+    string tenThietBi = ViewBag.TenThietBi;
+    string tenKhachHang = ViewBag.TenKhachHang;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <partial name="_SystemIcons" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#0d0d1a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>📸 Upload ảnh · #HD-@maPhieu.ToString("D4")</title>
+    <!-- KHÔNG dùng Google Fonts bên ngoài — tránh trắng trang khi mạng LAN -->
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --purple: #a855f7;
+            --purple-d: #7c3aed;
+            --purple-glow: rgba(168,85,247,0.3);
+            --bg: #0d0d1a;
+            --surface: #13131f;
+            --border: rgba(255,255,255,0.08);
+            --text: #ffffff;
+            --text2: rgba(255,255,255,0.65);
+            --text3: rgba(255,255,255,0.35);
+            --green: #22c55e;
+            --red: #ef4444;
+            --radius: 16px;
+        }
+
+        html, body {
+            height: 100%; background: var(--bg);
+            /* Dùng system-ui font stack — không cần load từ ngoài */
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            color: var(--text); -webkit-font-smoothing: antialiased;
+            overscroll-behavior: none;
+        }
+
+        /* --- Animated BG --- */
+        .bg-blobs {
+            position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
+        }
+        .blob {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.2;
+            animation: drift 12s ease-in-out infinite alternate;
+        }
+        .blob1 { width: 280px; height: 280px; background: var(--purple); top: -80px; left: -60px; animation-delay: 0s; }
+        .blob2 { width: 200px; height: 200px; background: #3b82f6; bottom: -60px; right: -40px; animation-delay: -4s; }
+        @@keyframes drift { to { transform: translate(30px, 20px) scale(1.1); } }
+
+        /* --- Main layout --- */
+        .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* --- Header --- */
+        .app-header {
+            padding: 20px 20px 0;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .header-icon {
+            width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--purple), var(--purple-d));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 6px 20px var(--purple-glow);
+        }
+        .header-title { font-size: 18px; font-weight: 800; }
+        .header-sub { font-size: 12.5px; color: var(--text3); margin-top: 2px; }
+
+        /* --- Notice banner (iOS) --- */
+        .notice-banner {
+            margin: 12px 16px 0;
+            background: rgba(59,130,246,0.12);
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 12.5px;
+            color: rgba(147,197,253,0.9);
+            line-height: 1.6;
+            display: none;
+        }
+        .notice-banner.show { display: block; }
+
+        /* --- Ticket info card --- */
+        .ticket-card {
+            margin: 12px 16px 0;
+            background: rgba(168,85,247,0.08);
+            border: 1px solid rgba(168,85,247,0.2);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .ticket-badge {
+            background: linear-gradient(135deg, var(--purple), var(--purple-d));
+            border-radius: 8px; padding: 6px 10px;
+            font-size: 13px; font-weight: 800; white-space: nowrap;
+            color: #fff;
+        }
+        .ticket-info { flex: 1; min-width: 0; }
+        .ticket-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ticket-customer { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+        /* Uploaded count badge */
+        .count-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(34,197,94,0.12);
+            border: 1px solid rgba(34,197,94,0.25);
+            border-radius: 8px; padding: 4px 10px;
+            font-size: 12px; font-weight: 600; color: #4ade80;
+        }
+
+        /* --- Upload zone --- */
+        .upload-area { padding: 16px; flex: 1; }
+
+        .drop-zone {
+            border: 2px dashed rgba(168,85,247,0.35);
+            border-radius: var(--radius);
+            background: rgba(168,85,247,0.04);
+            padding: 36px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .drop-zone.active {
+            border-color: var(--purple);
+            background: rgba(168,85,247,0.12);
+        }
+        .drop-zone-icon { font-size: 52px; margin-bottom: 12px; line-height: 1; }
+        .drop-zone-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+        .drop-zone-hint { font-size: 12.5px; color: var(--text3); }
+
+        /* Primary action button */
+        .btn-primary {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, var(--purple), var(--purple-d));
+            border: none; border-radius: 12px;
+            color: #fff; font-size: 15px; font-weight: 700;
+            cursor: pointer; margin-top: 12px;
+            box-shadow: 0 6px 22px var(--purple-glow);
+            transition: all 0.2s;
+            font-family: inherit;
+            -webkit-appearance: none;
+        }
+        .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+
+        /* Secondary button */
+        .btn-secondary {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 14px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text2); font-size: 14px; font-weight: 600;
+            cursor: pointer; margin-top: 10px;
+            transition: all 0.2s;
+            font-family: inherit;
+            -webkit-appearance: none;
+        }
+        .btn-secondary:active { background: rgba(255,255,255,0.1); }
+
+        /* --- Preview --- */
+        #previewSection { display: none; margin-top: 16px; }
+        .preview-wrap {
+            border-radius: 12px; overflow: hidden;
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+            position: relative;
+        }
+        #previewImg {
+            width: 100%; max-height: 300px; object-fit: contain; display: block;
+            background: rgba(0,0,0,0.3);
+        }
+        .preview-remove {
+            position: absolute; top: 8px; right: 8px;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(239,68,68,0.9);
+            border: none; color: #fff; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; line-height: 1;
+        }
+
+        /* --- Caption input --- */
+        .input-wrap { margin-top: 12px; }
+        .input-label { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+        .caption-input {
+            width: 100%; padding: 12px 14px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            border-radius: 10px; color: #fff;
+            font-size: 14px; outline: none;
+            font-family: inherit; transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+        .caption-input:focus { border-color: rgba(168,85,247,0.5); }
+        .caption-input::placeholder { color: var(--text3); }
+
+        /* --- Submit --- */
+        .btn-submit {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, var(--green), #16a34a);
+            border: none; border-radius: 12px;
+            color: #fff; font-size: 15px; font-weight: 700;
+            cursor: pointer; margin-top: 14px;
+            box-shadow: 0 6px 22px rgba(34,197,94,0.35);
+            transition: all 0.2s;
+            font-family: inherit;
+            -webkit-appearance: none;
+        }
+        .btn-submit:active { transform: scale(0.97); }
+        .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        /* --- Toast notification --- */
+        #toast {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(120px);
+            background: #1e1e2e; border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 20px;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 14px; font-weight: 600;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            z-index: 999; white-space: nowrap;
+            max-width: 90vw;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+        #toast.success { border-color: rgba(34,197,94,0.4); }
+        #toast.error   { border-color: rgba(239,68,68,0.4); }
+
+        /* --- Progress ring --- */
+        .upload-progress { display: none; flex-direction: column; align-items: center; padding: 30px; }
+        .progress-ring { width: 80px; height: 80px; position: relative; margin-bottom: 14px; }
+        .progress-ring svg { transform: rotate(-90deg); }
+        .ring-bg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 6; }
+        .ring-fill { fill: none; stroke: var(--purple); stroke-width: 6; stroke-linecap: round;
+            stroke-dasharray: 213; stroke-dashoffset: 213; transition: stroke-dashoffset 0.1s; }
+        .progress-label { font-size: 14px; color: var(--text2); font-weight: 500; }
+
+        /* Hidden file input */
+        #fileInputPick { display: none; }
+    </style>
+</head>
+<body>
+<div class="bg-blobs">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+</div>
+
+<div class="app">
+    <!-- HEADER -->
+    <div class="app-header">
+        <div class="header-icon">📸</div>
+        <div>
+            <div class="header-title">Upload ảnh sự cố</div>
+            <div class="header-sub">Chọn ảnh từ thiết bị của bạn</div>
+        </div>
+    </div>
+
+    <!-- iOS HTTPS notice -->
+    <div class="notice-banner" id="iosBanner">
+        ℹ️ Trên iPhone/iPad, chụp ảnh trực tiếp yêu cầu HTTPS. Vui lòng <strong>chọn từ thư viện ảnh</strong> thay vì chụp trực tiếp, hoặc chụp ảnh bằng Camera app rồi chọn ảnh đó.
+    </div>
+
+    <!-- TICKET INFO -->
+    <div class="ticket-card">
+        <div class="ticket-badge">#HD-@maPhieu.ToString("D4")</div>
+        <div class="ticket-info">
+            <div class="ticket-name">@tenThietBi</div>
+            <div class="ticket-customer">KH: @tenKhachHang</div>
+        </div>
+        <div id="uploadedCount" class="count-badge" style="display:none;">
+            <span>✅</span> <span id="countNum">0</span> ảnh
+        </div>
+    </div>
+
+    <!-- MAIN UPLOAD AREA -->
+    <div class="upload-area">
+        <!-- Drop zone / tap area -->
+        <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInputPick').click()">
+            <div class="drop-zone-icon">🖼️</div>
+            <div class="drop-zone-title">Nhấn để chọn ảnh</div>
+            <div class="drop-zone-hint">Hỗ trợ JPG, PNG, WEBP · Tối đa 5MB</div>
+        </div>
+
+        <!-- Nút chọn ảnh hợp nhất — dùng accept="image/*" không có capture để iOS/Android đều chọn được từ thư viện -->
+        <button class="btn-primary" id="btnPickPhoto" onclick="document.getElementById('fileInputPick').click()">
+            <span style="font-size:20px;">📁</span> Chọn ảnh từ thư viện / chụp mới
+        </button>
+
+        <!-- Hidden input: accept image/*, không dùng capture để cho phép chọn từ Photos app trên iOS -->
+        <input type="file" id="fileInputPick" accept="image/*" />
+
+        <!-- Preview section -->
+        <div id="previewSection">
+            <div class="preview-wrap">
+                <img id="previewImg" src="" alt="Preview" />
+                <button class="preview-remove" onclick="clearFile()">✕</button>
+            </div>
+            <div class="input-wrap">
+                <label class="input-label" for="captionInput">Ghi chú ảnh (tuỳ chọn)</label>
+                <input type="text" id="captionInput" class="caption-input" placeholder="VD: Màn hình bị vỡ góc trái..." autocomplete="off" />
+            </div>
+            <button class="btn-submit" id="btnSubmit" onclick="submitPhoto()">
+                <span style="font-size:18px;">☁️</span> Tải ảnh lên hệ thống
+            </button>
+        </div>
+
+        <!-- Progress -->
+        <div class="upload-progress" id="uploadProgress">
+            <div class="progress-ring">
+                <svg viewBox="0 0 72 72" width="80" height="80">
+                    <circle class="ring-bg" cx="36" cy="36" r="34"/>
+                    <circle class="ring-fill" id="ringFill" cx="36" cy="36" r="34"/>
+                </svg>
+            </div>
+            <div class="progress-label">Đang tải ảnh lên...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+    <span id="toastIcon">✅</span>
+    <span id="toastMsg">Thành công!</span>
+</div>
+
+<script>
+    // Lấy origin hiện tại để build URL upload — hoạt động cả HTTP lẫn HTTPS, cả localhost lẫn LAN IP
+    const PHIEU_ID = @maPhieu;
+    const UPLOAD_URL = window.location.origin + '/HinhAnhSuCo/MobileUploadPost';
+
+    let selectedFile = null;
+    let uploadedCount = 0;
+
+    // ── Detect iOS để hiển thị banner hướng dẫn ───────────────────────────
+    function isIOS() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+    if (isIOS() && window.location.protocol !== 'https:') {
+        document.getElementById('iosBanner').classList.add('show');
+    }
+
+    // ── Wire up file input ─────────────────────────────────────────────────
+    document.getElementById('fileInputPick').addEventListener('change', handleFileSelect);
+
+    // Drop zone drag-and-drop (tablet/desktop)
+    const dz = document.getElementById('dropZone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('active'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('active'));
+    dz.addEventListener('drop', e => {
+        e.preventDefault(); dz.classList.remove('active');
+        const f = e.dataTransfer.files[0];
+        if (f) showPreview(f);
+    });
+
+    function handleFileSelect(e) {
+        const f = e.target.files[0];
+        if (f) showPreview(f);
+        // Reset value để chọn lại cùng file nếu cần
+        e.target.value = '';
+    }
+
+    function showPreview(file) {
+        // Kiểm tra kích thước phía client trước
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Ảnh quá lớn! Tối đa 5MB.', false);
+            return;
+        }
+        selectedFile = file;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            document.getElementById('previewImg').src = ev.target.result;
+            document.getElementById('previewSection').style.display = 'block';
+            document.getElementById('dropZone').style.display = 'none';
+            document.getElementById('btnPickPhoto').style.display = 'none';
+            // Cuộn xuống để xem preview
+            document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        reader.onerror = () => showToast('Không đọc được ảnh. Thử ảnh khác.', false);
+        reader.readAsDataURL(file);
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        document.getElementById('previewSection').style.display = 'none';
+        document.getElementById('dropZone').style.display = 'block';
+        document.getElementById('btnPickPhoto').style.display = 'flex';
+        document.getElementById('captionInput').value = '';
+        document.getElementById('previewImg').src = '';
+    }
+
+    async function submitPhoto() {
+        if (!selectedFile) { showToast('Chưa chọn ảnh!', false); return; }
+
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+
+        // Show progress
+        document.getElementById('previewSection').style.display = 'none';
+        const progressEl = document.getElementById('uploadProgress');
+        progressEl.style.display = 'flex';
+
+        // Animate ring
+        const ring = document.getElementById('ringFill');
+        const circumference = 2 * Math.PI * 34; // r=34
+        ring.style.strokeDasharray = circumference;
+        ring.style.strokeDashoffset = circumference;
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress = Math.min(progress + 2, 90); // Tối đa 90% — 10% cuối khi server confirm
+            ring.style.strokeDashoffset = circumference * (1 - progress / 100);
+        }, 80);
+
+        const fd = new FormData();
+        fd.append('MaPhieu', PHIEU_ID);
+        fd.append('AnhFile', selectedFile);
+        fd.append('MoTa', document.getElementById('captionInput').value.trim());
+
+        try {
+            const res = await fetch(UPLOAD_URL, {
+                method: 'POST',
+                body: fd,
+                // Không set Content-Type header — để browser tự set boundary cho multipart/form-data
+            });
+
+            clearInterval(interval);
+            ring.style.strokeDashoffset = 0; // 100% done
+
+            let data;
+            try {
+                data = await res.json();
+            } catch {
+                data = { success: false, message: 'Phản hồi không hợp lệ từ máy chủ.' };
+            }
+
+            setTimeout(() => {
+                progressEl.style.display = 'none';
+                btn.disabled = false;
+                if (data.success) {
+                    uploadedCount++;
+                    const badge = document.getElementById('uploadedCount');
+                    document.getElementById('countNum').textContent = uploadedCount;
+                    badge.style.display = 'inline-flex';
+                    showToast('Tải ảnh lên thành công! 🎉', true);
+                    clearFile();
+                } else {
+                    showToast(data.message || 'Có lỗi xảy ra. Thử lại!', false);
+                    clearFile();
+                }
+            }, 400);
+
+        } catch (err) {
+            clearInterval(interval);
+            progressEl.style.display = 'none';
+            btn.disabled = false;
+            console.error('Upload error:', err);
+            showToast('Lỗi kết nối. Kiểm tra mạng và thử lại!', false);
+            clearFile();
+        }
+    }
+
+    function showToast(msg, success) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        document.getElementById('toastIcon').textContent = success ? '✅' : '❌';
+        toast.className = 'show ' + (success ? 'success' : 'error');
+        setTimeout(() => { toast.className = success ? 'success' : 'error'; }, 4000);
+    }
+</script>
+</body>
+</html>

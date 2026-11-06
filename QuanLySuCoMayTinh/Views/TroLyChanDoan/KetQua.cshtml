@@ -1,0 +1,300 @@
+@model QuanLySuCoMayTinh.Models.ViewModels.KetQuaChanDoanViewModel
+
+@{
+    ViewData["Title"] = "Kết quả chẩn đoán";
+}
+
+<style>
+    .ai-res-page { color:var(--text); max-width: 1000px; margin: 0 auto; }
+    
+    .ai-res-hero {
+        background:var(--surface);
+        border:1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(20px);
+        position: relative; overflow: hidden;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    
+    .ai-res-hero::before {
+        content: ''; position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 0% 0%, rgba(34,197,94,0.1) 0%, transparent 40%);
+        pointer-events: none;
+    }
+
+    .ai-res-icon {
+        width: 48px; height: 48px;
+        background: linear-gradient(135deg, #10b981, #3b82f6);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px; box-shadow: 0 6px 20px rgba(16,185,129,0.3);
+        margin-right: 16px; flex-shrink: 0;
+    }
+
+    .ai-card {
+        background:var(--surface);
+        border:1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        backdrop-filter: blur(16px);
+        height: 100%;
+        display: flex; flex-direction: column;
+    }
+
+    .ai-card-header {
+        padding: 16px 20px;
+        border-bottom:1px solid var(--border);
+        background: rgba(0,0,0,0.2);
+        font-weight: 600;
+        display: flex; align-items: center; gap: 8px;
+    }
+
+    .ai-card-body { padding: 20px; flex: 1; }
+
+    .ai-btn-outline {
+        background:var(--surface);
+        color:var(--text-muted);
+        border:1px solid var(--border);
+        padding: 8px 16px; border-radius: 8px;
+        font-size: 13.5px; font-weight: 500;
+        text-decoration: none; transition: all 0.2s;
+    }
+    .ai-btn-outline:hover { background:var(--surface2); color:var(--text); border-color:var(--border); }
+
+    .ai-btn-success {
+        background: linear-gradient(135deg, #10b981, #0284c7);
+        color: #fff; border: none;
+        padding: 8px 20px; border-radius: 8px;
+        font-size: 13.5px; font-weight: 600;
+        box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+        transition: all 0.2s;
+    }
+    .ai-btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
+
+    .tc-item {
+        padding: 12px 0;
+        border-bottom:1px solid var(--border);
+    }
+    .tc-item:last-child { border-bottom: none; padding-bottom: 0; }
+    
+    .tc-name { color:var(--text); font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+    .tc-desc { color:var(--text-muted); font-size: 12.5px; line-height: 1.4; }
+
+    .err-block {
+        background:var(--surface);
+        border:1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px; margin-bottom: 16px;
+    }
+    .err-block:last-child { margin-bottom: 0; }
+    
+    .err-title { font-size: 15px; font-weight: 700; color:var(--text); margin-bottom: 6px; }
+    .err-high-prob { color:var(--c-err); }
+    .err-normal { color:var(--c-info); }
+
+    .err-sol {
+        background: rgba(16,185,129,0.08);
+        border-left: 3px solid #10b981;
+        border-radius: 0 8px 8px 0;
+        padding: 14px; margin-top: 12px;
+    }
+</style>
+
+<div class="ai-res-page mt-2">
+    <div class="ai-res-hero">
+        <div class="d-flex align-items-center">
+            <div class="ai-res-icon"><i class="bi bi-clipboard2-pulse"></i></div>
+            <div>
+                <h3 class="mb-1 fw-bold" style="letter-spacing:0.5px">Kết quả chẩn đoán</h3>
+                <div style="color:var(--text-muted); font-size: 13.5px;">Phiếu #@Model.MaPhieu - @Model.Phieu?.ThietBi?.KhachHang?.HoTen (@Model.Phieu?.ThietBi?.TenTB)</div>
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2">
+            <a asp-controller="PhieuTiepNhan" asp-action="Details" asp-route-id="@Model.MaPhieu" class="ai-btn-outline">
+                <i class="bi bi-eye me-1"></i>Xem phiếu
+            </a>
+            <a asp-action="Index" asp-route-maPhieu="@Model.MaPhieu" class="ai-btn-outline">
+                <i class="bi bi-arrow-left me-1"></i>Chẩn đoán lại
+            </a>
+            
+            <form id="chotDonForm" asp-action="ChotDonSuaChua" method="post" class="m-0">
+                <input type="hidden" name="MaPhieu" value="@Model.MaPhieu" />
+                @if (Model.TrieuChungs != null)
+                {
+                    foreach (var tc in Model.TrieuChungs)
+                    {
+                        <input type="hidden" name="TrieuChungIds" value="@tc.MaTC" />
+                        <input type="hidden" name="TrieuChungNames" value="@tc.TenTC" />
+                    }
+                }
+                @if (Model.GoiYLoi != null && Model.GoiYLoi.Any())
+                {
+                    var topLoi = Model.GoiYLoi.First();
+                    <input type="hidden" name="MaLoi" value="@topLoi.MaLoiID" />
+                    <input type="hidden" name="TenLoi" value="@topLoi.TenLoi" />
+                }
+                <button type="submit" class="ai-btn-success" onclick="return confirm('Xác nhận chốt đơn mang máy đi sửa chữa?');">
+                    <i class="bi bi-check2-circle me-1"></i>Chốt & Sửa chữa
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="ai-card" style="border-top: 2px solid #fde047;">
+                <div class="ai-card-header">
+                    <i class="bi bi-list-check" style="color:var(--c-warn)"></i> Triệu chứng đã chọn
+                </div>
+                <div class="ai-card-body">
+                    @if (Model.TrieuChungs == null || !Model.TrieuChungs.Any())
+                    {
+                        <div style="color:var(--c-warn); background:rgba(253,224,71,0.1); padding:12px; border-radius:8px; border:1px solid rgba(253,224,71,0.2); font-size:13px;">
+                            Chưa có triệu chứng nào được chọn.
+                        </div>
+                    }
+                    else
+                    {
+                        <div>
+                            @foreach (var tc in Model.TrieuChungs)
+                            {
+                                <div class="tc-item">
+                                    <div class="tc-name">@tc.TenTC</div>
+                                    <div class="tc-desc">@tc.MoTa</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            @if (ViewBag.TopAIPredictions != null)
+            {
+                <div class="ai-card mb-4" style="border-top: 2px solid #a855f7;">
+                    <div class="ai-card-header">
+                        <i class="bi bi-robot" style="color:#a855f7"></i> Dự đoán từ Hybrid AI (Top 3)
+                    </div>
+                    <div class="ai-card-body">
+                        @foreach(var pred in ViewBag.TopAIPredictions)
+                        {
+                            var conf = (float)pred.Item2 * 100;
+                            var confLevel = conf >= 80 ? "Cao" : (conf >= 50 ? "Trung bình" : "Thấp");
+                            var confColor = conf >= 80 ? "#22c55e" : (conf >= 50 ? "#eab308" : "#ef4444");
+                            var maLoi = pred.Item1;
+                            var namesDict = ViewBag.MaLoiNames as Dictionary<int, string>;
+                            var tenLoi = namesDict != null && namesDict.ContainsKey(maLoi) ? namesDict[maLoi] : "Lỗi " + maLoi;
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                                <div>
+                                    <div class="fw-bold" style="color:var(--text)">@tenLoi</div>
+                                    <div style="font-size:12px; color:var(--text-muted)">Độ tin cậy: <span style="color:@confColor">@confLevel (@Math.Round(conf, 1)%)</span></div>
+                                </div>
+                                <div class="progress" style="width: 100px; height: 6px; background:var(--surface2);">
+                                    <div class="progress-bar" role="progressbar" style="width: @conf%; background-color: @confColor;" aria-valuenow="@conf" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        }
+                        @if (ViewBag.AIKhoiTao == true)
+                        {
+                            <div style="font-size:12px; color:var(--c-warn); margin-bottom:6px">
+                                <i class="bi bi-exclamation-triangle"></i> Mô hình khởi tạo: huấn luyện từ dữ liệu tổng hợp, chưa kiểm chứng bằng ca thật. Chỉ dùng để tham khảo.
+                            </div>
+                        }
+                        <div style="font-size:12px; color:var(--text-muted); font-style:italic">
+                            * Nếu độ tin cậy thấp, AI khuyến nghị kỹ thuật viên nên kiểm tra chéo với Gợi ý từ Rule Engine bên dưới.
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="ai-card" style="border-top: 2px solid #38bdf8;">
+                <div class="ai-card-header">
+                    <i class="bi bi-bug" style="color:var(--c-info)"></i> Gợi ý lỗi & giải pháp
+                </div>
+                <div class="ai-card-body">
+                    @if (Model.NhomLoiAI != null && Model.NhomLoiAI.Any())
+                    {
+                        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-bottom:12px; font-size:13px; color:var(--text);">
+                            <i class="bi bi-cpu me-1" style="color:var(--c-ok)"></i><b>Mô hình học máy dự đoán nhóm lỗi</b> từ mô tả "<span style="color:var(--text-muted)">@Model.MoTaTuDo</span>":
+                            @foreach (var n in Model.NhomLoiAI)
+                            {
+                                <span style="background:var(--surface); border:1px solid var(--border); padding:2px 8px; border-radius:12px; margin-left:6px; font-weight:600;">@n.Ten @((n.XacSuat * 100).ToString("0"))%</span>
+                            }
+                            <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px;">Chỉ là gợi ý; mã lỗi xếp hạng theo số triệu chứng khớp cộng độ tương đồng nhóm lỗi. KTV quyết định.</div>
+                        </div>
+                    }
+                    @if (Model.GoiYLoi == null || !Model.GoiYLoi.Any())
+                    {
+                        <div style="color:var(--c-err); background:rgba(252,165,165,0.1); padding:12px; border-radius:8px; border:1px solid rgba(252,165,165,0.2); font-size:13px;">
+                            <i class="bi bi-exclamation-triangle me-1"></i> Không suy luận được lỗi từ các triệu chứng đã chọn. Hãy thử chọn thêm triệu chứng khác.
+                        </div>
+                    }
+                    else
+                    {
+                        @for (var i = 0; i < Model.GoiYLoi.Count; i++)
+                        {
+                            var loi = Model.GoiYLoi[i];
+                            <div class="err-block">
+                                <div class="err-title @(i == 0 ? "err-high-prob" : "err-normal")">
+                                    @if (i == 0)
+                                    {
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> <span>Khả năng cao nhất: @loi.TenLoi</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-arrow-right-short me-1"></i> <span>Gợi ý: @loi.TenLoi</span>
+                                    }
+                                </div>
+                                <div style="margin-bottom:12px;">
+                                    <span style="background:var(--surface2); color:var(--text-muted); font-size:11px; padding:2px 8px; border-radius:12px; margin-right:6px;">@loi.PhanLoai</span>
+                                    @if (loi.IsAIPredicted)
+                                    {
+                                        <span style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:var(--c-ok); font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600; margin-right:6px;"><i class="bi bi-robot me-1"></i>AI Đề xuất</span>
+                                    }
+                                    <span style="background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); color:var(--c-info); font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Rule Score: @loi.Diem</span>
+                                    @if (loi.DoTuongDongNhomAI.HasValue)
+                                    {
+                                        <span style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:var(--c-ok); font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600; margin-left:6px;"><i class="bi bi-cpu me-1"></i>AI nhóm lỗi: @((loi.DoTuongDongNhomAI.Value * 100).ToString("0"))%</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(loi.DoTinCayAI))
+                                    {
+                                        var tipTc = "Biên điểm với mã lỗi thứ hai: " + loi.BienDiemAI + ". Xác suất đúng ước lượng " + (loi.XacSuatDungAI.HasValue ? Math.Round(loi.XacSuatDungAI.Value * 100) + "%" : "n/a") + ". Mức Cao (>= 75%): trên 890 bài thật giữ riêng, che dấu hiệu, đúng khoảng 83% (phủ 18%); trên 80 câu tự soạn đúng 24/24.";
+                                        <span title="@tipTc" style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.35); color:#d97706; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600; margin-left:6px;"><i class="bi bi-shield-check me-1"></i>Tin cậy AI: @loi.DoTinCayAI</span>
+                                    }
+                                    @if (loi.XacSuatMaLoiAI.HasValue && loi.XacSuatMaLoiAI.Value > 0)
+                                    {
+                                        <span title="Mô hình học máy dự đoán trực tiếp mã lỗi (nhãn huấn luyện yếu, chỉ gợi ý)" style="background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); color:#a855f7; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600; margin-left:6px;"><i class="bi bi-bullseye me-1"></i>AI mã lỗi: @((loi.XacSuatMaLoiAI.Value * 100).ToString("0"))%</span>
+                                    }
+                                </div>
+
+                                @if (loi.GiaiPhaps == null || !loi.GiaiPhaps.Any())
+                                {
+                                    <div style="color:var(--text-muted); font-size:12.5px; font-style:italic;">
+                                        Chưa có giải pháp được cấu hình cho lỗi này.
+                                    </div>
+                                }
+                                else
+                                {
+                                    @foreach (var gp in loi.GiaiPhaps)
+                                    {
+                                        <div class="err-sol">
+                                            <div style="color:var(--c-ok); font-weight:600; font-size:13px; margin-bottom:6px;">
+                                                <i class="bi bi-tools me-1"></i> Hướng dẫn khắc phục
+                                            </div>
+                                            <pre style="white-space: pre-wrap; color:var(--text-muted); font-size:13px; margin:0; font-family:'Be Vietnam Pro', sans-serif;">@gp.NoiDungStepByStep</pre>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

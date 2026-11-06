@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "web-dev", "runtimeExecutable": "dotnet", "runtimeArgs": ["run", "--no-build", "--no-launch-profile", "--", "--environment", "Development", "--urls", "http://localhost:5099"], "port": 5099 }
+  ]
+}

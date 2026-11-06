@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <partial name="_SystemIcons" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="IT Helpdesk — Hệ thống quản lý, chẩn đoán và giải pháp sự cố máy tính thông minh. Giúp kỹ thuật viên tiếp nhận, phân tích và giải quyết sự cố nhanh chóng." />
+    <title>IT Helpdesk — @ViewData["Title"]</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Design System Tokens (generated from DESIGN.md via google/design.md) -->
+    <link rel="stylesheet" href="~/css/design-tokens.css" asp-append-version="true">
+
+    <style>
+        /* =====================================================
+           IT HELPDESK — Landing Layout | Candy Blue Theme
+           Candy blue base: #5EE7FF
+           ===================================================== */
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --lav:          #7ec8f8;
+            --lav-mid:      #2f8fe8;
+            --lav-deep:     #1a73d4;
+            --lav-deeper:   #155db0;
+            --lav-darkest:  #1c3554;
+            --bg:           #eaf6ff;
+            --bg-mid:       #f7fbff;
+            --bg-card:      #ffffff;
+            --text:         #1c3554;
+            --text-soft:    #3d5874;
+            --text-muted:   #6b86a3;
+            --border:       rgba(47,143,232,0.12);
+            --border-bright:rgba(47,143,232,0.22);
+            --font:         'Be Vietnam Pro', 'Inter', sans-serif;
+            --radius:       14px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font);
+            background:
+                radial-gradient(circle at 88% 18%, rgba(126,200,248,0.45), transparent 32%),
+                linear-gradient(180deg, #f7fbff 0%, #eaf6ff 48%, #f4faff 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            animation: fadeInPage 0.6s ease-out both;
+            transition: opacity 0.3s ease;
+        }
+
+        body.page-leaving { opacity: 0; pointer-events: none; }
+
+        @@keyframes fadeInPage {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: rgba(47,143,232,0.28); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(47,143,232,0.48); }
+
+        /* ─── NAVBAR ─── */
+        .land-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background: rgba(247,251,255,0.72);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid transparent;
+            z-index: 1000;
+            transition: all 0.35s ease;
+        }
+
+        .land-nav::before { display: none; }
+
+        .land-nav.scrolled,
+        .land-nav.nav-scrolled {
+            background: rgba(255,255,255,0.92);
+            border-bottom-color: var(--border);
+            box-shadow: 0 8px 28px rgba(47,143,232,0.10);
+        }
+
+        /* ── Brand ── */
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .nav-brand-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(180deg, #8fd4ff, #2f8fe8);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(47,143,232,0.25);
+        }
+
+        .nav-brand-name {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            color: var(--text);
+        }
+
+        .nav-brand-tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            background: rgba(94,231,255,0.12);
+            border: 1px solid rgba(94,231,255,0.28);
+            border-radius: 20px;
+            color: var(--lav);
+            font-weight: 700;
+            letter-spacing: 0.8px;
+        }
+
+        /* ── Nav links ── */
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 7px 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            letter-spacing: 0.2px;
+        }
+
+        .nav-links a:hover {
+            color: var(--lav-mid);
+            background: rgba(47,143,232,0.08);
+        }
+
+        /* ── CTA button ── */
+        .nav-cta { display: flex; align-items: center; gap: 10px; }
+
+        .btn-nav-login {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #2f8fe8;
+            color: #fff;
+            padding: 9px 20px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.25s;
+            border: none;
+            box-shadow: 0 8px 18px rgba(47,143,232,0.28);
+            font-family: var(--font);
+        }
+
+        .btn-nav-login:hover {
+            transform: translateY(-2px);
+            background: #1a73d4;
+            color: #fff;
+            box-shadow: 0 10px 24px rgba(47,143,232,0.36);
+        }
+
+        /* ─── MAIN CONTENT ─── */
+        main { padding-top: 72px; }
+        body.landing-hero-page main { padding-top: 0; }
+        body.landing-hero-page .land-nav { background: #f7fbff; }
+
+        /* ─── FOOTER ─── */
+        .land-footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 40px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255,255,255,0.7);
+        }
+
+        .footer-copy { font-size: 12.5px; color: var(--text-muted); }
+        .footer-copy strong { color: var(--lav-mid); }
+
+        .footer-links { display: flex; gap: 20px; }
+
+        .footer-links a {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--lav); }
+
+        @@media (max-width: 768px) {
+            .land-nav { padding: 0 20px; }
+            .nav-links { display: none; }
+            .land-footer { grid-template-columns: 1fr; text-align: center; }
+            .footer-links { justify-content: center; }
+        }
+    </style>
+</head>
+<body class="@(ViewData["LandingHero"] as bool? == true ? "landing-hero-page" : null)">
+
+    <!-- ═══════════════ NAVBAR ═══════════════ -->
+    <nav class="land-nav" id="landNav">
+        <a class="nav-brand" href="/">
+            <div class="nav-brand-icon">
+                <i class="bi bi-pc-display" aria-hidden="true"></i>
+            </div>
+            <span class="nav-brand-name">IT HELPDESK</span>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="#features">Tính năng</a></li>
+            <li><a href="#how-it-works">Quy trình</a></li>
+            <li><a href="#stats-section">Tổng quan</a></li>
+            <li><a href="#tech-stack">Công nghệ</a></li>
+        </ul>
+
+        <div class="nav-cta">
+            <a class="btn-nav-login" href="@Url.Action("Login", "Auth")">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Đăng nhập hệ thống
+            </a>
+        </div>
+    </nav>
+
+    <!-- ═══════════════ MAIN ═══════════════ -->
+    <main>
+        @RenderBody()
+    </main>
+
+    <!-- ═══════════════ FOOTER ═══════════════ -->
+    <footer class="land-footer">
+        <p class="footer-copy">
+            &copy; 2026 &mdash; <strong>IT Helpdesk</strong> &mdash;
+            Đồ án cơ sở: Hệ thống quản lý chẩn đoán &amp; giải pháp sự cố máy tính.
+            Thực hiện: <strong>Trương Tuấn Vĩnh</strong>
+        </p>
+        <nav class="footer-links">
+            <a href="#features">Tính năng</a>
+            <a href="@Url.Action("Login", "Auth")">Đăng nhập</a>
+            <a href="#" id="policyLink" class="no-fade">Chính sách</a>
+        </nav>
+    </footer>
+
+    <!-- ─── Scripts ─── -->
+    <script>
+        // Policy modal functionality
+        document.getElementById('policyLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('policyModal').classList.add('active');
+        });
+        // Navbar scroll effect
+        const nav = document.getElementById('landNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 20);
+        }, { passive: true });
+
+        // Hiệu ứng chuyển trang mượt mà khi nhấn nút Đăng nhập
+        document.querySelectorAll('.btn-nav-login, .footer-links a[href*="Login"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const href = this.getAttribute('href');
+                document.body.classList.add('page-leaving');
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 300);
+            });
+        });
+    </script>
+
+    <!-- ══════════════ POLICY MODAL (CUSTOM) ══════════════ -->
+    <style>
+        .land-modal-overlay {
+            position: fixed; inset: 0; background: rgba(3,24,52,0.76); backdrop-filter: blur(8px);
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+        .land-modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .land-modal {
+            background: #fff; border: 1px solid rgba(47,143,232,0.16); border-radius: 16px;
+            width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto;
+            transform: translateY(20px) scale(0.95); transition: all 0.3s ease;
+            box-shadow: 0 20px 48px rgba(0,60,130,0.45);
+        }
+        .land-modal-overlay.active .land-modal { transform: translateY(0) scale(1); }
+        .land-modal-header { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .land-modal-body { padding: 24px; color: #3d5874; font-size: 14.5px; line-height: 1.7; }
+        .land-modal-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: flex-end; }
+        .btn-close-modal { background: none; border: none; color: #1c3554; font-size: 28px; cursor: pointer; line-height: 1; padding: 0; }
+        .btn-close-modal:hover { color: #ef4444; }
+        .btn-secondary-custom { background: #eaf6ff; border: 1px solid #b5d9ed; color: #1c3554; border-radius: 8px; padding: 8px 24px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; transition: background 0.2s; }
+        .btn-secondary-custom:hover { background: rgba(94,231,255,0.24); }
+    </style>
+
+    <div class="land-modal-overlay" id="policyModal" onclick="if(event.target === this) this.classList.remove('active')">
+        <div class="land-modal">
+            <div class="land-modal-header">
+                <h3 style="color: #1c3554; font-weight: 600; font-size: 20px; margin: 0;"><i class="bi bi-shield-check me-2" style="color: #2f8fe8; margin-right: 8px;"></i> Chính sách & Bảo mật</h3>
+                <button type="button" class="btn-close-modal" onclick="document.getElementById('policyModal').classList.remove('active')">&times;</button>
+            </div>
+            <div class="land-modal-body">
+                <h4 style="color: #2f8fe8; margin-bottom: 10px; font-size: 16px; font-weight: 600;">1. Mục đích thu thập dữ liệu</h4>
+                <p style="margin-bottom: 24px;">Hệ thống IT Helpdesk thu thập thông tin cơ bản của người dùng (nhân viên, kỹ thuật viên) nhằm mục đích định danh, phân quyền xử lý sự cố và theo dõi tiến độ công việc. Chúng tôi cam kết không sử dụng dữ liệu cho mục đích thương mại.</p>
+
+                <h4 style="color: #2f8fe8; margin-bottom: 10px; font-size: 16px; font-weight: 600;">2. Bảo mật thông tin</h4>
+                <p style="margin-bottom: 24px;">Toàn bộ dữ liệu phiếu kỹ thuật, lịch sử sửa chữa và thông tin thiết bị được mã hóa và lưu trữ an toàn. Chỉ những tài khoản được phân quyền hợp lệ mới có thể truy cập và xử lý các thông tin này.</p>
+
+                <h4 style="color: #2f8fe8; margin-bottom: 10px; font-size: 16px; font-weight: 600;">3. Trách nhiệm của người dùng</h4>
+                <p style="margin-bottom: 0;">Người dùng có trách nhiệm bảo vệ tài khoản đăng nhập của mình, không chia sẻ mật khẩu cho người khác. Mọi thao tác trên hệ thống đều được ghi log để phục vụ mục đích kiểm toán và quản lý chất lượng dịch vụ.</p>
+            </div>
+            <div class="land-modal-footer">
+                <button type="button" class="btn-secondary-custom" onclick="document.getElementById('policyModal').classList.remove('active')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>

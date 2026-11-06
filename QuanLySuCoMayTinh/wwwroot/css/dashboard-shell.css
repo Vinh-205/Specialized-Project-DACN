@@ -1,0 +1,151 @@
+/* Phase 1: shared navigation only. Business screens and dark theme stay unchanged. */
+html[data-theme="light"] .helpdesk-topbar,
+html[data-theme="light"] .helpdesk-sidebar,
+html[data-theme="light"] .topbar-breadcrumb-strip {
+    --text:#173b50;
+    --text-muted:#456b80;
+    --text-light:#56798a;
+    --border:#c7dfeC;
+    --border-light:#e1edf3;
+    --surface:#fff;
+    --surface2:#f1f9fd;
+    --surface3:#e8f4fb;
+    --surface-solid:#fff;
+    --lav:#0671bc;
+    --lav-mid:#0671bc;
+    --lav-deep:#0671bc;
+    --sidebar-label:#547488;
+    --sidebar-item:#365b70;
+    --sidebar-item-hover:#edf7fd;
+    --sidebar-active-bg:#e0f2ff;
+    --sidebar-active-color:#075e98;
+    --sidebar-active-bar:#0788ce;
+    --sidebar-sub-dot:#9ebecd;
+    --sidebar-active-dot:#0788ce;
+    font-family:'Be Vietnam Pro',sans-serif;
+    letter-spacing:0;
+    color:var(--text);
+    background:#fff;
+    border-color:var(--border);
+    backdrop-filter:none;
+}
+html[data-theme="light"] .helpdesk-topbar { box-shadow:0 1px 0 #c7dfec; }
+html[data-theme="light"] .helpdesk-sidebar { background:#f8fcff; }
+html[data-theme="light"] .topbar-breadcrumb-strip { background:#f1f9fd; }
+html[data-theme="light"] .helpdesk-topbar :is(.topbar-brand,.user-chip,.user-name,.notif-btn,.theme-toggle-btn,.btn-logout) { color:#173b50; }
+html[data-theme="light"] .helpdesk-topbar :is(.brand-icon,.user-avatar) { background:#e0f2ff; color:#0671bc; box-shadow:none; border-radius:6px; }
+html[data-theme="light"] #sidebarToggle { color:#0671bc !important; background:#edf7fd !important; border:1px solid #c7dfec !important; }
+html[data-theme="light"] .helpdesk-topbar :is(.user-chip,.notif-btn,.theme-toggle-btn,.btn-logout) { background:#f1f9fd; border-color:#c7dfec; border-radius:6px; }
+html[data-theme="light"] .topbar-ai-badge { background:#e9f6ef; border-color:#bedcc9; color:#28664b; }
+html[data-theme="light"] .role-chip-admin { background:#e9f6ef; border-color:#bedcc9; color:#28664b; }
+html[data-theme="light"] .role-chip-ktv { background:#e0f2ff; border-color:#bdd8e6; color:#075e98; }
+html[data-theme="light"] .user-chip > .bi-chevron-down { color:#54778d !important; }
+html[data-theme="light"] .topbar-search { background:#f1f9fd; border:1px solid #bdd8e6; border-radius:6px; box-shadow:none; }
+html[data-theme="light"] .topbar-search input { color:#173b50; font-family:inherit; }
+html[data-theme="light"] .topbar-search input::placeholder { color:#58788a; }
+html[data-theme="light"] .topbar-search > i { color:#54778d; }
+html[data-theme="light"] .topbar-search:focus-within { border-color:#0788ce; box-shadow:0 0 0 3px #0788ce15; }
+html[data-theme="light"] .helpdesk-sidebar :is(.sb-user-header,.sb-footer) { background:transparent; border-color:#d6e6ef; }
+html[data-theme="light"] .sb-user-header .uh-avatar { background:#e0f2ff; color:#0671bc; box-shadow:none; }
+html[data-theme="light"] .sb-user-header .uh-name { color:#173b50; }
+html[data-theme="light"] .helpdesk-sidebar :is(.sb-item,.sb-group-header,.sb-sub-item) { border-radius:6px; letter-spacing:0; }
+html[data-theme="light"] .helpdesk-sidebar :is(.sb-item:hover,.sb-group-header:hover,.sb-sub-item:hover) { color:#075e98; }
+html[data-theme="light"] .helpdesk-sidebar .sb-icon { color:#54829c; }
+html[data-theme="light"] .helpdesk-sidebar .sb-item.active .sb-icon { color:#0671bc; }
+html[data-theme="light"] .topbar-breadcrumb-strip :is(.bc-link,.bc-current) { color:#365b70; }
+html[data-theme="light"] .topbar-breadcrumb-strip .bc-current { font-weight:600; color:#075e98; }
+html[data-theme="light"] .helpdesk-topbar :is(a,button):focus-visible,
+html[data-theme="light"] .helpdesk-sidebar :is(a,button):focus-visible { outline:2px solid #0788ce; outline-offset:2px; }
+html[data-theme="light"] .helpdesk-workspace {
+    --bg: #f8fbfc;
+    --surface: #ffffff;
+    --surface2: #edf5f8;
+    --surface3: #e5f0f5;
+    --surface-solid: #ffffff;
+    --text: #183c4b;
+    --text-muted: #557181;
+    --text-light: #617d8c;
+    --border: #d6e5eb;
+    --border-light: #e5eef2;
+    --lav: #39718c;
+    --lav-mid: #2096ca;
+    --lav-deep: #007eaf;
+    --lav-deeper: #00648c;
+    --lav-darkest: #174655;
+    --orange-dark: #a95a0d;
+    --danger-dark: #ba424e;
+    --green-dark: #187a60;
+    --radius: 8px;
+    --card-shadow: 0 2px 8px rgba(28,65,79,.04);
+    /* Màu cảnh báo/trạng thái đủ tương phản (>= 4.5:1) cho chữ trên nền sáng */
+    --danger: #c5362c;
+    --cyan: #0b7285;
+    --text-light: #566f7d;
+    --c-ok: #187a60;
+    --c-warn: #a95a0d;
+    --c-err: #ba424e;
+    --c-info: #00648c;
+    --c-purple: #6b3fb8;
+    background: var(--bg);
+}
+html[data-theme="dark"] .helpdesk-workspace {
+    --bg: #182122;
+    --surface: #1e2a2b;
+    --surface2: #263638;
+    --surface3: #304144;
+    --surface-solid: #1e2a2b;
+    --text: #e7f2f2;
+    --text-muted: #a7bec1;
+    --text-light: #a7bec1;
+    --border: #3c5154;
+    --border-light: #304346;
+    --lav-deep: #76cced;
+    --lav-mid: #76cced;
+    --lav: #b6dce8;
+    --sidebar-bg: #1e2a2b;
+    --sidebar-text: #c2d7db;
+    --sidebar-active-bg: #29434b;
+    --sidebar-active-color: #a0e0f7;
+    --c-ok: #4ade80;
+    --c-warn: #fbbf24;
+    --c-err: #f87171;
+    --c-info: #76cced;
+    --c-purple: #a78bfa;
+    background: var(--bg);
+}
+/* Tương phản ở giao diện tối cho thành phần dùng chung */
+html[data-theme="dark"] .helpdesk-workspace { --sidebar-label: #a7bec1; }
+html[data-theme="dark"] .helpdesk-workspace .notif-badge { background: #c5362c; color: #fff; }
+html[data-theme="dark"] .helpdesk-workspace .sb-item-pill.danger { color: #ffc2bb; }
+html[data-theme="dark"] .helpdesk-workspace :is(.helpdesk-topbar,.helpdesk-sidebar,.topbar-breadcrumb-strip) { background: #1e2a2b; color: #e7f2f2; }
+html[data-theme="dark"] .helpdesk-workspace .hd-btn-primary { background: #087da3; color: #fff; box-shadow: none; }
+.helpdesk-workspace { font-family: 'Be Vietnam Pro', sans-serif; }
+.helpdesk-workspace .app-blobs-wrapper { display: none; }
+.helpdesk-workspace .helpdesk-topbar { box-shadow: none; border-bottom: 1px solid var(--border); }
+.workspace-label { font-size: 9px; color: var(--text-muted); padding-left: 14px; margin-left: 8px; border-left: 1px solid var(--border); }
+.workspace-identity { display: flex; align-items: center; gap: 9px; padding: 22px 12px 24px; text-decoration: none; color: var(--text); }
+.workspace-identity strong { display: block; font-size: 13px; }
+.workspace-identity small { display: block; margin-top: 5px; color: var(--text-muted); font-size: 9px; }
+.workspace-crt { display: block; width: 48px; height: 48px; flex-shrink: 0; background: url('/mascots/crt-directions.webp') 50% 50% / 300% 300% no-repeat; }
+.helpdesk-workspace .helpdesk-sidebar { box-shadow: none; border-right: 1px solid var(--border); }
+.helpdesk-workspace .sb-section-label { font-size: 9px; letter-spacing: 0; font-weight: 600; }
+.helpdesk-workspace .sb-item,.helpdesk-workspace .sb-group-header { font-size: 12px; min-height: 42px; }
+.helpdesk-workspace .sb-divider { margin: 12px 18px; }
+.helpdesk-workspace .sb-footer-copy { font-size: 11px; line-height: 1.6; color: var(--text-muted); }
+html[data-theme="light"] .helpdesk-sidebar { background: #eef6f8; }
+html[data-theme="light"] .helpdesk-sidebar .sb-item.active { background: #d6eef8; color: #00658b; box-shadow: none; border-radius: 0 6px 6px 0; }
+html[data-theme="light"] .helpdesk-sidebar .sb-item.active::before { background: #008cbf; width: 3px; }
+.helpdesk-workspace .topbar-breadcrumb-strip { font-size: 10px; }
+.helpdesk-workspace .hd-btn { border-radius: 6px; letter-spacing: 0; }
+html[data-theme="light"] .helpdesk-workspace .hd-btn-primary { background: #007eaf; border-color: #007eaf; color: white; box-shadow: none; }
+html[data-theme="light"] .helpdesk-workspace .hd-btn-primary:hover { background: #00678f; }
+html[data-theme="light"] .helpdesk-workspace .hd-btn-outline { background: white; color: #285567; border-color: #cadfe8; }
+html[data-theme="light"] .helpdesk-workspace .hd-badge-warning { background: #fff1d8; color: #895410; }
+html[data-theme="light"] .helpdesk-workspace .hd-badge-info { background: #ddf2fb; color: #076184; }
+html[data-theme="light"] .helpdesk-workspace .hd-badge-success { background: #def4e9; color: #17664e; }
+html[data-theme="light"] .helpdesk-workspace .hd-badge-gray { background: #eaf0f3; color: #4e6370; }
+html[data-theme="light"] .helpdesk-workspace .icon-btn { color: #42687b; background: white; border-color: #d6e5eb; }
+@media(max-width:768px) { .helpdesk-workspace .main-content-area { padding: 20px 16px !important; } .workspace-identity { padding-block: 12px; } }
+@media(prefers-reduced-motion:reduce) {
+    .helpdesk-topbar,.helpdesk-sidebar,.topbar-breadcrumb-strip { transition:none !important; }
+}
