@@ -23,3 +23,6 @@ QuanLySuCoMayTinh/appsettings.json
 QuanLySuCoMayTinh/appsettings.Development.json
 appsettings.Local.json
 .env
+
+# Tệp bàn giao giữa các agent (không đưa lên git)
+QuanLySuCoMayTinh/CODEX_BAN_GIAO_TU_CLAUDE.md
