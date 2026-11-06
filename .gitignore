@@ -3,7 +3,6 @@ obj/
 node_modules/
 
 # Mô hình, dữ liệu, môi trường Python và bản sao lưu (quá lớn / không thuộc mã nguồn)
-AI-Models/
 Datasets*/
 Backup_truoc_dong_bo_*/
 MoHinh-*/
@@ -15,7 +14,6 @@ __pycache__/
 QuanLySuCoMayTinh/Data/MLModels/
 QuanLySuCoMayTinh/HoSo_AI_TrinhBay/
 QuanLySuCoMayTinh/publish/
-*.onnx
 *.zip
 *.pt
 *.bin
